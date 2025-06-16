@@ -7,15 +7,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 export default function SignUpPage() {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,16 +33,23 @@ export default function SignUpPage() {
     setIsLoading(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log('Sign up attempt with:', { email, password });
+    console.log('Sign up attempt with:', { username, email, password });
+    
+    // Mock successful signup
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isUserLoggedIn', 'true');
+      localStorage.setItem('loggedInUsername', username);
+    }
+
     toast({
-      title: 'Sign Up Submitted (Mock)',
-      description: 'In a real app, this would create your account.',
+      title: 'Sign Up Successful (Mock)',
+      description: 'Redirecting to welcome page...',
     });
-    setIsLoading(false);
-    // Optionally clear fields
-    // setEmail('');
-    // setPassword('');
-    // setConfirmPassword('');
+    
+    setTimeout(() => {
+      router.push('/welcome');
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (
@@ -54,6 +64,18 @@ export default function SignUpPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                placeholder="Choose a username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                disabled={isLoading}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

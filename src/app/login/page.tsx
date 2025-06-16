@@ -9,14 +9,14 @@ import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation'; // Added for redirection
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -24,14 +24,18 @@ export default function LoginPage() {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
     console.log('Login attempt with:', { email, password });
+
+    // Mock successful login
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isUserLoggedIn', 'true');
+      localStorage.setItem('loggedInUsername', email); // Store email as username for this flow
+    }
+    
     toast({
       title: 'Login Successful (Mock)',
-      description: 'Redirecting to your dashboard...',
+      description: 'Redirecting to your welcome page...',
     });
-    // setEmail(''); // Optionally clear fields
-    // setPassword('');
     
-    // Redirect to welcome page after a short delay to allow toast to be seen
     setTimeout(() => {
       router.push('/welcome');
       setIsLoading(false);
