@@ -1,10 +1,101 @@
+
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Activity, ShieldCheck, AlertTriangleIcon } from 'lucide-react';
+import { UploadCloud, Activity, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
+interface AuthAwareLinkButtonProps {
+  isClient: boolean;
+  isUserLoggedIn: boolean;
+  href: string;
+  buttonText: string;
+  icon?: React.ReactNode;
+  buttonVariant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
+  buttonSize?: "default" | "sm" | "lg" | "icon" | null | undefined;
+  className?: string;
+}
+
+const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
+  isClient,
+  isUserLoggedIn,
+  href,
+  buttonText,
+  icon,
+  buttonVariant = "default",
+  buttonSize = "lg",
+  className = "",
+}) => {
+  const router = useRouter();
+
+  if (isClient && isUserLoggedIn) {
+    return (
+      <Button asChild variant={buttonVariant} size={buttonSize} className={className}>
+        <Link href={href}>
+          {icon}
+          {buttonText}
+        </Link>
+      </Button>
+    );
+  }
+
+  // Default to showing AlertDialog trigger if not client or not logged in
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant={buttonVariant} size={buttonSize} className={className}>
+          {icon}
+          {buttonText}
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Authentication Required</AlertDialogTitle>
+          <AlertDialogDescription>
+            You need to be logged in to access this feature. Please log in or create an account.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <Button asChild onClick={() => router.push('/login')}>
+            <Link href="/login">Log In</Link>
+          </Button>
+          <Button asChild onClick={() => router.push('/signup')}>
+            <Link href="/signup">Sign Up</Link>
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+};
+
 
 export default function HomePage() {
+  const [isClient, setIsClient] = useState(false);
+  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    setIsClient(true);
+    const loggedInStatus = localStorage.getItem('isUserLoggedIn') === 'true';
+    setIsUserLoggedIn(loggedInStatus);
+  }, []);
+
   return (
     <div className="flex flex-col items-center text-center space-y-12">
       <section className="w-full py-12 md:py-24 lg:py-32">
@@ -20,12 +111,15 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button asChild size="lg" className="shadow-lg hover:shadow-primary/50 transition-shadow">
-                  <Link href="/check">
-                    <UploadCloud className="mr-2 h-5 w-5" />
-                    Check a Product Now
-                  </Link>
-                </Button>
+                <AuthAwareLinkButton
+                  isClient={isClient}
+                  isUserLoggedIn={isUserLoggedIn}
+                  href="/check"
+                  buttonText="Check a Product Now"
+                  icon={<UploadCloud className="mr-2 h-5 w-5" />}
+                  buttonSize="lg"
+                  className="shadow-lg hover:shadow-primary/50 transition-shadow"
+                />
                 <Button asChild variant="outline" size="lg">
                   <Link href="#how-it-works">
                     Learn More
@@ -87,12 +181,15 @@ export default function HomePage() {
             </p>
           </div>
           <div className="mx-auto w-full max-w-sm space-y-2">
-             <Button asChild size="lg" className="w-full shadow-lg hover:shadow-primary/50 transition-shadow">
-               <Link href="/check">
-                 <UploadCloud className="mr-2 h-5 w-5" />
-                 Start Scanning
-               </Link>
-             </Button>
+             <AuthAwareLinkButton
+                isClient={isClient}
+                isUserLoggedIn={isUserLoggedIn}
+                href="/check"
+                buttonText="Start Scanning"
+                icon={<UploadCloud className="mr-2 h-5 w-5" />}
+                buttonSize="lg"
+                className="w-full shadow-lg hover:shadow-primary/50 transition-shadow"
+              />
           </div>
         </div>
       </section>
