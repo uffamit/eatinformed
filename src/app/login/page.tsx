@@ -9,12 +9,14 @@ import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation'; // Added for redirection
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const router = useRouter(); // Initialize useRouter
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -23,12 +25,17 @@ export default function LoginPage() {
     await new Promise(resolve => setTimeout(resolve, 1500));
     console.log('Login attempt with:', { email, password });
     toast({
-      title: 'Login Submitted (Mock)',
-      description: 'In a real app, this would attempt to log you in.',
+      title: 'Login Successful (Mock)',
+      description: 'Redirecting to your dashboard...',
     });
-    setIsLoading(false);
     // setEmail(''); // Optionally clear fields
     // setPassword('');
+    
+    // Redirect to welcome page after a short delay to allow toast to be seen
+    setTimeout(() => {
+      router.push('/welcome');
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (
@@ -56,7 +63,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Password</Label>              
               <Input
                 id="password"
                 type="password"
