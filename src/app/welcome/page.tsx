@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Smile, PartyPopper, Home } from 'lucide-react';
-import Image from 'next/image';
+import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -58,15 +58,8 @@ export default function WelcomePage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex justify-center">
-            <Image
-              src="https://placehold.co/300x200.png"
-              data-ai-hint="celebration confetti"
-              alt="Welcome illustration"
-              width={300}
-              height={200}
-              className="rounded-lg shadow-md"
-            />
+          <div className="flex justify-center items-center bg-muted/30 p-6 rounded-lg shadow-md">
+            <NutriScanLogo width={150} height={150} />
           </div>
           <p className="text-muted-foreground">
             You're all set to start exploring and making healthier food choices.

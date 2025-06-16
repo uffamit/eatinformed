@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadCloud, Activity, ShieldCheck } from 'lucide-react';
-import Image from 'next/image';
+import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -127,14 +127,9 @@ export default function HomePage() {
                 </Button>
               </div>
             </div>
-            <Image
-              src="https://placehold.co/600x400.png"
-              data-ai-hint="fresh vegetables groceries"
-              alt="Assortment of fresh vegetables and packaged food"
-              width={600}
-              height={400}
-              className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square shadow-xl"
-            />
+            <div className="mx-auto flex justify-center items-center aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last lg:aspect-square shadow-xl bg-muted/30 p-8">
+              <NutriScanLogo width={200} height={200} />
+            </div>
           </div>
         </div>
       </section>
