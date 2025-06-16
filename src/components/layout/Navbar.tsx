@@ -1,10 +1,11 @@
+
 'use client';
 
 import Link from 'next/link';
 import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, PackageSearch, HomeIcon } from 'lucide-react';
+import { Menu, PackageSearch, HomeIcon, LogIn, UserPlus } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +13,11 @@ const navItems = [
   { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/check', label: 'Check Product', icon: PackageSearch },
 ];
+
+const authNavItems = [
+  { href: '/login', label: 'Log In', icon: LogIn },
+  { href: '/signup', label: 'Sign Up', icon: UserPlus },
+]
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -39,8 +45,18 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden md:flex items-center space-x-2">
-          <Button variant="outline" size="sm">Log In</Button>
-          <Button size="sm">Sign Up</Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/login">
+              <LogIn className="mr-2 h-4 w-4" />
+              Log In
+            </Link>
+          </Button>
+          <Button size="sm" asChild>
+            <Link href="/signup">
+              <UserPlus className="mr-2 h-4 w-4" />
+              Sign Up
+            </Link>
+          </Button>
         </div>
 
         <div className="md:hidden">
@@ -69,8 +85,18 @@ export default function Navbar() {
                   </Link>
                 ))}
                 <div className="border-t pt-4 space-y-2">
-                  <Button variant="outline" className="w-full">Log In</Button>
-                  <Button className="w-full">Sign Up</Button>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link href="/login">
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Log In
+                    </Link>
+                  </Button>
+                  <Button className="w-full" asChild>
+                     <Link href="/signup">
+                      <UserPlus className="mr-2 h-4 w-4" />
+                       Sign Up
+                     </Link>
+                  </Button>
                 </div>
               </div>
             </SheetContent>
