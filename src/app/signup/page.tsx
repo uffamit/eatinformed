@@ -34,6 +34,11 @@ export default function SignUpPage() {
   }, [router]);
 
   const handleUsernameValidation = async (uname: string): Promise<boolean> => {
+    if (!db) {
+      console.error("Firestore instance (db) is not available. Check Firebase initialization.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Firestore is not properly configured. Please contact support.' });
+      return false;
+    }
     if (uname.length < 3 || uname.length > 20) {
       toast({ variant: 'destructive', title: 'Validation Error', description: 'Username must be between 3 and 20 characters.' });
       return false;
@@ -86,9 +91,13 @@ export default function SignUpPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      createdUserId = user.uid; // Store UID in case we need to clean up auth user
+      createdUserId = user.uid; 
 
       await updateProfile(user, { displayName: username });
+
+      if (!db) {
+        throw new Error("Firestore instance (db) is not available for transaction.");
+      }
 
       await runTransaction(db, async (transaction) => {
         const userDocRef = doc(db, 'users', user.uid);
@@ -96,8 +105,6 @@ export default function SignUpPage() {
 
         const freshUsernameDoc = await transaction.get(usernameDocRef);
         if (freshUsernameDoc.exists()) {
-          // This means username was taken between client-side check and transaction
-          // Auth user exists, but we can't reserve username.
           throw new Error("Username was claimed during sign-up. Please try a different username.");
         }
         
@@ -107,7 +114,6 @@ export default function SignUpPage() {
           username: username,
           displayName: username,
           createdAt: serverTimestamp(),
-          // You can add more profile fields here
         });
         transaction.set(usernameDocRef, { uid: user.uid });
       });
@@ -128,11 +134,11 @@ export default function SignUpPage() {
         errorMessage = 'The password is too weak. Please choose a stronger password.';
       } else if (error.message && error.message.includes("Username was claimed")) {
         errorMessage = error.message;
-        // If username was claimed during transaction, Firebase Auth user might have been created.
-        // Attempt to sign out the partially created user.
         if (auth.currentUser && auth.currentUser.uid === createdUserId) {
           await signOut(auth);
         }
+      } else if (error.message && error.message.includes("Firestore instance (db) is not available")) {
+        errorMessage = 'Firestore is not properly configured. Sign up cannot complete.';
       }
       
       toast({
