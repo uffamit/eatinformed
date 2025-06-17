@@ -10,6 +10,9 @@ import { UserPlus } from 'lucide-react';
 import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { auth, db } from '@/lib/firebase';
+import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
+import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 
 export default function SignUpPage() {
   const [username, setUsername] = useState('');
@@ -20,36 +23,112 @@ export default function SignUpPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  // Redirect if user is already logged in
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        router.push('/welcome');
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
+  const handleUsernameValidation = async (uname: string): Promise<boolean> => {
+    if (uname.length < 3 || uname.length > 20) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Username must be between 3 and 20 characters.' });
+      return false;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(uname)) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Username can only contain letters, numbers, and underscores.' });
+      return false;
+    }
+
+    const usernameDocRef = doc(db, 'usernames', uname.toLowerCase());
+    const usernameDoc = await getDoc(usernameDocRef);
+    if (usernameDoc.exists()) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Username is already taken. Please choose another.' });
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (password !== confirmPassword) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Passwords do not match.',
-      });
+      toast({ variant: 'destructive', title: 'Error', description: 'Passwords do not match.' });
       return;
     }
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log('Sign up attempt with:', { username, email, password });
-    
-    // Mock successful signup
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('isUserLoggedIn', 'true');
-      localStorage.setItem('loggedInUsername', username);
+    if (password.length < 6) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Password must be at least 6 characters long.' });
+      return;
     }
 
-    toast({
-      title: 'Sign Up Successful (Mock)',
-      description: 'Redirecting to welcome page...',
-    });
-    
-    setTimeout(() => {
-      router.push('/welcome');
+    setIsLoading(true);
+
+    const isUsernameValid = await handleUsernameValidation(username);
+    if (!isUsernameValid) {
       setIsLoading(false);
-    }, 1000);
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName: username });
+
+      // Firestore transaction to create user profile and reserve username
+      await runTransaction(db, async (transaction) => {
+        const userDocRef = doc(db, 'users', user.uid);
+        const usernameDocRef = doc(db, 'usernames', username.toLowerCase());
+
+        // Double-check username uniqueness within the transaction
+        const freshUsernameDoc = await transaction.get(usernameDocRef);
+        if (freshUsernameDoc.exists()) {
+          // This case should be rare if initial check was done, but handles race conditions
+          // To properly handle, we might need to delete the just-created Firebase auth user or ask them to log in and change username.
+          // For simplicity now, we'll throw an error. The auth user exists, but profile/username doc fails.
+          // Consider a cleanup function or manual intervention if this happens.
+          // Alternatively, sign out the user and ask them to try again.
+          await signOut(auth); // Sign out the partially created user
+          throw new Error("Username was claimed during sign-up. Please try a different username.");
+        }
+        
+        transaction.set(userDocRef, {
+          uid: user.uid,
+          email: user.email,
+          username: username,
+          displayName: username, // Storing for consistency, auth profile has it too
+          createdAt: serverTimestamp(),
+        });
+        transaction.set(usernameDocRef, { uid: user.uid });
+      });
+
+      toast({
+        title: 'Sign Up Successful!',
+        description: 'Redirecting to your welcome page...',
+      });
+      
+      router.push('/welcome');
+
+    } catch (error: any) {
+      console.error("Sign up error:", error);
+      let errorMessage = 'An unexpected error occurred during sign up.';
+      if (error.code === 'auth/email-already-in-use') {
+        errorMessage = 'This email is already registered. Please log in or use a different email.';
+      } else if (error.code === 'auth/weak-password') {
+        errorMessage = 'The password is too weak. Please choose a stronger password.';
+      } else if (error.message.includes("Username was claimed")) {
+        errorMessage = error.message;
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Sign Up Failed',
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -69,11 +148,13 @@ export default function SignUpPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="Choose a username"
+                placeholder="Choose a username (3-20 chars, a-z, 0-9, _)"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 disabled={isLoading}
+                minLength={3}
+                maxLength={20}
               />
             </div>
             <div className="space-y-2">
@@ -93,11 +174,11 @@ export default function SignUpPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Create a strong password"
+                placeholder="Create a strong password (min 6 chars)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={8}
+                minLength={6}
                 disabled={isLoading}
               />
             </div>

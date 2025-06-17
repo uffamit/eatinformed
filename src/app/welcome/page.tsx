@@ -4,46 +4,78 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smile, PartyPopper, Home } from 'lucide-react';
+import { Smile, PartyPopper, Home, Loader2 } from 'lucide-react';
 import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { auth, db } from '@/lib/firebase';
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+
+interface UserProfile {
+  username: string;
+  email: string;
+  // Add other fields if you store more data in Firestore user profile
+}
 
 export default function WelcomePage() {
-  const [username, setUsername] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // This code runs only on the client side
-    const storedUsername = localStorage.getItem('loggedInUsername');
-    const isLoggedIn = localStorage.getItem('isUserLoggedIn') === 'true';
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        // Fetch user profile from Firestore
+        const userDocRef = doc(db, 'users', currentUser.uid);
+        const userDocSnap = await getDoc(userDocRef);
+        if (userDocSnap.exists()) {
+          setUserProfile(userDocSnap.data() as UserProfile);
+        } else {
+          // Fallback if Firestore profile doesn't exist, use auth display name
+          setUserProfile({ 
+            username: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+            email: currentUser.email || 'No email'
+          });
+        }
+      } else {
+        router.replace('/login'); // Redirect to login if not authenticated
+      }
+      setIsLoading(false);
+    });
 
-    if (!isLoggedIn) {
-      router.replace('/login'); // Redirect to login if not authenticated
-    } else {
-      setUsername(storedUsername);
-    }
+    return () => unsubscribe();
   }, [router]);
 
-  if (username === null && typeof window !== 'undefined' && localStorage.getItem('isUserLoggedIn') === 'true') {
-    // Still loading username or it's genuinely not set but logged in
-    // You could show a loading spinner here if desired
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">
         <Card className="w-full max-w-lg shadow-xl p-8">
-          <PartyPopper className="mx-auto h-12 w-12 text-primary mb-4" />
+          <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin mb-4" />
           <CardTitle className="text-3xl font-headline">Loading Welcome Page...</CardTitle>
+          <CardDescription>Please wait while we fetch your details.</CardDescription>
         </Card>
       </div>
     );
   }
   
-  if (!username && (typeof window === 'undefined' || localStorage.getItem('isUserLoggedIn') !== 'true')) {
-    // If not logged in (e.g. direct navigation, or logout happened), this will be caught by useEffect redirect
-    // but this is a fallback for SSR or initial render before useEffect runs
-    return null; 
+  if (!user || !userProfile) {
+    // This case should ideally be handled by the redirect in useEffect,
+    // but acts as a fallback or if data fetching failed.
+    return (
+       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">
+        <Card className="w-full max-w-lg shadow-xl p-8">
+            <CardTitle className="text-3xl font-headline">Error</CardTitle>
+            <CardDescription>Could not load user data. Please try logging in again.</CardDescription>
+            <Button asChild className="mt-4">
+                <Link href="/login">Go to Login</Link>
+            </Button>
+        </Card>
+      </div>
+    );
   }
-
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">
@@ -51,14 +83,14 @@ export default function WelcomePage() {
         <CardHeader>
           <CardTitle className="text-3xl font-headline flex items-center justify-center">
             <PartyPopper className="mr-3 h-8 w-8 text-primary" />
-            Welcome, {username || 'User'}!
+            Welcome, {userProfile.username}!
           </CardTitle>
           <CardDescription className="text-lg">
             We're glad to have you here.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex justify-center items-center bg-muted/30 p-6 rounded-lg shadow-md">
+          <div className="flex justify-center items-center bg-muted/30 p-6 rounded-lg shadow-inner">
             <NutriScanLogo width={150} height={150} />
           </div>
           <p className="text-muted-foreground">

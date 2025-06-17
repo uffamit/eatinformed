@@ -4,14 +4,12 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Activity, ShieldCheck } from 'lucide-react';
+import { UploadCloud, Activity, ShieldCheck, Loader2 } from 'lucide-react';
 import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -19,10 +17,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; // Explicitly import these
+import { auth } from '@/lib/firebase';
+import type { User } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+
 
 interface AuthAwareLinkButtonProps {
-  isClient: boolean;
-  isUserLoggedIn: boolean;
+  currentUser: User | null;
+  isLoadingAuth: boolean;
   href: string;
   buttonText: string;
   icon?: React.ReactNode;
@@ -32,8 +35,8 @@ interface AuthAwareLinkButtonProps {
 }
 
 const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
-  isClient,
-  isUserLoggedIn,
+  currentUser,
+  isLoadingAuth,
   href,
   buttonText,
   icon,
@@ -42,8 +45,18 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
   className = "",
 }) => {
   const router = useRouter();
+  const [showDialog, setShowDialog] = useState(false);
 
-  if (isClient && isUserLoggedIn) {
+  if (isLoadingAuth) {
+    return (
+      <Button variant={buttonVariant} size={buttonSize} className={className} disabled>
+        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+        {buttonText}
+      </Button>
+    );
+  }
+
+  if (currentUser) {
     return (
       <Button asChild variant={buttonVariant} size={buttonSize} className={className}>
         <Link href={href}>
@@ -54,11 +67,10 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
     );
   }
 
-  // Default to showing AlertDialog trigger if not client or not logged in
   return (
-    <AlertDialog>
+    <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
       <AlertDialogTrigger asChild>
-        <Button variant={buttonVariant} size={buttonSize} className={className}>
+        <Button variant={buttonVariant} size={buttonSize} className={className} onClick={() => setShowDialog(true)}>
           {icon}
           {buttonText}
         </Button>
@@ -71,13 +83,13 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Button asChild onClick={() => router.push('/login')}>
-            <Link href="/login">Log In</Link>
-          </Button>
-          <Button asChild onClick={() => router.push('/signup')}>
-            <Link href="/signup">Sign Up</Link>
-          </Button>
+          <AlertDialogCancel onClick={() => setShowDialog(false)}>Cancel</AlertDialogCancel>
+          <AlertDialogAction asChild onClick={() => { setShowDialog(false); router.push('/login'); }}>
+             <span className="cursor-pointer">Log In</span>
+          </AlertDialogAction>
+          <AlertDialogAction asChild onClick={() => { setShowDialog(false); router.push('/signup'); }}>
+             <span className="cursor-pointer">Sign Up</span>
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -86,14 +98,15 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
 
 
 export default function HomePage() {
-  const [isClient, setIsClient] = useState(false);
-  const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
-  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   useEffect(() => {
-    setIsClient(true);
-    const loggedInStatus = localStorage.getItem('isUserLoggedIn') === 'true';
-    setIsUserLoggedIn(loggedInStatus);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setIsLoadingAuth(false);
+    });
+    return () => unsubscribe();
   }, []);
 
   return (
@@ -112,8 +125,8 @@ export default function HomePage() {
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <AuthAwareLinkButton
-                  isClient={isClient}
-                  isUserLoggedIn={isUserLoggedIn}
+                  currentUser={currentUser}
+                  isLoadingAuth={isLoadingAuth}
                   href="/check"
                   buttonText="Check a Product Now"
                   icon={<UploadCloud className="mr-2 h-5 w-5" />}
@@ -127,7 +140,7 @@ export default function HomePage() {
                 </Button>
               </div>
             </div>
-            <div className="mx-auto flex justify-center items-center aspect-video overflow-hidden rounded-xl sm:w-full lg:order-last lg:aspect-square shadow-xl bg-muted/30 p-8">
+            <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[400px] shadow-xl bg-muted/30 p-8 rounded-xl">
               <NutriScanLogo width={200} height={200} />
             </div>
           </div>
@@ -177,8 +190,8 @@ export default function HomePage() {
           </div>
           <div className="mx-auto w-full max-w-sm space-y-2">
              <AuthAwareLinkButton
-                isClient={isClient}
-                isUserLoggedIn={isUserLoggedIn}
+                currentUser={currentUser}
+                isLoadingAuth={isLoadingAuth}
                 href="/check"
                 buttonText="Start Scanning"
                 icon={<UploadCloud className="mr-2 h-5 w-5" />}

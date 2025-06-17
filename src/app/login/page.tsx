@@ -7,9 +7,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,28 +20,43 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
 
+  // Redirect if user is already logged in
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        router.push('/welcome');
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    console.log('Login attempt with:', { email, password });
 
-    // Mock successful login
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('isUserLoggedIn', 'true');
-      localStorage.setItem('loggedInUsername', email); // Store email as username for this flow
-    }
-    
-    toast({
-      title: 'Login Successful (Mock)',
-      description: 'Redirecting to your welcome page...',
-    });
-    
-    setTimeout(() => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      toast({
+        title: 'Login Successful!',
+        description: 'Redirecting to your welcome page...',
+      });
       router.push('/welcome');
+    } catch (error: any) {
+      console.error("Login error:", error);
+      let errorMessage = 'An unexpected error occurred during login.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        errorMessage = 'Invalid email or password. Please try again.';
+      } else if (error.code === 'auth/too-many-requests') {
+        errorMessage = 'Too many login attempts. Please try again later.';
+      }
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: errorMessage,
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

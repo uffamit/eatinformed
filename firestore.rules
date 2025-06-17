@@ -1,0 +1,34 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection:
+    // - Users can create their own profile document.
+    // - Users can read, update, and delete their own profile document.
+    // - No one else can read/write other users' profiles directly here (adjust if admin roles are needed).
+    match /users/{userId} {
+      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Usernames collection (for ensuring username uniqueness):
+    // - Authenticated users can read to check if a username exists.
+    // - Authenticated users can create a username document if it doesn't exist and links to their UID.
+    // - Only the user who owns the username (or an admin) should be able to delete it (more complex, for now, allow create by auth user).
+    match /usernames/{username} {
+      allow read: if request.auth != null;
+      // Allow create if the user is authenticated, the document doesn't exist yet,
+      // and the uid in the document matches the authenticated user's uid.
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      // Update/Delete rules can be more specific, e.g., only by the user or admin.
+      // For simplicity, not allowing update/delete from client directly by default.
+      allow update, delete: if false; 
+    }
+
+    // Allow read access to other collections if needed, e.g., public data.
+    // match /publicData/{docId} {
+    //   allow read: if true;
+    // }
+  }
+}
