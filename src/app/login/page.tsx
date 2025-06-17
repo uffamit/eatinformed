@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { LogIn } from 'lucide-react';
+import { LogIn, Loader2 } from 'lucide-react';
 import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -32,6 +32,10 @@ export default function LoginPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+     if (!email || !password) {
+      toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please enter both email and password.'});
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -48,6 +52,8 @@ export default function LoginPage() {
         errorMessage = 'Invalid email or password. Please try again.';
       } else if (error.code === 'auth/too-many-requests') {
         errorMessage = 'Too many login attempts. Please try again later.';
+      } else if (error.code === 'auth/invalid-email') {
+        errorMessage = 'The email address is not valid.';
       }
       toast({
         variant: 'destructive',
@@ -96,7 +102,14 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full text-lg py-6 shadow-md hover:shadow-primary/40 transition-shadow" disabled={isLoading}>
-              {isLoading ? 'Logging In...' : 'Log In'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Logging In...
+                </>
+              ) : (
+                'Log In'
+              )}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
               Don&apos;t have an account?{' '}

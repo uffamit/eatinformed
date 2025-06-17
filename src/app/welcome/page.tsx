@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smile, PartyPopper, Home, Loader2 } from 'lucide-react';
+import { PartyPopper, Home, Loader2 } from 'lucide-react';
 import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -15,7 +15,7 @@ import { doc, getDoc } from 'firebase/firestore';
 interface UserProfile {
   username: string;
   email: string;
-  // Add other fields if you store more data in Firestore user profile
+  displayName?: string; // Firestore might store this differently than auth profile
 }
 
 export default function WelcomePage() {
@@ -30,15 +30,27 @@ export default function WelcomePage() {
         setUser(currentUser);
         // Fetch user profile from Firestore
         const userDocRef = doc(db, 'users', currentUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        if (userDocSnap.exists()) {
-          setUserProfile(userDocSnap.data() as UserProfile);
-        } else {
-          // Fallback if Firestore profile doesn't exist, use auth display name
-          setUserProfile({ 
-            username: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-            email: currentUser.email || 'No email'
-          });
+        try {
+            const userDocSnap = await getDoc(userDocRef);
+            if (userDocSnap.exists()) {
+              setUserProfile(userDocSnap.data() as UserProfile);
+            } else {
+              // Fallback if Firestore profile doesn't exist (should be rare after signup)
+              // Use auth display name or derive from email
+              setUserProfile({ 
+                username: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+                email: currentUser.email || 'No email provided',
+                displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User'
+              });
+            }
+        } catch (error) {
+            console.error("Error fetching user profile:", error);
+             // Fallback in case of error
+            setUserProfile({ 
+                username: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
+                email: currentUser.email || 'No email provided',
+                displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User'
+            });
         }
       } else {
         router.replace('/login'); // Redirect to login if not authenticated
@@ -62,20 +74,19 @@ export default function WelcomePage() {
   }
   
   if (!user || !userProfile) {
-    // This case should ideally be handled by the redirect in useEffect,
-    // but acts as a fallback or if data fetching failed.
+    // This case implies redirection to /login should have happened or is in progress
     return (
        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">
         <Card className="w-full max-w-lg shadow-xl p-8">
-            <CardTitle className="text-3xl font-headline">Error</CardTitle>
-            <CardDescription>Could not load user data. Please try logging in again.</CardDescription>
-            <Button asChild className="mt-4">
-                <Link href="/login">Go to Login</Link>
-            </Button>
+            <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin mb-4" />
+            <CardTitle className="text-3xl font-headline">Loading...</CardTitle>
+            <CardDescription>Redirecting or loading user data...</CardDescription>
         </Card>
       </div>
     );
   }
+
+  const displayName = userProfile.displayName || userProfile.username;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">
@@ -83,14 +94,14 @@ export default function WelcomePage() {
         <CardHeader>
           <CardTitle className="text-3xl font-headline flex items-center justify-center">
             <PartyPopper className="mr-3 h-8 w-8 text-primary" />
-            Welcome, {userProfile.username}!
+            Welcome, {displayName}!
           </CardTitle>
           <CardDescription className="text-lg">
-            We're glad to have you here.
+            We're glad to have you at NutriScan.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex justify-center items-center bg-muted/30 p-6 rounded-lg shadow-inner">
+          <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[150px] shadow-xl bg-muted/30 p-8 rounded-xl">
             <NutriScanLogo width={150} height={150} />
           </div>
           <p className="text-muted-foreground">
@@ -100,8 +111,7 @@ export default function WelcomePage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" className="shadow-md hover:shadow-primary/40 transition-shadow">
               <Link href="/check">
-                <Smile className="mr-2 h-5 w-5" />
-                Scan a Product
+                 Scan a Product
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>

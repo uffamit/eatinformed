@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; // Explicitly import these
+import { AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; 
 import { auth } from '@/lib/firebase';
 import type { User } from 'firebase/auth';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -47,6 +47,14 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
   const router = useRouter();
   const [showDialog, setShowDialog] = useState(false);
 
+  const handleButtonClick = () => {
+    if (currentUser) {
+      router.push(href);
+    } else {
+      setShowDialog(true);
+    }
+  };
+
   if (isLoadingAuth) {
     return (
       <Button variant={buttonVariant} size={buttonSize} className={className} disabled>
@@ -56,42 +64,31 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
     );
   }
 
-  if (currentUser) {
-    return (
-      <Button asChild variant={buttonVariant} size={buttonSize} className={className}>
-        <Link href={href}>
-          {icon}
-          {buttonText}
-        </Link>
-      </Button>
-    );
-  }
-
   return (
     <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-      <AlertDialogTrigger asChild>
-        <Button variant={buttonVariant} size={buttonSize} className={className} onClick={() => setShowDialog(true)}>
-          {icon}
-          {buttonText}
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Authentication Required</AlertDialogTitle>
-          <AlertDialogDescription>
-            You need to be logged in to access this feature. Please log in or create an account.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel onClick={() => setShowDialog(false)}>Cancel</AlertDialogCancel>
-          <AlertDialogAction asChild onClick={() => { setShowDialog(false); router.push('/login'); }}>
-             <span className="cursor-pointer">Log In</span>
-          </AlertDialogAction>
-          <AlertDialogAction asChild onClick={() => { setShowDialog(false); router.push('/signup'); }}>
-             <span className="cursor-pointer">Sign Up</span>
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      <Button variant={buttonVariant} size={buttonSize} className={className} onClick={handleButtonClick}>
+        {icon}
+        {buttonText}
+      </Button>
+      {!currentUser && (
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Authentication Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              You need to be logged in to access this feature. Please log in or create an account.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowDialog(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction asChild onClick={() => { setShowDialog(false); router.push('/login'); }}>
+               <span className="cursor-pointer">Log In</span>
+            </AlertDialogAction>
+            <AlertDialogAction asChild onClick={() => { setShowDialog(false); router.push('/signup'); }}>
+               <span className="cursor-pointer">Sign Up</span>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      )}
     </AlertDialog>
   );
 };
@@ -113,7 +110,7 @@ export default function HomePage() {
     <div className="flex flex-col items-center text-center space-y-12">
       <section className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
+          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_500px]"> {/* Adjusted grid for potentially smaller logo */}
             <div className="flex flex-col justify-center space-y-4 text-left">
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
@@ -140,8 +137,8 @@ export default function HomePage() {
                 </Button>
               </div>
             </div>
-            <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[400px] shadow-xl bg-muted/30 p-8 rounded-xl">
-              <NutriScanLogo width={200} height={200} />
+            <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[250px] shadow-xl bg-muted/30 p-8 rounded-xl"> {/* Adjusted max-w for logo */}
+              <NutriScanLogo width={200} height={200} /> {/* Explicit size */}
             </div>
           </div>
         </div>

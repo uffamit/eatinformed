@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus } from 'lucide-react';
+import { UserPlus, Loader2 } from 'lucide-react';
 import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -35,18 +35,24 @@ export default function SignUpPage() {
 
   const handleUsernameValidation = async (uname: string): Promise<boolean> => {
     if (uname.length < 3 || uname.length > 20) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Username must be between 3 and 20 characters.' });
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Username must be between 3 and 20 characters.' });
       return false;
     }
     if (!/^[a-zA-Z0-9_]+$/.test(uname)) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Username can only contain letters, numbers, and underscores.' });
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Username can only contain letters, numbers, and underscores.' });
       return false;
     }
 
     const usernameDocRef = doc(db, 'usernames', uname.toLowerCase());
-    const usernameDoc = await getDoc(usernameDocRef);
-    if (usernameDoc.exists()) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Username is already taken. Please choose another.' });
+    try {
+      const usernameDoc = await getDoc(usernameDocRef);
+      if (usernameDoc.exists()) {
+        toast({ variant: 'destructive', title: 'Username Unavailable', description: 'This username is already taken. Please choose another.' });
+        return false;
+      }
+    } catch (error) {
+      console.error("Error checking username:", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not validate username. Please try again.' });
       return false;
     }
     return true;
@@ -54,12 +60,16 @@ export default function SignUpPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!username || !email || !password || !confirmPassword) {
+      toast({ variant: 'destructive', title: 'Missing Fields', description: 'Please fill in all fields.'});
+      return;
+    }
     if (password !== confirmPassword) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Passwords do not match.' });
+      toast({ variant: 'destructive', title: 'Password Mismatch', description: 'Passwords do not match.' });
       return;
     }
     if (password.length < 6) {
-      toast({ variant: 'destructive', title: 'Error', description: 'Password must be at least 6 characters long.' });
+      toast({ variant: 'destructive', title: 'Weak Password', description: 'Password must be at least 6 characters long.' });
       return;
     }
 
@@ -71,26 +81,23 @@ export default function SignUpPage() {
       return;
     }
 
+    let createdUserId: string | null = null;
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      createdUserId = user.uid; // Store UID in case we need to clean up auth user
 
       await updateProfile(user, { displayName: username });
 
-      // Firestore transaction to create user profile and reserve username
       await runTransaction(db, async (transaction) => {
         const userDocRef = doc(db, 'users', user.uid);
         const usernameDocRef = doc(db, 'usernames', username.toLowerCase());
 
-        // Double-check username uniqueness within the transaction
         const freshUsernameDoc = await transaction.get(usernameDocRef);
         if (freshUsernameDoc.exists()) {
-          // This case should be rare if initial check was done, but handles race conditions
-          // To properly handle, we might need to delete the just-created Firebase auth user or ask them to log in and change username.
-          // For simplicity now, we'll throw an error. The auth user exists, but profile/username doc fails.
-          // Consider a cleanup function or manual intervention if this happens.
-          // Alternatively, sign out the user and ask them to try again.
-          await signOut(auth); // Sign out the partially created user
+          // This means username was taken between client-side check and transaction
+          // Auth user exists, but we can't reserve username.
           throw new Error("Username was claimed during sign-up. Please try a different username.");
         }
         
@@ -98,8 +105,9 @@ export default function SignUpPage() {
           uid: user.uid,
           email: user.email,
           username: username,
-          displayName: username, // Storing for consistency, auth profile has it too
+          displayName: username,
           createdAt: serverTimestamp(),
+          // You can add more profile fields here
         });
         transaction.set(usernameDocRef, { uid: user.uid });
       });
@@ -118,9 +126,15 @@ export default function SignUpPage() {
         errorMessage = 'This email is already registered. Please log in or use a different email.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'The password is too weak. Please choose a stronger password.';
-      } else if (error.message.includes("Username was claimed")) {
+      } else if (error.message && error.message.includes("Username was claimed")) {
         errorMessage = error.message;
+        // If username was claimed during transaction, Firebase Auth user might have been created.
+        // Attempt to sign out the partially created user.
+        if (auth.currentUser && auth.currentUser.uid === createdUserId) {
+          await signOut(auth);
+        }
       }
+      
       toast({
         variant: 'destructive',
         title: 'Sign Up Failed',
@@ -155,6 +169,7 @@ export default function SignUpPage() {
                 disabled={isLoading}
                 minLength={3}
                 maxLength={20}
+                pattern="^[a-zA-Z0-9_]+$"
               />
             </div>
             <div className="space-y-2">
@@ -195,7 +210,14 @@ export default function SignUpPage() {
               />
             </div>
             <Button type="submit" className="w-full text-lg py-6 shadow-md hover:shadow-primary/40 transition-shadow" disabled={isLoading}>
-              {isLoading ? 'Creating Account...' : 'Sign Up'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                'Sign Up'
+              )}
             </Button>
             <div className="text-center text-sm text-muted-foreground">
               Already have an account?{' '}

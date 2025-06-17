@@ -19,7 +19,6 @@ const db = getFirestore(app);
 
 // Set persistence to local by default
 // This needs to be done before any auth operations that might trigger persistence.
-// It's okay to call this multiple times, but ideally it's called once early.
 setPersistence(auth, browserLocalPersistence)
   .catch((error) => {
     console.error("Error setting auth persistence:", error);
