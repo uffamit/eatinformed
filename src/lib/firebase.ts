@@ -79,3 +79,4 @@ const auth = authInstance;
 const db = dbInstance;
 
 export { app, auth, db };
+

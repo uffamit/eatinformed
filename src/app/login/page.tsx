@@ -54,6 +54,8 @@ export default function LoginPage() {
         errorMessage = 'Too many login attempts. Please try again later.';
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = 'The email address is not valid.';
+      } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
+        errorMessage = 'Cannot connect to Firebase. Please check your internet connection and Firebase configuration in .env.';
       }
       toast({
         variant: 'destructive',
@@ -123,3 +125,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
