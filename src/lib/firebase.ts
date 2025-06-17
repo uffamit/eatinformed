@@ -29,8 +29,8 @@ console.log("Firebase Config Used:", {
 
 try {
   if (!firebaseConfig.projectId) {
-    console.error("Firebase Critical Error: projectId is missing in firebaseConfig. This usually means NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set correctly in your .env file. Firebase services will fail.");
-    // throw new Error("Firebase projectId is missing in configuration."); // Optionally throw to halt further execution
+    console.error("Firebase Critical Error: projectId is missing in firebaseConfig. This usually means NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set correctly in your .env file or environment variables. Firebase services will fail.");
+    // Optionally throw to halt further execution if needed
   } else {
     console.log("Firebase: projectId is present in firebaseConfig:", firebaseConfig.projectId);
   }
@@ -44,14 +44,15 @@ try {
   dbInstance = getFirestore(app);
   console.log("Firebase: Firestore instance obtained successfully.");
 
-  // Check if running in development and if emulators are intended (optional)
+  // Example for connecting to emulators (comment out if not using)
   // const useEmulators = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
   // if (useEmulators) {
-  //   console.log("Firebase: Attempting to connect to emulators...");
+  //   console.log("Firebase: Attempting to connect to emulators (if configured)...");
   //   try {
-  //     connectAuthEmulator(authInstance, "http://localhost:9099", { disableWarnings: true });
-  //     connectFirestoreEmulator(dbInstance, "localhost", 8080);
-  //     console.log("Firebase: Successfully connected to Auth and Firestore emulators.");
+  //     // Make sure emulators are running on these ports if you uncomment
+  //     // connectAuthEmulator(authInstance, "http://localhost:9099", { disableWarnings: true });
+  //     // connectFirestoreEmulator(dbInstance, "localhost", 8080);
+  //     // console.log("Firebase: Successfully connected to Auth and Firestore emulators.");
   //   } catch (emulatorError) {
   //     console.error("Firebase: Error connecting to emulators:", emulatorError);
   //   }
@@ -65,14 +66,13 @@ try {
     .catch((error) => {
       console.error("Firebase: Error setting auth persistence:", error.code, error.message);
     });
-  console.log("Firebase: Successfully initialized and configured all services.");
+  console.log("Firebase: Successfully initialized and configured related services.");
 
 } catch (error: any) {
-  console.error("Firebase: CRITICAL - Failed to initialize Firebase application or services.", error.code ? `${error.code} - ${error.message}` : error);
-  // Ensure instances are explicitly null if initialization fails catastrophically
+  console.error("Firebase: CRITICAL - Failed to initialize Firebase application or core services.", error.code ? `${error.code} - ${error.message}` : error);
   authInstance = null; 
   dbInstance = null;
-  console.error("Firebase: Auth and DB instances have been set to null due to initialization failure.");
+  console.error("Firebase: Auth and DB instances have been set to null due to initialization failure. Check config and Firebase project status.");
 }
 
 const auth = authInstance;
