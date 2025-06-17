@@ -26,7 +26,7 @@ export default function SignUpPage() {
   // Redirect if user is already logged in
   useEffect(() => {
     if (!auth) {
-        console.warn("SignUpPage: Firebase Auth instance not available on mount.");
+        console.warn("SignUpPage: Firebase Auth instance not available on mount. Check .env configuration and Firebase initialization in src/lib/firebase.ts.");
         // Optionally, you could show a specific error toast here if auth is persistently null
         return;
     }
@@ -60,9 +60,10 @@ export default function SignUpPage() {
         toast({ variant: 'destructive', title: 'Username Unavailable', description: 'This username is already taken. Please choose another.' });
         return false;
       }
-    } catch (error) {
-      console.error("Error checking username (likely connectivity or config issue):", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not validate username. Please check your internet connection or try again later.' });
+    } catch (error: any) {
+      console.error("Error checking username (likely connectivity or config issue):", error.code, error.message, error);
+      // This is where "client is offline" or similar errors surface for getDoc
+      toast({ variant: 'destructive', title: 'Error', description: "Can't validate username. Check connection or try later." });
       return false;
     }
     return true;
@@ -84,14 +85,14 @@ export default function SignUpPage() {
     }
     
     if (!auth) {
-      console.error("SignUp Error: Firebase Auth instance is not available. Check Firebase initialization.");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Authentication service is not available. Please contact support.' });
+      console.error("SignUp Error: Firebase Auth instance is not available. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables are correct.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Authentication service is not available. Please contact support or check console logs.' });
       setIsLoading(false);
       return;
     }
      if (!db) {
-      console.error("SignUp Error: Firestore instance (db) is not available. Check Firebase initialization.");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available. Please contact support.' });
+      console.error("SignUp Error: Firestore instance (db) is not available. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID) are correct.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available. Please contact support or check console logs.' });
       setIsLoading(false);
       return;
     }
@@ -144,7 +145,7 @@ export default function SignUpPage() {
       router.push('/welcome');
 
     } catch (error: any) {
-      console.error("Sign up error:", error);
+      console.error("Sign up error:", error.code, error.message, error);
       let errorMessage = 'An unexpected error occurred during sign up. Please try again.';
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'This email is already registered. Please log in or use a different email.';
@@ -157,7 +158,7 @@ export default function SignUpPage() {
           await signOut(auth); 
         }
       } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
-        errorMessage = 'Cannot connect to Firebase. Please check your internet connection and try again.';
+        errorMessage = 'Cannot connect to Firebase. Please check your internet connection and Firebase configuration in .env. See browser console for details.';
       }
       
       toast({

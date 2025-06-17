@@ -28,10 +28,11 @@ console.log("Firebase Config Used:", {
 
 
 try {
-  if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-    console.error("Firebase Critical Error: NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set in .env. Firebase services will fail to connect to the correct project.");
+  if (!firebaseConfig.projectId) {
+    console.error("Firebase Critical Error: projectId is missing in firebaseConfig. This usually means NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set correctly in your .env file. Firebase services will fail.");
+    // throw new Error("Firebase projectId is missing in configuration."); // Optionally throw to halt further execution
   } else {
-    console.log("Firebase: NEXT_PUBLIC_FIREBASE_PROJECT_ID is set:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+    console.log("Firebase: projectId is present in firebaseConfig:", firebaseConfig.projectId);
   }
   
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
