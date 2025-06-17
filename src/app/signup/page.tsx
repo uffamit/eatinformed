@@ -10,7 +10,7 @@ import { UserPlus, Loader2 } from 'lucide-react';
 import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase'; // Ensure db is imported
 import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
 import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 
@@ -25,6 +25,11 @@ export default function SignUpPage() {
 
   // Redirect if user is already logged in
   useEffect(() => {
+    if (!auth) {
+        console.warn("SignUpPage: Firebase Auth instance not available on mount.");
+        // Optionally, you could show a specific error toast here if auth is persistently null
+        return;
+    }
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
         router.push('/welcome');
@@ -35,8 +40,8 @@ export default function SignUpPage() {
 
   const handleUsernameValidation = async (uname: string): Promise<boolean> => {
     if (!db) {
-      console.error("Firestore instance (db) is not available. Check Firebase initialization.");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Firestore is not properly configured. Please contact support.' });
+      console.error("Firestore instance (db) is not available. Check Firebase initialization in src/lib/firebase.ts and .env configuration.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Cannot connect to database. Please check configuration or contact support.' });
       return false;
     }
     if (uname.length < 3 || uname.length > 20) {
@@ -56,8 +61,8 @@ export default function SignUpPage() {
         return false;
       }
     } catch (error) {
-      console.error("Error checking username:", error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not validate username. Please try again.' });
+      console.error("Error checking username (likely connectivity or config issue):", error);
+      toast({ variant: 'destructive', title: 'Error', description: 'Could not validate username. Please check your internet connection or try again later.' });
       return false;
     }
     return true;
@@ -77,6 +82,20 @@ export default function SignUpPage() {
       toast({ variant: 'destructive', title: 'Weak Password', description: 'Password must be at least 6 characters long.' });
       return;
     }
+    
+    if (!auth) {
+      console.error("SignUp Error: Firebase Auth instance is not available. Check Firebase initialization.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Authentication service is not available. Please contact support.' });
+      setIsLoading(false);
+      return;
+    }
+     if (!db) {
+      console.error("SignUp Error: Firestore instance (db) is not available. Check Firebase initialization.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available. Please contact support.' });
+      setIsLoading(false);
+      return;
+    }
+
 
     setIsLoading(true);
 
@@ -94,17 +113,16 @@ export default function SignUpPage() {
       createdUserId = user.uid; 
 
       await updateProfile(user, { displayName: username });
-
-      if (!db) {
-        throw new Error("Firestore instance (db) is not available for transaction.");
-      }
-
+      
+      // Firestore transaction
       await runTransaction(db, async (transaction) => {
         const userDocRef = doc(db, 'users', user.uid);
         const usernameDocRef = doc(db, 'usernames', username.toLowerCase());
 
+        // It's good practice to re-check username inside transaction for race conditions
         const freshUsernameDoc = await transaction.get(usernameDocRef);
         if (freshUsernameDoc.exists()) {
+          // This specific error will be caught and handled below
           throw new Error("Username was claimed during sign-up. Please try a different username.");
         }
         
@@ -112,7 +130,7 @@ export default function SignUpPage() {
           uid: user.uid,
           email: user.email,
           username: username,
-          displayName: username,
+          displayName: username, // Store consistently
           createdAt: serverTimestamp(),
         });
         transaction.set(usernameDocRef, { uid: user.uid });
@@ -127,18 +145,19 @@ export default function SignUpPage() {
 
     } catch (error: any) {
       console.error("Sign up error:", error);
-      let errorMessage = 'An unexpected error occurred during sign up.';
+      let errorMessage = 'An unexpected error occurred during sign up. Please try again.';
       if (error.code === 'auth/email-already-in-use') {
         errorMessage = 'This email is already registered. Please log in or use a different email.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'The password is too weak. Please choose a stronger password.';
       } else if (error.message && error.message.includes("Username was claimed")) {
-        errorMessage = error.message;
+        errorMessage = error.message; // Use the specific message from the transaction
+        // If username was claimed after auth user was created, sign out the partially created user.
         if (auth.currentUser && auth.currentUser.uid === createdUserId) {
-          await signOut(auth);
+          await signOut(auth); 
         }
-      } else if (error.message && error.message.includes("Firestore instance (db) is not available")) {
-        errorMessage = 'Firestore is not properly configured. Sign up cannot complete.';
+      } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
+        errorMessage = 'Cannot connect to Firebase. Please check your internet connection and try again.';
       }
       
       toast({

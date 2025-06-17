@@ -13,14 +13,14 @@ const firebaseConfig: FirebaseOptions = {
 };
 
 let app;
-let authInstance; 
-let dbInstance; 
+let authInstance: ReturnType<typeof getAuth> | null = null; 
+let dbInstance: ReturnType<typeof getFirestore> | null = null;
 
 console.log("Firebase: Attempting to initialize...");
 console.log("Firebase Config Used:", {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ? 'Loaded' : 'MISSING',
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ? 'Loaded' : 'MISSING',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? 'Loaded' : 'MISSING',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? `Loaded: ${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}` : 'MISSING - CRITICAL for Firestore/Auth',
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ? 'Loaded' : 'MISSING',
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ? 'Loaded' : 'MISSING',
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ? 'Loaded' : 'MISSING',
@@ -29,19 +29,19 @@ console.log("Firebase Config Used:", {
 
 try {
   if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
-    console.error("Firebase Critical Error: NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set in .env. Firebase services will fail.");
+    console.error("Firebase Critical Error: NEXT_PUBLIC_FIREBASE_PROJECT_ID is not set in .env. Firebase services will fail to connect to the correct project.");
   } else {
     console.log("Firebase: NEXT_PUBLIC_FIREBASE_PROJECT_ID is set:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
   }
   
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  console.log("Firebase: App initialized or retrieved.");
+  console.log("Firebase: App initialized or retrieved successfully.");
 
   authInstance = getAuth(app);
-  console.log("Firebase: Auth instance obtained.");
+  console.log("Firebase: Auth instance obtained successfully.");
   
   dbInstance = getFirestore(app);
-  console.log("Firebase: Firestore instance obtained.");
+  console.log("Firebase: Firestore instance obtained successfully.");
 
   // Check if running in development and if emulators are intended (optional)
   // const useEmulators = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATORS === 'true';
@@ -67,10 +67,11 @@ try {
   console.log("Firebase: Successfully initialized and configured all services.");
 
 } catch (error: any) {
-  console.error("Firebase: Failed to initialize application.", error.code ? `${error.code} - ${error.message}` : error);
-  // Ensure instances are null if initialization fails catastrophically before they are assigned
-  if (!authInstance) authInstance = null as any; 
-  if (!dbInstance) dbInstance = null as any;
+  console.error("Firebase: CRITICAL - Failed to initialize Firebase application or services.", error.code ? `${error.code} - ${error.message}` : error);
+  // Ensure instances are explicitly null if initialization fails catastrophically
+  authInstance = null; 
+  dbInstance = null;
+  console.error("Firebase: Auth and DB instances have been set to null due to initialization failure.");
 }
 
 const auth = authInstance;
