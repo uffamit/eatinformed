@@ -25,22 +25,23 @@ export default function SignUpPage() {
 
   useEffect(() => {
     if (!auth) {
-        console.warn("SignUpPage: Firebase Auth instance not available on mount. Check .env configuration and Firebase initialization in src/lib/firebase.ts.");
-        // Potentially disable form or show a global error if auth is critical and missing
-        return;
+        console.warn("SignUpPage: Firebase Auth instance not available on mount. Check .env configuration and Firebase initialization in src/lib/firebase.ts. This might indicate an issue with Firebase setup.");
     }
-    const unsubscribe = auth.onAuthStateChanged(user => {
+    if (!db) {
+        console.warn("SignUpPage: Firebase Firestore instance (db) not available on mount. Check .env and Firebase initialization in src/lib/firebase.ts. Firestore operations will fail.");
+    }
+    const unsubscribe = auth?.onAuthStateChanged(user => {
       if (user) {
         router.push('/welcome');
       }
     });
-    return () => unsubscribe();
+    return () => unsubscribe?.();
   }, [router]);
 
   const handleUsernameValidation = async (uname: string): Promise<boolean> => {
     if (!db) {
-      console.error("SignUpPage: Firestore instance (db) is not available for username validation. Check Firebase initialization in src/lib/firebase.ts and .env configuration (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID).");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Cannot connect to database to validate username. Please check configuration or contact support.' });
+      console.error("SignUpPage: Firebase Firestore instance (db) is not available for username validation. CRITICAL: Check Firebase initialization in src/lib/firebase.ts and ensure .env configuration (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID) is correct and the server was restarted.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available for username validation. Please contact support or check console logs.' });
       return false;
     }
     if (uname.length < 3 || uname.length > 20) {
@@ -68,8 +69,8 @@ export default function SignUpPage() {
       let description = "Can't validate username. Check connection or try later.";
       if (error.code === 'permission-denied') {
         description = "Permission denied checking username. Please ensure Firestore rules for 'usernames' collection allow unauthenticated reads (allow read: if true;) and are correctly deployed for path: " + usernameDocRefPath;
-      } else if (error.code === 'unavailable') {
-         description = "Cannot connect to Firebase to check username. Please check your internet connection and Firebase setup.";
+      } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
+         description = "Cannot connect to Firebase to check username. Please check your internet connection and Firebase setup in .env, then restart the server. The client is offline.";
       }
       toast({ variant: 'destructive', title: 'Username Validation Error', description });
       return false;
@@ -93,14 +94,14 @@ export default function SignUpPage() {
     }
     
     if (!auth) {
-      console.error("SignUpPage: Firebase Auth instance is not available for handleSubmit. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables are correct. Sign-up cannot proceed.");
+      console.error("SignUpPage: Firebase Auth instance is not available for handleSubmit. CRITICAL: Check Firebase initialization in src/lib/firebase.ts and ensure .env variables are correct and server restarted. Sign-up cannot proceed.");
       toast({ variant: 'destructive', title: 'Configuration Error', description: 'Authentication service is not available. Please contact support or check console logs.' });
       setIsLoading(false);
       return;
     }
      if (!db) {
-      console.error("SignUpPage: Firestore instance (db) is not available for handleSubmit. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID) are correct. Sign-up cannot proceed.");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available. Please contact support or check console logs.' });
+      console.error("SignUpPage: Firebase Firestore instance (db) is not available for handleSubmit. CRITICAL: Check Firebase initialization in src/lib/firebase.ts and ensure .env variables (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID) are correct and server restarted. Sign-up cannot proceed.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available for user creation. Please contact support or check console logs.' });
       setIsLoading(false);
       return;
     }
@@ -163,7 +164,7 @@ export default function SignUpPage() {
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'The password is too weak. Please choose a stronger password.';
       } else if (error.code === 'auth/configuration-not-found') {
-        errorMessage = 'Firebase authentication configuration is missing or incorrect. Please check the setup (especially .env file and Firebase project settings). Contact support if this persists.';
+        errorMessage = 'Firebase authentication configuration is missing or incorrect. Please check the setup (especially .env file and Firebase project settings) and restart the server. Contact support if this persists.';
       } else if (error.message && error.message.includes("Username was claimed")) {
         errorMessage = error.message; 
         if (auth.currentUser && auth.currentUser.uid === createdUserId) {
@@ -171,7 +172,7 @@ export default function SignUpPage() {
            await signOut(auth); 
         }
       } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
-        errorMessage = 'Cannot connect to Firebase services. Please check your internet connection and ensure Firebase configuration (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env) is correct. See browser console for details from Firebase Lib.';
+        errorMessage = 'Cannot connect to Firebase services. Please check your internet connection and ensure Firebase configuration (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env) is correct and server restarted. See browser console for details from Firebase Lib.';
       } else if (error.code === 'permission-denied') {
         errorMessage = 'Permission denied during user data creation. Please check Firestore rules for writing to users and usernames collections.';
       }
