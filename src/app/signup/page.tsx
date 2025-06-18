@@ -52,8 +52,8 @@ export default function SignUpPage() {
     }
 
     const usernameDocRef = doc(db, 'usernames', uname.toLowerCase());
+    console.log(`SignUpPage: Attempting to get document for username validation from path: /usernames/${uname.toLowerCase()}`); 
     try {
-      console.log(`SignUpPage: Attempting to get document for username: ${uname.toLowerCase()}`);
       const usernameDoc = await getDoc(usernameDocRef);
       if (usernameDoc.exists()) {
         toast({ variant: 'destructive', title: 'Username Unavailable', description: 'This username is already taken. Please choose another.' });
@@ -64,9 +64,9 @@ export default function SignUpPage() {
       console.error("SignUpPage: Error checking username (likely connectivity or config issue):", error.code, error.message, error);
       let description = "Can't validate username. Check connection or try later.";
       if (error.code === 'permission-denied') {
-        description = "Permission denied when checking username. Please ensure Firestore rules are correctly deployed to allow this check.";
+        description = "Permission denied when checking username. Please ensure Firestore rules for the 'usernames' collection allow unauthenticated reads and are correctly deployed. Also check the console for the exact path being queried.";
       } else if (error.code === 'unavailable') {
-        description = "Cannot connect to Firebase to check username. Please check your internet connection and Firebase setup.";
+         description = "Cannot connect to Firebase to check username. Please check your internet connection and Firebase setup.";
       }
       toast({ variant: 'destructive', title: 'Username Validation Error', description });
       return false;
@@ -143,8 +143,6 @@ export default function SignUpPage() {
         description: 'Redirecting to your welcome page...',
       });
       
-      // No need to manually sign out here unless specifically intended.
-      // router.push will navigate, and onAuthStateChanged in WelcomePage will handle auth state.
       router.push('/welcome');
 
     } catch (error: any) {
@@ -156,8 +154,6 @@ export default function SignUpPage() {
         errorMessage = 'The password is too weak. Please choose a stronger password.';
       } else if (error.message && error.message.includes("Username was claimed")) {
         errorMessage = error.message; 
-        // If username was claimed, and a user was partially created in Auth, sign them out
-        // to prevent inconsistent states. Check if the createdUserId matches current user.
         if (auth.currentUser && auth.currentUser.uid === createdUserId) {
            console.log("SignUpPage: Signing out partially created user due to username claim conflict.");
            await signOut(auth); 
@@ -264,4 +260,3 @@ export default function SignUpPage() {
     </div>
   );
 }
-
