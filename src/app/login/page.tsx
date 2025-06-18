@@ -10,8 +10,6 @@ import { LogIn, Loader2 } from 'lucide-react';
 import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -20,18 +18,11 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!auth) {
-      console.warn("LoginPage: Firebase Auth instance not available on mount. Check .env configuration and Firebase initialization in src/lib/firebase.ts.");
-      return;
-    }
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        router.push('/welcome');
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
+  // useEffect(() => {
+  //   // Mocked or removed auth check
+  //   // Example: const user = localStorage.getItem('user');
+  //   // if (user) router.push('/welcome');
+  // }, [router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,44 +32,26 @@ export default function LoginPage() {
     }
     setIsLoading(true);
 
-    if (!auth) {
-      console.error("LoginPage: Firebase Auth instance is not available for handleSubmit. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables are correct. Login cannot proceed.");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Authentication service is not available. Please contact support or check console logs.' });
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      console.log("LoginPage: Attempting signInWithEmailAndPassword...");
-      await signInWithEmailAndPassword(auth, email, password);
-      console.log("LoginPage: Login successful.");
-      toast({
-        title: 'Login Successful!',
-        description: 'Redirecting to your welcome page...',
-      });
-      router.push('/welcome');
-    } catch (error: any) {
-      console.error("LoginPage: Login error:", error.code, error.message, error);
-      let errorMessage = 'An unexpected error occurred during login.';
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        errorMessage = 'Invalid email or password. Please try again.';
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = 'Too many login attempts. Please try again later.';
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = 'The email address is not valid.';
-      } else if (error.code === 'auth/configuration-not-found') {
-        errorMessage = 'Firebase authentication configuration is missing or incorrect. Please check the setup (especially .env file and Firebase project settings). Contact support if this persists.';
-      } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
-        errorMessage = 'Cannot connect to Firebase. Please check your internet connection and Firebase configuration in .env.';
+    // Mock login logic
+    console.log("Attempting login with:", { email, password });
+    setTimeout(() => {
+      // Simulate API call
+      if (email === "user@example.com" && password === "password") {
+        toast({
+          title: 'Login Successful! (Mock)',
+          description: 'Redirecting to your welcome page...',
+        });
+        // localStorage.setItem('user', JSON.stringify({ email })); // Mock storing user
+        router.push('/welcome');
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Login Failed (Mock)',
+          description: 'Invalid email or password.',
+        });
       }
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: errorMessage,
-      });
-    } finally {
       setIsLoading(false);
-    }
+    }, 1000);
   };
 
   return (

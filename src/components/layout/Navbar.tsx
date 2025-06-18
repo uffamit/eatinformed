@@ -9,8 +9,6 @@ import { Menu, PackageSearch, HomeIcon, LogIn, UserPlus, LogOut, UserCircle, Loa
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import { auth } from '@/lib/firebase';
-import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,29 +24,37 @@ const navItems = [
   { href: '/check', label: 'Check Product', icon: PackageSearch },
 ];
 
+// Mock user type
+interface MockUser {
+  displayName?: string;
+  email?: string;
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<MockUser | null>(null); // Using MockUser or null
   const [isLoadingAuth, setIsLoadingAuth] = useState(true); 
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setIsLoadingAuth(false);
-    });
-    return () => unsubscribe(); 
+    // Simulate auth check, e.g., from localStorage or just set a mock state
+    // const storedUser = localStorage.getItem('user');
+    // if (storedUser) {
+    //   setUser(JSON.parse(storedUser));
+    // } else {
+    //   setUser(null);
+    // }
+    // For this revert, let's assume the user is logged out by default or use a simple mock
+    setUser(null); // Or setUser({ displayName: "Mock User", email: "mock@example.com" }) for testing logged-in state
+    setIsLoadingAuth(false);
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      // toast({ title: "Logged Out", description: "You have been successfully logged out."}); // Optional: Add toast
-      router.push('/'); 
-    } catch (error) {
-      console.error("Logout error:", error);
-      // toast({ variant: "destructive", title: "Logout Failed", description: "Could not log you out. Please try again."}); // Optional: Add toast
-    }
+    // Mock logout
+    // localStorage.removeItem('user');
+    setUser(null);
+    // toast({ title: "Logged Out (Mock)", description: "You have been successfully logged out."});
+    router.push('/'); 
   };
 
   const mobileNavLinks = navItems.map(item => (
@@ -138,10 +144,12 @@ export default function Navbar() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName || user.email?.split('@')[0]}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
+                    <p className="text-sm font-medium leading-none">{user.displayName || user.email?.split('@')[0] || "User"}</p>
+                    {user.email && (
+                       <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    )}
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -149,8 +157,6 @@ export default function Navbar() {
                     <HomeIcon className="mr-2 h-4 w-4" />
                     Welcome Page
                 </DropdownMenuItem>
-                {/* Add more items here like "Profile", "Settings" if needed */}
-                {/* <DropdownMenuItem asChild><Link href="/profile">Profile</Link></DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/50 dark:focus:text-red-400">
                   <LogOut className="mr-2 h-4 w-4" />

@@ -10,9 +10,6 @@ import { UserPlus, Loader2 } from 'lucide-react';
 import { useState, type FormEvent, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebase'; 
-import { createUserWithEmailAndPassword, updateProfile, signOut } from 'firebase/auth';
-import { doc, getDoc, runTransaction, serverTimestamp } from 'firebase/firestore';
 
 export default function SignUpPage() {
   const [username, setUsername] = useState('');
@@ -23,60 +20,9 @@ export default function SignUpPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!auth) {
-        console.warn("SignUpPage: Firebase Auth instance not available on mount. Check .env configuration and Firebase initialization in src/lib/firebase.ts. This might indicate an issue with Firebase setup.");
-    }
-    if (!db) {
-        console.warn("SignUpPage: Firebase Firestore instance (db) not available on mount. Check .env and Firebase initialization in src/lib/firebase.ts. Firestore operations will fail.");
-    }
-    const unsubscribe = auth?.onAuthStateChanged(user => {
-      if (user) {
-        router.push('/welcome');
-      }
-    });
-    return () => unsubscribe?.();
-  }, [router]);
-
-  const handleUsernameValidation = async (uname: string): Promise<boolean> => {
-    if (!db) {
-      console.error("SignUpPage: Firebase Firestore instance (db) is not available for username validation. CRITICAL: Check Firebase initialization in src/lib/firebase.ts and ensure .env configuration (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID) is correct and the server was restarted.");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available for username validation. Please contact support or check console logs.' });
-      return false;
-    }
-    if (uname.length < 3 || uname.length > 20) {
-      toast({ variant: 'destructive', title: 'Validation Error', description: 'Username must be between 3 and 20 characters.' });
-      return false;
-    }
-    if (!/^[a-zA-Z0-9_]+$/.test(uname)) {
-      toast({ variant: 'destructive', title: 'Validation Error', description: 'Username can only contain letters, numbers, and underscores.' });
-      return false;
-    }
-    
-    const usernameDocRefPath = `usernames/${uname.toLowerCase()}`;
-    console.log(`SignUpPage: Attempting to get document for username validation from path: ${usernameDocRefPath}`);
-    const usernameDocRef = doc(db, 'usernames', uname.toLowerCase());
-    
-    try {
-      const usernameDoc = await getDoc(usernameDocRef);
-      if (usernameDoc.exists()) {
-        toast({ variant: 'destructive', title: 'Username Unavailable', description: 'This username is already taken. Please choose another.' });
-        return false;
-      }
-      console.log(`SignUpPage: Username ${uname.toLowerCase()} is available.`);
-    } catch (error: any) {
-      console.error("SignUpPage: Error checking username (likely connectivity or config issue):", error.code, error.message, error);
-      let description = "Can't validate username. Check connection or try later.";
-      if (error.code === 'permission-denied') {
-        description = "Permission denied checking username. Please ensure Firestore rules for 'usernames' collection allow unauthenticated reads (allow read: if true;) and are correctly deployed for path: " + usernameDocRefPath;
-      } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
-         description = "Cannot connect to Firebase to check username. Please check your internet connection and Firebase setup in .env, then restart the server. The client is offline.";
-      }
-      toast({ variant: 'destructive', title: 'Username Validation Error', description });
-      return false;
-    }
-    return true;
-  };
+  // useEffect(() => {
+  //    // Mocked or removed auth check
+  // }, [router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -93,98 +39,27 @@ export default function SignUpPage() {
       return;
     }
     
-    if (!auth) {
-      console.error("SignUpPage: Firebase Auth instance is not available for handleSubmit. CRITICAL: Check Firebase initialization in src/lib/firebase.ts and ensure .env variables are correct and server restarted. Sign-up cannot proceed.");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Authentication service is not available. Please contact support or check console logs.' });
-      setIsLoading(false);
-      return;
-    }
-     if (!db) {
-      console.error("SignUpPage: Firebase Firestore instance (db) is not available for handleSubmit. CRITICAL: Check Firebase initialization in src/lib/firebase.ts and ensure .env variables (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID) are correct and server restarted. Sign-up cannot proceed.");
-      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available for user creation. Please contact support or check console logs.' });
-      setIsLoading(false);
-      return;
-    }
-
     setIsLoading(true);
+    console.log("Attempting signup with:", { username, email, password });
 
-    const isUsernameValid = await handleUsernameValidation(username);
-    if (!isUsernameValid) {
-      setIsLoading(false);
-      return;
-    }
-
-    let createdUserId: string | null = null;
-
-    try {
-      console.log("SignUpPage: Attempting createUserWithEmailAndPassword...");
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      createdUserId = user.uid; 
-      console.log("SignUpPage: User created successfully in Firebase Auth. UID:", user.uid);
-
-      console.log("SignUpPage: Attempting to update Firebase Auth profile displayName...");
-      await updateProfile(user, { displayName: username });
-      console.log("SignUpPage: Firebase Auth profile displayName updated.");
-      
-      console.log("SignUpPage: Attempting Firestore transaction to save user profile and username...");
-      await runTransaction(db, async (transaction) => {
-        const userDocRef = doc(db, 'users', user.uid);
-        const usernameDocRef = doc(db, 'usernames', username.toLowerCase());
-
-        const freshUsernameDoc = await transaction.get(usernameDocRef);
-        if (freshUsernameDoc.exists()) {
-          console.warn("SignUpPage: Username was claimed during sign-up (race condition).")
-          throw new Error("Username was claimed during sign-up. Please try a different username.");
-        }
-        
-        transaction.set(userDocRef, {
-          uid: user.uid,
-          email: user.email,
-          username: username,
-          displayName: username, 
-          createdAt: serverTimestamp(),
-        });
-        transaction.set(usernameDocRef, { uid: user.uid });
-      });
-      console.log("SignUpPage: Firestore transaction successful. User profile and username saved.");
+    // Mock signup logic
+    setTimeout(() => {
+      // Simulate API call & username check
+      const mockUsernames = ['testuser', 'admin']; // Example taken usernames
+      if (mockUsernames.includes(username.toLowerCase())) {
+        toast({ variant: 'destructive', title: 'Username Unavailable (Mock)', description: 'This username is already taken.' });
+        setIsLoading(false);
+        return;
+      }
 
       toast({
-        title: 'Sign Up Successful!',
+        title: 'Sign Up Successful! (Mock)',
         description: 'Redirecting to your welcome page...',
       });
-      
+      // localStorage.setItem('user', JSON.stringify({ email, username })); // Mock storing user
       router.push('/welcome');
-
-    } catch (error: any) {
-      console.error("SignUpPage: Sign up error in handleSubmit:", error.code, error.message, error);
-      let errorMessage = 'An unexpected error occurred during sign up. Please try again.';
-      if (error.code === 'auth/email-already-in-use') {
-        errorMessage = 'This email is already registered. Please log in or use a different email.';
-      } else if (error.code === 'auth/weak-password') {
-        errorMessage = 'The password is too weak. Please choose a stronger password.';
-      } else if (error.code === 'auth/configuration-not-found') {
-        errorMessage = 'Firebase authentication configuration is missing or incorrect. Please check the setup (especially .env file and Firebase project settings) and restart the server. Contact support if this persists.';
-      } else if (error.message && error.message.includes("Username was claimed")) {
-        errorMessage = error.message; 
-        if (auth.currentUser && auth.currentUser.uid === createdUserId) {
-           console.log("SignUpPage: Signing out partially created user due to username claim conflict.");
-           await signOut(auth); 
-        }
-      } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
-        errorMessage = 'Cannot connect to Firebase services. Please check your internet connection and ensure Firebase configuration (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env) is correct and server restarted. See browser console for details from Firebase Lib.';
-      } else if (error.code === 'permission-denied') {
-        errorMessage = 'Permission denied during user data creation. Please check Firestore rules for writing to users and usernames collections.';
-      }
-      
-      toast({
-        variant: 'destructive',
-        title: 'Sign Up Failed',
-        description: errorMessage,
-      });
-    } finally {
       setIsLoading(false);
-    }
+    }, 1500);
   };
 
   return (

@@ -8,57 +8,31 @@ import { PartyPopper, Home, Loader2 } from 'lucide-react';
 import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebase';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
 
+// Mock user data structure
 interface UserProfile {
   username: string;
-  email: string;
-  displayName?: string; // Firestore might store this differently than auth profile
+  email?: string;
 }
 
 export default function WelcomePage() {
-  const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        // Fetch user profile from Firestore
-        const userDocRef = doc(db, 'users', currentUser.uid);
-        try {
-            const userDocSnap = await getDoc(userDocRef);
-            if (userDocSnap.exists()) {
-              setUserProfile(userDocSnap.data() as UserProfile);
-            } else {
-              // Fallback if Firestore profile doesn't exist (should be rare after signup)
-              // Use auth display name or derive from email
-              setUserProfile({ 
-                username: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-                email: currentUser.email || 'No email provided',
-                displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User'
-              });
-            }
-        } catch (error) {
-            console.error("Error fetching user profile:", error);
-             // Fallback in case of error
-            setUserProfile({ 
-                username: currentUser.displayName || currentUser.email?.split('@')[0] || 'User',
-                email: currentUser.email || 'No email provided',
-                displayName: currentUser.displayName || currentUser.email?.split('@')[0] || 'User'
-            });
-        }
-      } else {
-        router.replace('/login'); // Redirect to login if not authenticated
-      }
-      setIsLoading(false);
-    });
-
-    return () => unsubscribe();
+    // Simulate fetching user data or checking auth state
+    // For this reverted version, we'll just mock it or leave it empty
+    // Example: const storedUser = localStorage.getItem('user');
+    // if (storedUser) {
+    //   setUserProfile(JSON.parse(storedUser));
+    // } else {
+    //   // If no user, redirect to login (or handle as per pre-Firebase logic)
+    //   // router.replace('/login'); 
+    // }
+    // For now, let's assume a mock user for display purposes
+    setUserProfile({ username: "Valued User" });
+    setIsLoading(false);
   }, [router]);
 
   if (isLoading) {
@@ -67,26 +41,13 @@ export default function WelcomePage() {
         <Card className="w-full max-w-lg shadow-xl p-8">
           <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin mb-4" />
           <CardTitle className="text-3xl font-headline">Loading Welcome Page...</CardTitle>
-          <CardDescription>Please wait while we fetch your details.</CardDescription>
+          <CardDescription>Please wait while we prepare your welcome.</CardDescription>
         </Card>
       </div>
     );
   }
   
-  if (!user || !userProfile) {
-    // This case implies redirection to /login should have happened or is in progress
-    return (
-       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">
-        <Card className="w-full max-w-lg shadow-xl p-8">
-            <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin mb-4" />
-            <CardTitle className="text-3xl font-headline">Loading...</CardTitle>
-            <CardDescription>Redirecting or loading user data...</CardDescription>
-        </Card>
-      </div>
-    );
-  }
-
-  const displayName = userProfile.displayName || userProfile.username;
+  const displayName = userProfile?.username || 'Guest';
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">

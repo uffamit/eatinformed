@@ -15,54 +15,41 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; 
-import { auth } from '@/lib/firebase';
-import type { User } from 'firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
-
 
 interface AuthAwareLinkButtonProps {
-  currentUser: User | null;
-  isLoadingAuth: boolean;
+  // currentUser and isLoadingAuth removed as Firebase is reverted
   href: string;
   buttonText: string;
   icon?: React.ReactNode;
   buttonVariant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
   buttonSize?: "default" | "sm" | "lg" | "icon" | null | undefined;
   className?: string;
+  alwaysPrompt?: boolean; // New prop to control if dialog always shows for certain actions
 }
 
 const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
-  currentUser,
-  isLoadingAuth,
   href,
   buttonText,
   icon,
   buttonVariant = "default",
   buttonSize = "lg",
   className = "",
+  alwaysPrompt = false, // Default to false
 }) => {
   const router = useRouter();
   const [showDialog, setShowDialog] = useState(false);
 
   const handleButtonClick = () => {
-    if (currentUser) {
-      router.push(href);
-    } else {
+    if (alwaysPrompt) { // If alwaysPrompt is true, show the dialog
       setShowDialog(true);
+    } else {
+      // For non-prompting buttons, directly navigate or perform action
+      // This example will just navigate. If it were a real mock, it might check mock auth state.
+      router.push(href);
     }
   };
-
-  if (isLoadingAuth) {
-    return (
-      <Button variant={buttonVariant} size={buttonSize} className={className} disabled>
-        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-        {buttonText}
-      </Button>
-    );
-  }
 
   return (
     <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
@@ -70,12 +57,12 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
         {icon}
         {buttonText}
       </Button>
-      {!currentUser && (
+      {alwaysPrompt && ( // Only render dialog content if it's meant to be shown
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Authentication Required</AlertDialogTitle>
             <AlertDialogDescription>
-              You need to be logged in to access this feature. Please log in or create an account.
+              You need to be logged in to access this feature. Please log in or create an account. (This is a mock prompt as Firebase integration is currently reverted).
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -95,22 +82,20 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
 
 
 export default function HomePage() {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  // Removed currentUser and isLoadingAuth state related to Firebase
+  // const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-      setIsLoadingAuth(false);
-    });
-    return () => unsubscribe();
-  }, []);
+  // useEffect(() => {
+    // Removed Firebase onAuthStateChanged listener
+    // setIsLoadingAuth(false); // If using a mock, set loading to false
+  // }, []);
 
   return (
     <div className="flex flex-col items-center text-center space-y-12">
       <section className="w-full py-12 md:py-24 lg:py-32">
         <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_500px]"> {/* Adjusted grid for potentially smaller logo */}
+          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_500px]">
             <div className="flex flex-col justify-center space-y-4 text-left">
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
@@ -122,13 +107,14 @@ export default function HomePage() {
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <AuthAwareLinkButton
-                  currentUser={currentUser}
-                  isLoadingAuth={isLoadingAuth}
-                  href="/check"
+                  // currentUser={null} // Removed
+                  // isLoadingAuth={false} // Removed
+                  href="/check" // It will now always show the dialog due to alwaysPrompt=true
                   buttonText="Check a Product Now"
                   icon={<UploadCloud className="mr-2 h-5 w-5" />}
                   buttonSize="lg"
                   className="shadow-lg hover:shadow-primary/50 transition-shadow"
+                  alwaysPrompt={true} // Ensure this prompts for login/signup as it's a key action
                 />
                 <Button asChild variant="outline" size="lg">
                   <Link href="#how-it-works">
@@ -137,8 +123,8 @@ export default function HomePage() {
                 </Button>
               </div>
             </div>
-            <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[250px] shadow-xl bg-muted/30 p-8 rounded-xl"> {/* Adjusted max-w for logo */}
-              <NutriScanLogo width={200} height={200} /> {/* Explicit size */}
+            <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[250px] shadow-xl bg-muted/30 p-8 rounded-xl">
+              <NutriScanLogo width={200} height={200} />
             </div>
           </div>
         </div>
@@ -187,13 +173,14 @@ export default function HomePage() {
           </div>
           <div className="mx-auto w-full max-w-sm space-y-2">
              <AuthAwareLinkButton
-                currentUser={currentUser}
-                isLoadingAuth={isLoadingAuth}
-                href="/check"
+                // currentUser={null} // Removed
+                // isLoadingAuth={false} // Removed
+                href="/check" // It will now always show the dialog due to alwaysPrompt=true
                 buttonText="Start Scanning"
                 icon={<UploadCloud className="mr-2 h-5 w-5" />}
                 buttonSize="lg"
                 className="w-full shadow-lg hover:shadow-primary/50 transition-shadow"
+                alwaysPrompt={true} // Ensure this prompts for login/signup
               />
           </div>
         </div>

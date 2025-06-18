@@ -1,31 +1,23 @@
-
+// Firestore rules have been cleared as Firebase integration is reverted.
+// To re-integrate Firestore:
+// 1. Set up Firestore in your Firebase project.
+// 2. Define security rules here. For example:
+/*
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users collection:
-    // - Authenticated users can read and write their own document.
-    // - No one else can read or write to other user's documents.
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
+    // Example: Users collection
+    // match /users/{userId} {
+    //   allow read, write: if request.auth != null && request.auth.uid == userId;
+    // }
 
-    // Usernames collection:
-    // - Anyone can read any document (to check for username uniqueness before signup).
-    // - Authenticated users can create a username document, but only if the 'uid' field
-    //   in the new document matches their own authenticated UID. This is used during signup transaction.
-    // - No updates or deletes are allowed on username documents for simplicity,
-    //   making usernames permanent once created.
-    match /usernames/{username} {
-      allow read: if true; // Allows anyone to check if a username exists
-      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
-      // allow update, delete: if false; // Explicitly disallow update/delete
-    }
-
-    // Add other collection rules here if needed, for example:
-    // match /scans/{scanId} {
-    //   allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    // Example: Usernames collection (for unique username checks)
+    // match /usernames/{username} {
+    //   allow read: if true; // Allows anyone to check if a username exists
+    //   allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
     // }
   }
 }
+*/
