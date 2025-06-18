@@ -20,8 +20,11 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // Redirect if user is already logged in
   useEffect(() => {
+    if (!auth) {
+      console.warn("LoginPage: Firebase Auth instance not available on mount. Check .env configuration and Firebase initialization in src/lib/firebase.ts.");
+      return;
+    }
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
         router.push('/welcome');
@@ -38,15 +41,24 @@ export default function LoginPage() {
     }
     setIsLoading(true);
 
+    if (!auth) {
+      console.error("LoginPage: Firebase Auth instance is not available for handleSubmit. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables are correct. Login cannot proceed.");
+      toast({ variant: 'destructive', title: 'Configuration Error', description: 'Authentication service is not available. Please contact support or check console logs.' });
+      setIsLoading(false);
+      return;
+    }
+
     try {
+      console.log("LoginPage: Attempting signInWithEmailAndPassword...");
       await signInWithEmailAndPassword(auth, email, password);
+      console.log("LoginPage: Login successful.");
       toast({
         title: 'Login Successful!',
         description: 'Redirecting to your welcome page...',
       });
       router.push('/welcome');
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error("LoginPage: Login error:", error.code, error.message, error);
       let errorMessage = 'An unexpected error occurred during login.';
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
         errorMessage = 'Invalid email or password. Please try again.';
@@ -54,6 +66,8 @@ export default function LoginPage() {
         errorMessage = 'Too many login attempts. Please try again later.';
       } else if (error.code === 'auth/invalid-email') {
         errorMessage = 'The email address is not valid.';
+      } else if (error.code === 'auth/configuration-not-found') {
+        errorMessage = 'Firebase authentication configuration is missing or incorrect. Please check the setup (especially .env file and Firebase project settings). Contact support if this persists.';
       } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
         errorMessage = 'Cannot connect to Firebase. Please check your internet connection and Firebase configuration in .env.';
       }
@@ -125,4 +139,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

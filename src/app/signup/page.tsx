@@ -26,6 +26,7 @@ export default function SignUpPage() {
   useEffect(() => {
     if (!auth) {
         console.warn("SignUpPage: Firebase Auth instance not available on mount. Check .env configuration and Firebase initialization in src/lib/firebase.ts.");
+        // Potentially disable form or show a global error if auth is critical and missing
         return;
     }
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -50,9 +51,11 @@ export default function SignUpPage() {
       toast({ variant: 'destructive', title: 'Validation Error', description: 'Username can only contain letters, numbers, and underscores.' });
       return false;
     }
-
+    
+    const usernameDocRefPath = `usernames/${uname.toLowerCase()}`;
+    console.log(`SignUpPage: Attempting to get document for username validation from path: ${usernameDocRefPath}`);
     const usernameDocRef = doc(db, 'usernames', uname.toLowerCase());
-    console.log(`SignUpPage: Attempting to get document for username validation from path: ${usernameDocRef.path}`); 
+    
     try {
       const usernameDoc = await getDoc(usernameDocRef);
       if (usernameDoc.exists()) {
@@ -64,7 +67,7 @@ export default function SignUpPage() {
       console.error("SignUpPage: Error checking username (likely connectivity or config issue):", error.code, error.message, error);
       let description = "Can't validate username. Check connection or try later.";
       if (error.code === 'permission-denied') {
-        description = "Permission denied checking username. Please ensure Firestore rules for 'usernames' collection allow unauthenticated reads (allow read: if true;) and are correctly deployed. Also check the console for the exact path being queried.";
+        description = "Permission denied checking username. Please ensure Firestore rules for 'usernames' collection allow unauthenticated reads (allow read: if true;) and are correctly deployed for path: " + usernameDocRefPath;
       } else if (error.code === 'unavailable') {
          description = "Cannot connect to Firebase to check username. Please check your internet connection and Firebase setup.";
       }
@@ -90,13 +93,13 @@ export default function SignUpPage() {
     }
     
     if (!auth) {
-      console.error("SignUpPage: Firebase Auth instance is not available for handleSubmit. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables are correct.");
+      console.error("SignUpPage: Firebase Auth instance is not available for handleSubmit. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables are correct. Sign-up cannot proceed.");
       toast({ variant: 'destructive', title: 'Configuration Error', description: 'Authentication service is not available. Please contact support or check console logs.' });
       setIsLoading(false);
       return;
     }
      if (!db) {
-      console.error("SignUpPage: Firestore instance (db) is not available for handleSubmit. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID) are correct.");
+      console.error("SignUpPage: Firestore instance (db) is not available for handleSubmit. Check Firebase initialization in src/lib/firebase.ts and ensure .env variables (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID) are correct. Sign-up cannot proceed.");
       toast({ variant: 'destructive', title: 'Configuration Error', description: 'Database service is not available. Please contact support or check console logs.' });
       setIsLoading(false);
       return;
@@ -113,18 +116,24 @@ export default function SignUpPage() {
     let createdUserId: string | null = null;
 
     try {
+      console.log("SignUpPage: Attempting createUserWithEmailAndPassword...");
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       createdUserId = user.uid; 
+      console.log("SignUpPage: User created successfully in Firebase Auth. UID:", user.uid);
 
+      console.log("SignUpPage: Attempting to update Firebase Auth profile displayName...");
       await updateProfile(user, { displayName: username });
+      console.log("SignUpPage: Firebase Auth profile displayName updated.");
       
+      console.log("SignUpPage: Attempting Firestore transaction to save user profile and username...");
       await runTransaction(db, async (transaction) => {
         const userDocRef = doc(db, 'users', user.uid);
         const usernameDocRef = doc(db, 'usernames', username.toLowerCase());
 
         const freshUsernameDoc = await transaction.get(usernameDocRef);
         if (freshUsernameDoc.exists()) {
+          console.warn("SignUpPage: Username was claimed during sign-up (race condition).")
           throw new Error("Username was claimed during sign-up. Please try a different username.");
         }
         
@@ -137,6 +146,7 @@ export default function SignUpPage() {
         });
         transaction.set(usernameDocRef, { uid: user.uid });
       });
+      console.log("SignUpPage: Firestore transaction successful. User profile and username saved.");
 
       toast({
         title: 'Sign Up Successful!',
@@ -152,6 +162,8 @@ export default function SignUpPage() {
         errorMessage = 'This email is already registered. Please log in or use a different email.';
       } else if (error.code === 'auth/weak-password') {
         errorMessage = 'The password is too weak. Please choose a stronger password.';
+      } else if (error.code === 'auth/configuration-not-found') {
+        errorMessage = 'Firebase authentication configuration is missing or incorrect. Please check the setup (especially .env file and Firebase project settings). Contact support if this persists.';
       } else if (error.message && error.message.includes("Username was claimed")) {
         errorMessage = error.message; 
         if (auth.currentUser && auth.currentUser.uid === createdUserId) {
