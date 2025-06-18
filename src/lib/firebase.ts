@@ -19,7 +19,9 @@ let dbInstance: Firestore | null = null;
 console.log("Firebase Lib: Attempting to initialize Firebase...");
 
 // Log the actual values being used for initialization
-console.log("Firebase Lib: Raw .env values seen by this module:", {
+// These are read at build time by Next.js and made available to the client-side code.
+// If these are 'YOUR_PROJECT_ID' or undefined here, the .env file is the issue or server wasn't restarted.
+console.log("Firebase Lib: Raw .env values seen by this module (should be populated by Next.js):", {
     NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
     NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
     NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -32,7 +34,7 @@ console.log("Firebase Lib: FirebaseConfig object constructed for initializeApp:"
 
 
 if (typeof window !== 'undefined') { // Ensure Firebase is initialized only on the client-side
-  if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId || firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID") {
+  if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.projectId || firebaseConfig.apiKey === "YOUR_API_KEY" || firebaseConfig.projectId === "YOUR_PROJECT_ID" || firebaseConfig.authDomain === "YOUR_AUTH_DOMAIN") {
     console.error("Firebase Lib CRITICAL Error: Missing or placeholder Firebase configuration values (apiKey, authDomain, projectId).");
     console.error("Firebase Lib CRITICAL Error: VALUES USED -> apiKey:", firebaseConfig.apiKey, "authDomain:", firebaseConfig.authDomain, "projectId:", firebaseConfig.projectId);
     console.error("Firebase Lib CRITICAL Error: This usually means NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, or NEXT_PUBLIC_FIREBASE_PROJECT_ID are not set correctly in your .env file or have placeholder values like 'YOUR_PROJECT_ID'.");
