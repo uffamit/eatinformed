@@ -62,7 +62,13 @@ export default function SignUpPage() {
       console.log(`SignUpPage: Username ${uname.toLowerCase()} is available.`);
     } catch (error: any) {
       console.error("SignUpPage: Error checking username (likely connectivity or config issue):", error.code, error.message, error);
-      toast({ variant: 'destructive', title: 'Error', description: "Can't validate username. Check connection or try later." });
+      let description = "Can't validate username. Check connection or try later.";
+      if (error.code === 'permission-denied') {
+        description = "Permission denied when checking username. Please ensure Firestore rules are correctly deployed to allow this check.";
+      } else if (error.code === 'unavailable') {
+        description = "Cannot connect to Firebase to check username. Please check your internet connection and Firebase setup.";
+      }
+      toast({ variant: 'destructive', title: 'Username Validation Error', description });
       return false;
     }
     return true;
@@ -137,6 +143,8 @@ export default function SignUpPage() {
         description: 'Redirecting to your welcome page...',
       });
       
+      // No need to manually sign out here unless specifically intended.
+      // router.push will navigate, and onAuthStateChanged in WelcomePage will handle auth state.
       router.push('/welcome');
 
     } catch (error: any) {
@@ -148,11 +156,16 @@ export default function SignUpPage() {
         errorMessage = 'The password is too weak. Please choose a stronger password.';
       } else if (error.message && error.message.includes("Username was claimed")) {
         errorMessage = error.message; 
+        // If username was claimed, and a user was partially created in Auth, sign them out
+        // to prevent inconsistent states. Check if the createdUserId matches current user.
         if (auth.currentUser && auth.currentUser.uid === createdUserId) {
-          await signOut(auth); 
+           console.log("SignUpPage: Signing out partially created user due to username claim conflict.");
+           await signOut(auth); 
         }
       } else if (error.code === 'unavailable' || (error.message && error.message.toLowerCase().includes('offline'))) {
         errorMessage = 'Cannot connect to Firebase services. Please check your internet connection and ensure Firebase configuration (especially NEXT_PUBLIC_FIREBASE_PROJECT_ID in .env) is correct. See browser console for details from Firebase Lib.';
+      } else if (error.code === 'permission-denied') {
+        errorMessage = 'Permission denied during user data creation. Please check Firestore rules for writing to users and usernames collections.';
       }
       
       toast({
@@ -251,3 +264,4 @@ export default function SignUpPage() {
     </div>
   );
 }
+
