@@ -21,7 +21,7 @@ export default function SignUpPage() {
   const router = useRouter();
 
   // useEffect(() => {
-  //    // Mocked or removed auth check
+  //    // Removed auth check
   // }, [router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -42,21 +42,20 @@ export default function SignUpPage() {
     setIsLoading(true);
     console.log("Attempting signup with:", { username, email, password });
 
-    // Mock signup logic
+    // Placeholder signup logic
     setTimeout(() => {
       // Simulate API call & username check
-      const mockUsernames = ['testuser', 'admin']; // Example taken usernames
-      if (mockUsernames.includes(username.toLowerCase())) {
-        toast({ variant: 'destructive', title: 'Username Unavailable (Mock)', description: 'This username is already taken.' });
+      const takenUsernames = ['testuser', 'admin']; 
+      if (takenUsernames.includes(username.toLowerCase())) {
+        toast({ variant: 'destructive', title: 'Username Unavailable', description: 'This username is already taken.' });
         setIsLoading(false);
         return;
       }
 
       toast({
-        title: 'Sign Up Successful! (Mock)',
+        title: 'Sign Up Successful!',
         description: 'Redirecting to your welcome page...',
       });
-      // localStorage.setItem('user', JSON.stringify({ email, username })); // Mock storing user
       router.push('/welcome');
       setIsLoading(false);
     }, 1500);

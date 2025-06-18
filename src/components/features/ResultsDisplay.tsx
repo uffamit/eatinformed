@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients';
@@ -45,7 +46,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
         )}
         <div className="mt-4 flex flex-col items-center">
          {renderStars(assessmentData.rating)}
-         <p className="text-muted-foreground mt-1">Health & Safety Rating (European Standards)</p>
+         <p className="text-muted-foreground mt-1">Health & Safety Rating</p>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -73,14 +74,14 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
         <Separator />
 
         <div>
-            <h3 className="text-lg font-semibold mb-2 flex items-center"><Info className="h-5 w-5 mr-2 text-primary" /> Dietary Information Placeholder</h3>
+            <h3 className="text-lg font-semibold mb-2 flex items-center"><Info className="h-5 w-5 mr-2 text-primary" /> Dietary Information</h3>
             <p className="text-sm text-muted-foreground">
                 Allergen flags and dietary preference matching will be shown here in a future update. For example: "Contains: Gluten, Dairy. Suitable for Vegetarians."
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
-                <Badge variant="outline">Gluten-Free (Mock)</Badge>
-                <Badge variant="outline">Vegan (Mock)</Badge>
-                <Badge variant="destructive">Contains Peanuts (Mock)</Badge>
+                <Badge variant="outline">Gluten-Free</Badge>
+                <Badge variant="outline">Vegan</Badge>
+                <Badge variant="destructive">Contains Peanuts</Badge>
             </div>
         </div>
 

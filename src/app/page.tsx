@@ -19,14 +19,13 @@ import {
 import { AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; 
 
 interface AuthAwareLinkButtonProps {
-  // currentUser and isLoadingAuth removed as Firebase is reverted
   href: string;
   buttonText: string;
   icon?: React.ReactNode;
   buttonVariant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
   buttonSize?: "default" | "sm" | "lg" | "icon" | null | undefined;
   className?: string;
-  alwaysPrompt?: boolean; // New prop to control if dialog always shows for certain actions
+  alwaysPrompt?: boolean; 
 }
 
 const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
@@ -36,17 +35,15 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
   buttonVariant = "default",
   buttonSize = "lg",
   className = "",
-  alwaysPrompt = false, // Default to false
+  alwaysPrompt = false,
 }) => {
   const router = useRouter();
   const [showDialog, setShowDialog] = useState(false);
 
   const handleButtonClick = () => {
-    if (alwaysPrompt) { // If alwaysPrompt is true, show the dialog
+    if (alwaysPrompt) { 
       setShowDialog(true);
     } else {
-      // For non-prompting buttons, directly navigate or perform action
-      // This example will just navigate. If it were a real mock, it might check mock auth state.
       router.push(href);
     }
   };
@@ -57,12 +54,12 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
         {icon}
         {buttonText}
       </Button>
-      {alwaysPrompt && ( // Only render dialog content if it's meant to be shown
+      {alwaysPrompt && ( 
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Authentication Required</AlertDialogTitle>
             <AlertDialogDescription>
-              You need to be logged in to access this feature. Please log in or create an account. (This is a mock prompt as Firebase integration is currently reverted).
+              You need to be logged in to access this feature. Please log in or create an account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -82,15 +79,6 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
 
 
 export default function HomePage() {
-  // Removed currentUser and isLoadingAuth state related to Firebase
-  // const [currentUser, setCurrentUser] = useState<User | null>(null);
-  // const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-
-  // useEffect(() => {
-    // Removed Firebase onAuthStateChanged listener
-    // setIsLoadingAuth(false); // If using a mock, set loading to false
-  // }, []);
-
   return (
     <div className="flex flex-col items-center text-center space-y-12">
       <section className="w-full py-12 md:py-24 lg:py-32">
@@ -107,14 +95,12 @@ export default function HomePage() {
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <AuthAwareLinkButton
-                  // currentUser={null} // Removed
-                  // isLoadingAuth={false} // Removed
-                  href="/check" // It will now always show the dialog due to alwaysPrompt=true
+                  href="/check" 
                   buttonText="Check a Product Now"
                   icon={<UploadCloud className="mr-2 h-5 w-5" />}
                   buttonSize="lg"
                   className="shadow-lg hover:shadow-primary/50 transition-shadow"
-                  alwaysPrompt={true} // Ensure this prompts for login/signup as it's a key action
+                  alwaysPrompt={true} 
                 />
                 <Button asChild variant="outline" size="lg">
                   <Link href="#how-it-works">
@@ -173,14 +159,12 @@ export default function HomePage() {
           </div>
           <div className="mx-auto w-full max-w-sm space-y-2">
              <AuthAwareLinkButton
-                // currentUser={null} // Removed
-                // isLoadingAuth={false} // Removed
-                href="/check" // It will now always show the dialog due to alwaysPrompt=true
+                href="/check" 
                 buttonText="Start Scanning"
                 icon={<UploadCloud className="mr-2 h-5 w-5" />}
                 buttonSize="lg"
                 className="w-full shadow-lg hover:shadow-primary/50 transition-shadow"
-                alwaysPrompt={true} // Ensure this prompts for login/signup
+                alwaysPrompt={true} 
               />
           </div>
         </div>

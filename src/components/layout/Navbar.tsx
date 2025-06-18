@@ -9,6 +9,7 @@ import { Menu, PackageSearch, HomeIcon, LogIn, UserPlus, LogOut, UserCircle, Loa
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +25,7 @@ const navItems = [
   { href: '/check', label: 'Check Product', icon: PackageSearch },
 ];
 
-// Mock user type
-interface MockUser {
+interface AppUser {
   displayName?: string;
   email?: string;
 }
@@ -33,27 +33,20 @@ interface MockUser {
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<MockUser | null>(null); // Using MockUser or null
+  const { toast } = useToast();
+  const [user, setUser] = useState<AppUser | null>(null); 
   const [isLoadingAuth, setIsLoadingAuth] = useState(true); 
 
   useEffect(() => {
-    // Simulate auth check, e.g., from localStorage or just set a mock state
-    // const storedUser = localStorage.getItem('user');
-    // if (storedUser) {
-    //   setUser(JSON.parse(storedUser));
-    // } else {
-    //   setUser(null);
-    // }
-    // For this revert, let's assume the user is logged out by default or use a simple mock
-    setUser(null); // Or setUser({ displayName: "Mock User", email: "mock@example.com" }) for testing logged-in state
+    // Placeholder for auth check logic
+    // For now, assume the user is logged out by default
+    setUser(null); 
     setIsLoadingAuth(false);
   }, []);
 
   const handleLogout = async () => {
-    // Mock logout
-    // localStorage.removeItem('user');
     setUser(null);
-    // toast({ title: "Logged Out (Mock)", description: "You have been successfully logged out."});
+    toast({ title: "Logged Out", description: "You have been successfully logged out."});
     router.push('/'); 
   };
 
@@ -78,7 +71,7 @@ export default function Navbar() {
     mobileAuthActions = (
       <>
         <DropdownMenuItem onClick={() => router.push('/welcome')} className="cursor-pointer justify-start p-2">
-            <UserCircle className="mr-2 h-4 w-4" /> My Account (Welcome)
+            <UserCircle className="mr-2 h-4 w-4" /> My Account
         </DropdownMenuItem>
         <Button variant="outline" className="w-full justify-start mt-2 p-2" onClick={handleLogout}>
           <LogOut className="mr-2 h-4 w-4" />

@@ -9,7 +9,6 @@ import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Mock user data structure
 interface UserProfile {
   username: string;
   email?: string;
@@ -22,15 +21,7 @@ export default function WelcomePage() {
 
   useEffect(() => {
     // Simulate fetching user data or checking auth state
-    // For this reverted version, we'll just mock it or leave it empty
-    // Example: const storedUser = localStorage.getItem('user');
-    // if (storedUser) {
-    //   setUserProfile(JSON.parse(storedUser));
-    // } else {
-    //   // If no user, redirect to login (or handle as per pre-Firebase logic)
-    //   // router.replace('/login'); 
-    // }
-    // For now, let's assume a mock user for display purposes
+    // For now, let's assume a generic user for display purposes
     setUserProfile({ username: "Valued User" });
     setIsLoading(false);
   }, [router]);

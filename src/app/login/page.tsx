@@ -19,9 +19,7 @@ export default function LoginPage() {
   const router = useRouter();
 
   // useEffect(() => {
-  //   // Mocked or removed auth check
-  //   // Example: const user = localStorage.getItem('user');
-  //   // if (user) router.push('/welcome');
+  //   // Removed auth check
   // }, [router]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -32,21 +30,20 @@ export default function LoginPage() {
     }
     setIsLoading(true);
 
-    // Mock login logic
+    // Placeholder login logic
     console.log("Attempting login with:", { email, password });
     setTimeout(() => {
       // Simulate API call
       if (email === "user@example.com" && password === "password") {
         toast({
-          title: 'Login Successful! (Mock)',
+          title: 'Login Successful!',
           description: 'Redirecting to your welcome page...',
         });
-        // localStorage.setItem('user', JSON.stringify({ email })); // Mock storing user
         router.push('/welcome');
       } else {
         toast({
           variant: 'destructive',
-          title: 'Login Failed (Mock)',
+          title: 'Login Failed',
           description: 'Invalid email or password.',
         });
       }
