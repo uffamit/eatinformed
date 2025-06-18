@@ -52,7 +52,7 @@ export default function SignUpPage() {
     }
 
     const usernameDocRef = doc(db, 'usernames', uname.toLowerCase());
-    console.log(`SignUpPage: Attempting to get document for username validation from path: /usernames/${uname.toLowerCase()}`); 
+    console.log(`SignUpPage: Attempting to get document for username validation from path: ${usernameDocRef.path}`); 
     try {
       const usernameDoc = await getDoc(usernameDocRef);
       if (usernameDoc.exists()) {
@@ -64,7 +64,7 @@ export default function SignUpPage() {
       console.error("SignUpPage: Error checking username (likely connectivity or config issue):", error.code, error.message, error);
       let description = "Can't validate username. Check connection or try later.";
       if (error.code === 'permission-denied') {
-        description = "Permission denied when checking username. Please ensure Firestore rules for the 'usernames' collection allow unauthenticated reads and are correctly deployed. Also check the console for the exact path being queried.";
+        description = "Permission denied checking username. Please ensure Firestore rules for 'usernames' collection allow unauthenticated reads (allow read: if true;) and are correctly deployed. Also check the console for the exact path being queried.";
       } else if (error.code === 'unavailable') {
          description = "Cannot connect to Firebase to check username. Please check your internet connection and Firebase setup.";
       }
