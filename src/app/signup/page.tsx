@@ -20,10 +20,6 @@ export default function SignUpPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // useEffect(() => {
-  //    // Removed auth check
-  // }, [router]);
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!username || !email || !password || !confirmPassword) {
@@ -40,11 +36,9 @@ export default function SignUpPage() {
     }
     
     setIsLoading(true);
-    console.log("Attempting signup with:", { username, email, password });
+    console.log("Signup attempt with:", { username, email, password });
 
-    // Placeholder signup logic
     setTimeout(() => {
-      // Simulate API call & username check
       const takenUsernames = ['testuser', 'admin']; 
       if (takenUsernames.includes(username.toLowerCase())) {
         toast({ variant: 'destructive', title: 'Username Unavailable', description: 'This username is already taken.' });
@@ -67,7 +61,7 @@ export default function SignUpPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline flex items-center justify-center">
             <UserPlus className="mr-2 h-7 w-7 text-primary" />
-            Create Your NutriScan Account
+            Create Your EatInformed Account
           </CardTitle>
           <CardDescription>Join us to start analyzing your food products.</CardDescription>
         </CardHeader>

@@ -2,7 +2,7 @@
 'use client';
 
 import Link from 'next/link';
-import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
+import { EatInformedLogo } from '@/components/icons/NutriScanLogo'; // Path remains, component name changes
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, PackageSearch, HomeIcon, LogIn, UserPlus, LogOut, UserCircle, Loader2 } from 'lucide-react';
@@ -38,8 +38,6 @@ export default function Navbar() {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true); 
 
   useEffect(() => {
-    // Placeholder for auth check logic
-    // For now, assume the user is logged out by default
     setUser(null); 
     setIsLoadingAuth(false);
   }, []);
@@ -102,9 +100,9 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2" aria-label="NutriScan Home">
-          <NutriScanLogo width={32} height={32} />
-           <span className="font-bold text-lg hidden sm:inline-block">NutriScan</span>
+        <Link href="/" className="flex items-center space-x-2" aria-label="EatInformed Home">
+          <EatInformedLogo width={32} height={32} />
+           <span className="font-bold text-lg hidden sm:inline-block">EatInformed</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
@@ -184,9 +182,9 @@ export default function Navbar() {
               </SheetTrigger>
               <SheetContent side="right" className="w-[250px] sm:w-[300px]">
                 <div className="flex flex-col space-y-2 p-4">
-                  <Link href="/" className="flex items-center space-x-2 mb-4" aria-label="NutriScan Home">
-                    <NutriScanLogo width={28} height={28} />
-                     <span className="font-bold text-lg">NutriScan</span>
+                  <Link href="/" className="flex items-center space-x-2 mb-4" aria-label="EatInformed Home">
+                    <EatInformedLogo width={28} height={28} />
+                     <span className="font-bold text-lg">EatInformed</span>
                   </Link>
                   <div className="flex flex-col space-y-1">
                     {mobileNavLinks}

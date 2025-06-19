@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadCloud, Activity, ShieldCheck, Loader2 } from 'lucide-react';
-import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
+import { EatInformedLogo } from '@/components/icons/NutriScanLogo'; // Path remains, component name changes
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
@@ -87,7 +87,7 @@ export default function HomePage() {
             <div className="flex flex-col justify-center space-y-4 text-left">
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                  NutriScan: Know Your Food's Truth
+                  EatInformed: Know Your Food's Truth
                 </h1>
                 <p className="max-w-[600px] text-muted-foreground md:text-xl">
                   Upload a photo of any packaged food label. Our AI instantly extracts ingredients, analyzes health impacts, and gives you a clear 1-5 rating. Make informed choices, effortlessly.
@@ -110,7 +110,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[250px] shadow-xl bg-muted/30 p-8 rounded-xl">
-              <NutriScanLogo width={200} height={200} />
+              <EatInformedLogo width={200} height={200} />
             </div>
           </div>
         </div>

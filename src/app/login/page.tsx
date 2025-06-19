@@ -18,10 +18,6 @@ export default function LoginPage() {
   const { toast } = useToast();
   const router = useRouter();
 
-  // useEffect(() => {
-  //   // Removed auth check
-  // }, [router]);
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
      if (!email || !password) {
@@ -30,10 +26,8 @@ export default function LoginPage() {
     }
     setIsLoading(true);
 
-    // Placeholder login logic
-    console.log("Attempting login with:", { email, password });
+    console.log("Login attempt with:", { email, password });
     setTimeout(() => {
-      // Simulate API call
       if (email === "user@example.com" && password === "password") {
         toast({
           title: 'Login Successful!',
@@ -57,7 +51,7 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-headline flex items-center justify-center">
             <LogIn className="mr-2 h-7 w-7 text-primary" />
-            Log In to NutriScan
+            Log In to EatInformed
           </CardTitle>
           <CardDescription>Enter your credentials to access your account.</CardDescription>
         </CardHeader>

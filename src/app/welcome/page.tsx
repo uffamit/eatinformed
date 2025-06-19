@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PartyPopper, Home, Loader2 } from 'lucide-react';
-import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
+import { EatInformedLogo } from '@/components/icons/NutriScanLogo'; // Path remains, component name changes
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -20,8 +20,6 @@ export default function WelcomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Simulate fetching user data or checking auth state
-    // For now, let's assume a generic user for display purposes
     setUserProfile({ username: "Valued User" });
     setIsLoading(false);
   }, [router]);
@@ -49,12 +47,12 @@ export default function WelcomePage() {
             Welcome, {displayName}!
           </CardTitle>
           <CardDescription className="text-lg">
-            We're glad to have you at NutriScan.
+            We're glad to have you at EatInformed.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[150px] shadow-xl bg-muted/30 p-8 rounded-xl">
-            <NutriScanLogo width={150} height={150} />
+            <EatInformedLogo width={150} height={150} />
           </div>
           <p className="text-muted-foreground">
             You're all set to start exploring and making healthier food choices.
