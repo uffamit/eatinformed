@@ -24,7 +24,8 @@ const ExtractIngredientsOutputSchema = z.object({
   ingredients: z.string().describe('The list of ingredients extracted from the food label.'),
   nutritionInformation: z
     .string()
-    .describe('The nutritional information extracted from the food label.'),
+ .describe('The nutritional information extracted from the food label.'),
+  status: z.enum(['success', 'no_data', 'unreadable']).describe('The status of the extraction: "success", "no_data" if no information was found, or "unreadable" if the information was present but could not be read.'),
 });
 export type ExtractIngredientsOutput = z.infer<typeof ExtractIngredientsOutputSchema>;
 
@@ -41,6 +42,10 @@ const extractIngredientsPrompt = ai.definePrompt({
   Analyze the image of the food label and extract the ingredient list and nutritional information.
 
   Photo: {{media url=photoDataUri}}
+
+  If you cannot find any ingredient or nutritional information in the image, set the 'status' field to 'no_data'.
+  If the information appears to be present but is too blurry or difficult to read, set the 'status' field to 'unreadable'.
+  If you successfully extract the information, set the 'status' field to 'success'.
 
   Present the extracted ingredient list and nutritional information clearly and concisely.
   `,
