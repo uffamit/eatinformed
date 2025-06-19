@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import { useState, ChangeEvent, FormEvent, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +12,15 @@ import { assessHealthSafety, type AssessHealthSafetyOutput } from '@/ai/flows/as
 import ResultsDisplay from '@/components/features/ResultsDisplay';
 import { Loader2, UploadCloud, FileScan, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function CheckPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -23,6 +33,7 @@ export default function CheckPage() {
   const [assessmentData, setAssessmentData] = useState<AssessHealthSafetyOutput | null>(null);
 
   const [progressMessage, setProgressMessage] = useState<string>('');
+  const [showNoIngredientsDialog, setShowNoIngredientsDialog] = useState(false);
 
   useEffect(() => {
     if (error) {
@@ -38,14 +49,12 @@ export default function CheckPage() {
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      // Basic file type validation
       if (!selectedFile.type.startsWith('image/')) {
         setError('Invalid file type. Please upload an image (JPEG, PNG, GIF, WEBP).');
         setFile(null);
         setImagePreviewUrl(null);
         return;
       }
-      // Basic file size validation (e.g., 5MB)
       if (selectedFile.size > 5 * 1024 * 1024) {
         setError('File is too large. Maximum size is 5MB.');
         setFile(null);
@@ -59,8 +68,9 @@ export default function CheckPage() {
         setImagePreviewUrl(reader.result as string);
       };
       reader.readAsDataURL(selectedFile);
-      setIngredientsData(null); // Reset previous results
-      setAssessmentData(null); // Reset previous results
+      setIngredientsData(null); 
+      setAssessmentData(null); 
+      setShowNoIngredientsDialog(false);
     }
   };
 
@@ -75,15 +85,21 @@ export default function CheckPage() {
     setError(null);
     setIngredientsData(null);
     setAssessmentData(null);
+    setShowNoIngredientsDialog(false);
 
     try {
       setProgressMessage('Extracting ingredients from image...');
       const extracted = await extractIngredients({ photoDataUri: imagePreviewUrl });
-      setIngredientsData(extracted);
       
-      if (!extracted.ingredients || extracted.ingredients.trim() === "") {
-        throw new Error("Could not extract ingredients from the image. Please try a clearer image or ensure the ingredients list is visible.");
+      if (!extracted || !extracted.ingredients || extracted.ingredients.trim() === "") {
+        setIngredientsData(null);
+        setAssessmentData(null);
+        setShowNoIngredientsDialog(true);
+        setIsLoading(false);
+        setProgressMessage('');
+        return; 
       }
+      setIngredientsData(extracted);
       
       setProgressMessage('Assessing health & safety...');
       const assessment = await assessHealthSafety({ ingredients: extracted.ingredients });
@@ -103,7 +119,9 @@ export default function CheckPage() {
       setAssessmentData(null);
     } finally {
       setIsLoading(false);
-      setProgressMessage('');
+      if (!showNoIngredientsDialog) { // Only clear progress message if not showing the dialog
+         setProgressMessage('');
+      }
     }
   };
 
@@ -167,6 +185,20 @@ export default function CheckPage() {
       {ingredientsData && assessmentData && (
         <ResultsDisplay ingredientsData={ingredientsData} assessmentData={assessmentData} imagePreviewUrl={imagePreviewUrl} />
       )}
+
+      <AlertDialog open={showNoIngredientsDialog} onOpenChange={setShowNoIngredientsDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>No Ingredients Found</AlertDialogTitle>
+            <AlertDialogDescription>
+              Could not extract ingredients from the image. Please give a proper image of the label or re-take the image if it's too blurry.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowNoIngredientsDialog(false)}>OK</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
