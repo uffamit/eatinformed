@@ -42,7 +42,7 @@ export default function CheckPage() {
         title: 'Error',
         description: error,
       });
-      setError(null); // Reset error after showing toast
+      setError(null); 
     }
   }, [error, toast]);
 
@@ -55,7 +55,7 @@ export default function CheckPage() {
         setImagePreviewUrl(null);
         return;
       }
-      if (selectedFile.size > 5 * 1024 * 1024) {
+      if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
         setError('File is too large. Maximum size is 5MB.');
         setFile(null);
         setImagePreviewUrl(null);
@@ -91,12 +91,34 @@ export default function CheckPage() {
       setProgressMessage('Extracting ingredients from image...');
       const extracted = await extractIngredients({ photoDataUri: imagePreviewUrl });
       
-      if (!extracted || !extracted.ingredients || extracted.ingredients.trim() === "") {
+      let noUsefulIngredients = false;
+      const extractedIngredientsText = extracted?.ingredients?.trim().toLowerCase();
+
+      if (!extracted || !extractedIngredientsText) {
+        noUsefulIngredients = true;
+      } else {
+        const knownFailurePhrases = [
+          "no ingredients found",
+          "unable to extract ingredients",
+          "ingredients not found",
+          "could not extract ingredients",
+          "no ingredients extracted",
+          "no ingredients provided",
+          "no ingredient information found",
+          "ingredient list not visible",
+          "no ingredients detected",
+        ];
+        if (knownFailurePhrases.includes(extractedIngredientsText)) {
+          noUsefulIngredients = true;
+        }
+      }
+
+      if (noUsefulIngredients) {
         setIngredientsData(null);
         setAssessmentData(null);
         setShowNoIngredientsDialog(true);
         setIsLoading(false);
-        setProgressMessage('');
+        setProgressMessage(''); 
         return; 
       }
       setIngredientsData(extracted);
@@ -119,7 +141,7 @@ export default function CheckPage() {
       setAssessmentData(null);
     } finally {
       setIsLoading(false);
-      if (!showNoIngredientsDialog) { // Only clear progress message if not showing the dialog
+      if (!showNoIngredientsDialog) { 
          setProgressMessage('');
       }
     }
@@ -191,7 +213,7 @@ export default function CheckPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>No Ingredients Found</AlertDialogTitle>
             <AlertDialogDescription>
-              Could not extract ingredients from the image. Please give a proper image of the label or re-take the image if it's too blurry.
+              Please upload proper image or if it&apos;s too blur re take it.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
