@@ -5,7 +5,7 @@ import type { ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients';
 import type { AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, ThumbsUp, ThumbsDown, AlertTriangle, Leaf, Info, ListChecks, Target, Skull, Share2 } from 'lucide-react';
+import { Star, ThumbsUp, ThumbsDown, AlertTriangle, Leaf, Info, ListChecks, Target, Share2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 
@@ -16,9 +16,12 @@ interface ResultsDisplayProps {
 }
 
 export default function ResultsDisplay({ ingredientsData, assessmentData, imagePreviewUrl }: ResultsDisplayProps) {
-  if (!ingredientsData || !assessmentData) {
+  if (!assessmentData) { // Assessment data is the primary driver for display
     return null;
   }
+
+  const isZeroRatingScenario = assessmentData.rating === 0 && 
+                                 assessmentData.warnings?.includes("Unable to evaluate due to missing or unreadable label. Please upload a clear image.");
 
   const renderStars = (rating: number) => {
     const totalStars = 5;
@@ -38,7 +41,9 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
   return (
     <Card className="w-full max-w-3xl mx-auto shadow-xl mt-8">
       <CardHeader className="text-center">
-        <CardTitle className="text-3xl font-headline">Scan Results</CardTitle>
+        <CardTitle className="text-3xl font-headline">
+            {isZeroRatingScenario ? "Analysis Incomplete" : "Scan Results"}
+        </CardTitle>
         {imagePreviewUrl && (
           <div className="mt-4 flex justify-center">
             <img src={imagePreviewUrl} alt="Scanned food label" className="max-h-48 rounded-md border object-contain" />
@@ -47,29 +52,37 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
         <div className="mt-4 flex flex-col items-center">
          {renderStars(assessmentData.rating)}
          <p className="text-muted-foreground mt-1">Health & Safety Rating</p>
+         {isZeroRatingScenario && (
+            <CardDescription className="mt-2 text-destructive">
+                No ingredients or nutritional information found in the image.
+            </CardDescription>
+         )}
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <Separator />
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <InfoCard title="Pros" icon={<ThumbsUp className="h-6 w-6 text-green-500" />} items={assessmentData.pros} variant="pros" />
-          <InfoCard title="Cons" icon={<ThumbsDown className="h-6 w-6 text-red-500" />} items={assessmentData.cons} variant="cons" />
+          <InfoCard title="Pros" icon={<ThumbsUp className="h-6 w-6 text-green-500" />} items={assessmentData.pros} variant="pros" isZeroRating={isZeroRatingScenario} />
+          <InfoCard title="Cons" icon={<ThumbsDown className="h-6 w-6 text-red-500" />} items={assessmentData.cons} variant="cons" isZeroRating={isZeroRatingScenario} />
         </div>
 
         {assessmentData.warnings && assessmentData.warnings.length > 0 && (
-          <InfoCard title="Warnings" icon={<AlertTriangle className="h-6 w-6 text-yellow-500" />} items={assessmentData.warnings} variant="warnings" />
+          <InfoCard title="Warnings" icon={<AlertTriangle className="h-6 w-6 text-yellow-500" />} items={assessmentData.warnings} variant="warnings" isZeroRating={isZeroRatingScenario}/>
         )}
         
-        <Separator />
+        {!isZeroRatingScenario && ingredientsData && (
+            <>
+                <Separator />
+                <DisclosureSection title="Ingredients List" icon={<ListChecks className="h-5 w-5 text-primary" />}>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData.ingredients || 'No ingredients extracted.'}</p>
+                </DisclosureSection>
 
-        <DisclosureSection title="Ingredients List" icon={<ListChecks className="h-5 w-5 text-primary" />}>
-          <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData.ingredients || 'No ingredients extracted.'}</p>
-        </DisclosureSection>
-
-        <DisclosureSection title="Nutritional Information" icon={<Target className="h-5 w-5 text-primary" />}>
-          <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData.nutritionInformation || 'No nutritional information extracted.'}</p>
-        </DisclosureSection>
+                <DisclosureSection title="Nutritional Information" icon={<Target className="h-5 w-5 text-primary" />}>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData.nutritionInformation || 'No nutritional information extracted.'}</p>
+                </DisclosureSection>
+            </>
+        )}
         
         <Separator />
 
@@ -84,7 +97,6 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
                 <Badge variant="destructive">Contains Peanuts</Badge>
             </div>
         </div>
-
 
       </CardContent>
       <CardFooter className="flex flex-col items-center space-y-4">
@@ -107,18 +119,20 @@ interface InfoCardProps {
   icon: React.ReactNode;
   items: string[];
   variant: 'pros' | 'cons' | 'warnings';
+  isZeroRating?: boolean;
 }
 
-function InfoCard({ title, icon, items, variant }: InfoCardProps) {
+function InfoCard({ title, icon, items, variant, isZeroRating }: InfoCardProps) {
   let textColor = "text-foreground";
-  if (variant === "pros") textColor = "text-green-700 dark:text-green-400";
-  if (variant === "cons") textColor = "text-red-700 dark:text-red-400";
-  if (variant === "warnings") textColor = "text-yellow-700 dark:text-yellow-500";
+  if (variant === "pros" && !isZeroRating) textColor = "text-green-700 dark:text-green-400";
+  if (variant === "cons" && !isZeroRating) textColor = "text-red-700 dark:text-red-400";
+  if (variant === "warnings" && !isZeroRating) textColor = "text-yellow-700 dark:text-yellow-500";
+  if (isZeroRating) textColor = "text-muted-foreground";
   
   let ItemIcon = Leaf;
-  if (variant === "pros") ItemIcon = ThumbsUp;
-  if (variant === "cons") ItemIcon = ThumbsDown;
-  if (variant === "warnings") ItemIcon = AlertTriangle;
+  if (variant === "pros" && !isZeroRating) ItemIcon = ThumbsUp;
+  if (variant === "cons" && !isZeroRating) ItemIcon = ThumbsDown;
+  if (variant === "warnings") ItemIcon = AlertTriangle; // Keep AlertTriangle for warnings even in 0-rating
 
 
   return (
@@ -134,7 +148,14 @@ function InfoCard({ title, icon, items, variant }: InfoCardProps) {
           <ul className={`space-y-1 text-sm list-inside ${textColor}`}>
             {items.map((item, index) => (
               <li key={index} className="flex items-start">
-                <ItemIcon className={`h-4 w-4 mr-2 mt-0.5 shrink-0 ${textColor === "text-foreground" ? "text-primary" : "" }`} />
+                 {/* For 0-rating specific messages, don't show item icon if it's one of the placeholder texts */}
+                {!(isZeroRating && (item.startsWith("None (no data") || item.startsWith("Unable to evaluate"))) &&
+                    <ItemIcon className={`h-4 w-4 mr-2 mt-0.5 shrink-0 ${textColor === "text-foreground" ? "text-primary" : "" }`} />
+                }
+                {/* If it IS a zero-rating specific message, add a generic Info icon or similar if desired, or no icon */}
+                {isZeroRating && (item.startsWith("None (no data") || item.startsWith("Unable to evaluate")) &&
+                    <Info className={`h-4 w-4 mr-2 mt-0.5 shrink-0 ${textColor}`} /> 
+                }
                 <span>{item}</span>
               </li>
             ))}
@@ -173,3 +194,4 @@ function DisclosureSection({ title, icon, children }: DisclosureSectionProps) {
         </Accordion>
     )
 }
+

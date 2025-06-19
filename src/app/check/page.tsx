@@ -35,6 +35,10 @@ export default function CheckPage() {
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [showNoIngredientsDialog, setShowNoIngredientsDialog] = useState(false);
 
+  // Store the image URL that was used for the analysis attempt for ResultsDisplay
+  const [imagePreviewUrlForResults, setImagePreviewUrlForResults] = useState<string | null>(null);
+
+
   useEffect(() => {
     if (error) {
       toast({
@@ -71,6 +75,7 @@ export default function CheckPage() {
       setIngredientsData(null); 
       setAssessmentData(null); 
       setShowNoIngredientsDialog(false);
+      setImagePreviewUrlForResults(null);
     }
   };
 
@@ -86,15 +91,18 @@ export default function CheckPage() {
     setIngredientsData(null);
     setAssessmentData(null);
     setShowNoIngredientsDialog(false);
+    setImagePreviewUrlForResults(imagePreviewUrl); // Store for results display
 
     try {
       setProgressMessage('Extracting ingredients from image...');
       const extracted = await extractIngredients({ photoDataUri: imagePreviewUrl });
       
       let noUsefulIngredients = false;
-      const extractedIngredientsText = extracted?.ingredients?.trim().toLowerCase();
+      const extractedIngredientsText = extracted?.ingredients?.trim().toLowerCase() || "";
+      const extractedNutritionText = extracted?.nutritionInformation?.trim().toLowerCase() || "";
 
-      if (!extracted || !extractedIngredientsText) {
+
+      if (!extractedIngredientsText && !extractedNutritionText) {
         noUsefulIngredients = true;
       } else {
         const knownFailurePhrases = [
@@ -107,21 +115,36 @@ export default function CheckPage() {
           "no ingredient information found",
           "ingredient list not visible",
           "no ingredients detected",
+          "no nutritional information found",
+          "unable to extract nutritional information",
         ];
-        if (knownFailurePhrases.includes(extractedIngredientsText)) {
-          noUsefulIngredients = true;
+        // Check if both are empty or contain failure phrases
+        const ingredientsFail = !extractedIngredientsText || knownFailurePhrases.some(phrase => extractedIngredientsText.includes(phrase));
+        const nutritionFail = !extractedNutritionText || knownFailurePhrases.some(phrase => extractedNutritionText.includes(phrase));
+        
+        if (ingredientsFail && nutritionFail) {
+            noUsefulIngredients = true;
         }
       }
 
       if (noUsefulIngredients) {
-        setIngredientsData(null);
-        setAssessmentData(null);
+        setIngredientsData({
+            ingredients: "No ingredients or nutritional information found in the image.",
+            nutritionInformation: "" 
+        });
+        setAssessmentData({
+          rating: 0,
+          pros: ["None (no data available to assess)."],
+          cons: ["None (no data available to assess)."],
+          warnings: ["Unable to evaluate due to missing or unreadable label. Please upload a clear image."],
+        });
         setShowNoIngredientsDialog(true);
         setIsLoading(false);
         setProgressMessage(''); 
         return; 
       }
-      setIngredientsData(extracted);
+      
+      setIngredientsData(extracted); // Store successfully extracted data
       
       setProgressMessage('Assessing health & safety...');
       const assessment = await assessHealthSafety({ ingredients: extracted.ingredients });
@@ -137,11 +160,13 @@ export default function CheckPage() {
       console.error('Analysis error:', err);
       const errorMessage = err.message || 'An unexpected error occurred during analysis.';
       setError(errorMessage);
+      // In case of other errors, ensure we don't show partial data
       setIngredientsData(null);
       setAssessmentData(null);
     } finally {
       setIsLoading(false);
-      if (!showNoIngredientsDialog) { 
+      // Only clear progress message if dialog isn't shown, or if an error didn't cause it
+      if (!showNoIngredientsDialog && !error) { 
          setProgressMessage('');
       }
     }
@@ -204,20 +229,24 @@ export default function CheckPage() {
         </CardContent>
       </Card>
 
-      {ingredientsData && assessmentData && (
-        <ResultsDisplay ingredientsData={ingredientsData} assessmentData={assessmentData} imagePreviewUrl={imagePreviewUrl} />
+      {/* Display results only if there's data to show */}
+      {assessmentData && (ingredientsData || assessmentData.rating === 0) && (
+        <ResultsDisplay 
+            ingredientsData={ingredientsData} 
+            assessmentData={assessmentData} 
+            imagePreviewUrl={imagePreviewUrlForResults} />
       )}
 
       <AlertDialog open={showNoIngredientsDialog} onOpenChange={setShowNoIngredientsDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>No Ingredients Found</AlertDialogTitle>
+            <AlertDialogTitle>Unable to Process Image</AlertDialogTitle>
             <AlertDialogDescription>
-              Please upload proper image or if it&apos;s too blur re take it.
+              The label is missing or too blurry to read. Please upload a clear image of the product label showing ingredients and nutritional information.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setShowNoIngredientsDialog(false)}>OK</AlertDialogAction>
+            <AlertDialogAction onClick={() => setShowNoIngredientsDialog(false)}>Check Product Again</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
