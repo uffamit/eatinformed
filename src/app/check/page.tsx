@@ -35,7 +35,6 @@ export default function CheckPage() {
   const [progressMessage, setProgressMessage] = useState<string>('');
   const [showNoIngredientsDialog, setShowNoIngredientsDialog] = useState(false);
 
-  // Store the image URL that was used for the analysis attempt for ResultsDisplay
   const [imagePreviewUrlForResults, setImagePreviewUrlForResults] = useState<string | null>(null);
 
 
@@ -91,7 +90,7 @@ export default function CheckPage() {
     setIngredientsData(null);
     setAssessmentData(null);
     setShowNoIngredientsDialog(false);
-    setImagePreviewUrlForResults(imagePreviewUrl); // Store for results display
+    setImagePreviewUrlForResults(imagePreviewUrl);
 
     try {
       setProgressMessage('Extracting ingredients from image...');
@@ -118,7 +117,7 @@ export default function CheckPage() {
           "no nutritional information found",
           "unable to extract nutritional information",
         ];
-        // Check if both are empty or contain failure phrases
+        
         const ingredientsFail = !extractedIngredientsText || knownFailurePhrases.some(phrase => extractedIngredientsText.includes(phrase));
         const nutritionFail = !extractedNutritionText || knownFailurePhrases.some(phrase => extractedNutritionText.includes(phrase));
         
@@ -144,7 +143,7 @@ export default function CheckPage() {
         return; 
       }
       
-      setIngredientsData(extracted); // Store successfully extracted data
+      setIngredientsData(extracted);
       
       setProgressMessage('Assessing health & safety...');
       const assessment = await assessHealthSafety({ ingredients: extracted.ingredients });
@@ -160,12 +159,10 @@ export default function CheckPage() {
       console.error('Analysis error:', err);
       const errorMessage = err.message || 'An unexpected error occurred during analysis.';
       setError(errorMessage);
-      // In case of other errors, ensure we don't show partial data
       setIngredientsData(null);
       setAssessmentData(null);
     } finally {
       setIsLoading(false);
-      // Only clear progress message if dialog isn't shown, or if an error didn't cause it
       if (!showNoIngredientsDialog && !error) { 
          setProgressMessage('');
       }
@@ -229,7 +226,6 @@ export default function CheckPage() {
         </CardContent>
       </Card>
 
-      {/* Display results only if there's data to show */}
       {assessmentData && (ingredientsData || assessmentData.rating === 0) && (
         <ResultsDisplay 
             ingredientsData={ingredientsData} 
