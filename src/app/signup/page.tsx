@@ -7,12 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus, Loader2 } from 'lucide-react';
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
 export default function SignUpPage() {
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(''); // Username is collected but not used by backend in this version
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,23 +36,42 @@ export default function SignUpPage() {
     }
     
     setIsLoading(true);
-    console.log("Signup attempt with:", { username, email, password });
-
-    setTimeout(() => {
-      const takenUsernames = ['testuser', 'admin']; 
-      if (takenUsernames.includes(username.toLowerCase())) {
-        toast({ variant: 'destructive', title: 'Username Unavailable', description: 'This username is already taken.' });
-        setIsLoading(false);
-        return;
-      }
-
-      toast({
-        title: 'Sign Up Successful!',
-        description: 'Redirecting to your welcome page...',
+    
+    try {
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
       });
-      router.push('/welcome');
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        localStorage.setItem('token', data.token);
+        toast({
+          title: 'Sign Up Successful!',
+          description: 'Redirecting to your welcome page...',
+        });
+        router.push('/welcome');
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Sign Up Failed',
+          description: data.error || 'An unexpected error occurred.',
+        });
+      }
+    } catch (error) {
+      console.error("Signup page error:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Sign Up Error',
+        description: 'Could not connect to the server. Please try again later.',
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (

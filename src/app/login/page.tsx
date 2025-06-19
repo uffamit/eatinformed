@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogIn, Loader2 } from 'lucide-react';
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -26,9 +26,19 @@ export default function LoginPage() {
     }
     setIsLoading(true);
 
-    console.log("Login attempt with:", { email, password });
-    setTimeout(() => {
-      if (email === "user@example.com" && password === "password") {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.token) {
+        localStorage.setItem('token', data.token);
         toast({
           title: 'Login Successful!',
           description: 'Redirecting to your welcome page...',
@@ -38,11 +48,19 @@ export default function LoginPage() {
         toast({
           variant: 'destructive',
           title: 'Login Failed',
-          description: 'Invalid email or password.',
+          description: data.error || 'Invalid email or password.',
         });
       }
+    } catch (error) {
+      console.error("Login page error:", error);
+      toast({
+        variant: 'destructive',
+        title: 'Login Error',
+        description: 'Could not connect to the server. Please try again later.',
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
