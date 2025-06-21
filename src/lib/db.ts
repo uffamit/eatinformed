@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 
 const DB_DIR = path.resolve(process.cwd());
-const DB_PATH = path.join(DB_DIR, 'database.sqlite');
+const DB_PATH = process.env.VERCEL ? '/tmp/database.sqlite' : path.join(DB_DIR, 'database.sqlite');
 
 // Ensure the directory exists (though for project root, it always will)
 if (!fs.existsSync(DB_DIR)) {
