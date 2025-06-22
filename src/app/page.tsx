@@ -96,13 +96,10 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <AuthAwareLinkButton
-                  href="/check" 
-                  buttonText="Check a Product Now"
-                  icon={<UploadCloud className="mr-2 h-5 w-5" />}
-                  buttonSize="lg"
-                  className="shadow-lg hover:shadow-primary/50 transition-shadow"
-                />
+                <Button size="lg" className="shadow-lg" disabled>
+                    <UploadCloud className="mr-2 h-5 w-5" />
+                    Check a Product (Temporarily Disabled)
+                </Button>
                 <Button asChild variant="outline" size="lg">
                   <Link href="#how-it-works">
                     Learn More
@@ -159,13 +156,10 @@ export default function HomePage() {
             </p>
           </div>
           <div className="mx-auto w-full max-w-sm space-y-2">
-             <AuthAwareLinkButton
-                href="/check" 
-                buttonText="Start Scanning"
-                icon={<UploadCloud className="mr-2 h-5 w-5" />}
-                buttonSize="lg"
-                className="w-full shadow-lg hover:shadow-primary/50 transition-shadow"
-              />
+             <Button size="lg" className="w-full shadow-lg" disabled>
+                <UploadCloud className="mr-2 h-5 w-5" />
+                Start Scanning (Temporarily Disabled)
+              </Button>
           </div>
         </div>
       </section>

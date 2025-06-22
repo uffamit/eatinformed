@@ -60,10 +60,8 @@ export default function WelcomePage() {
             What would you like to do next?
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="shadow-md hover:shadow-primary/40 transition-shadow">
-              <Link href="/check">
-                 Scan a Product
-              </Link>
+            <Button size="lg" className="shadow-md" disabled>
+                 Scan a Product (Temporarily Disabled)
             </Button>
             <Button variant="outline" size="lg" asChild>
               <Link href="/">

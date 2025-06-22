@@ -21,7 +21,7 @@ import { useAuth } from '@/hooks/use-auth';
 
 const navItems = [
   { href: '/', label: 'Home', icon: HomeIcon },
-  { href: '/check', label: 'Check Product', icon: PackageSearch },
+  // { href: '/check', label: 'Check Product', icon: PackageSearch }, // Temporarily disabled for debugging
 ];
 
 export default function Navbar() {
