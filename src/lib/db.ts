@@ -1,43 +1,6 @@
-
-import { createClient, type Client, type InStatement } from '@libsql/client';
-
-let db: Client | null = null;
-
-const getDbClient = (): Client => {
-  if (db) {
-    return db;
-  }
-
-  const url = process.env.TURSO_DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-
-  if (!url || !authToken) {
-    console.error(
-      "Turso environment variables not set. Authentication will not work. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in your .env file."
-    );
-    throw new Error("Server database configuration is incomplete.");
-  }
-  
-  db = createClient({
-    url,
-    authToken,
-  });
-
-  return db;
-}
-
-
-async function initializeTable() {
-  const client = getDbClient();
-  await client.execute(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password_hash TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-}
+// DUMMY FILE FOR DEBUGGING
+// This file bypasses the real database to isolate a server crash.
+// It uses a simple in-memory array to store user data for this session.
 
 export interface User {
   id: number;
@@ -46,45 +9,36 @@ export interface User {
   created_at?: string;
 }
 
+// Dummy user store
+const users: User[] = [];
+let userIdCounter = 1;
+
 export async function createUser(email: string, passwordHash: string): Promise<{ lastInsertRowid: bigint | undefined }> {
-  await initializeTable();
-  const client = getDbClient();
-  try {
-    const result = await client.execute({
-      sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
-      args: [email, passwordHash]
-    });
-    return { lastInsertRowid: result.lastInsertRowid };
-  } catch (error: any) {
-    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE' || (error.message && error.message.includes("UNIQUE constraint failed"))) {
-      throw new Error('Email already exists.');
-    }
-    throw error;
+  console.log("DUMMY DB: Creating user", email);
+  const existing = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (existing) {
+    // Mimic database constraint failure
+    throw new Error('Email already exists.');
   }
+  const newUser: User = {
+    id: userIdCounter++,
+    email,
+    password_hash: passwordHash,
+    created_at: new Date().toISOString()
+  };
+  users.push(newUser);
+  return { lastInsertRowid: BigInt(newUser.id) };
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  await initializeTable();
-  const client = getDbClient();
-  
-  const result = await client.execute({
-    sql: 'SELECT * FROM users WHERE email = ? COLLATE NOCASE',
-    args: [email],
-  });
+  console.log("DUMMY DB: Finding user", email);
+  const user = users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
+  return Promise.resolve(user);
+}
 
-  if (result.rows.length === 0) {
-    return null;
-  }
-  
-  const row = result.rows[0];
-  
-  // Ensure the returned object matches the User interface
-  const user: User = {
-      id: row.id as number,
-      email: row.email as string,
-      password_hash: row.password_hash as string,
-      created_at: row.created_at as string | undefined,
-  };
-  
-  return user;
+// Dummy function to prevent errors from other parts of the code that might call it.
+// The original function ensures the database table exists.
+async function initializeTable() {
+    // Do nothing in the dummy implementation.
+    return Promise.resolve();
 }

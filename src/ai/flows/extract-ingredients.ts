@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Extracts ingredient lists and nutritional information from an image of a food label using OCR.

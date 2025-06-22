@@ -1,5 +1,1 @@
-import { config } from 'dotenv';
-config();
-
-import '@/ai/flows/extract-ingredients.ts';
-import '@/ai/flows/assess-health-safety.ts';
+// This file is intentionally left blank to disable AI features for debugging.
