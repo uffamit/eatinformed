@@ -46,7 +46,7 @@ export function createUser(email: string, passwordHash: string): Database.RunRes
 }
 
 export function findUserByEmail(email: string): User | null {
-  const stmt = db.prepare('SELECT * FROM users WHERE email = ?');
+  const stmt = db.prepare('SELECT * FROM users WHERE email = ? COLLATE NOCASE');
   const user = stmt.get(email) as User | undefined;
   return user || null;
 }

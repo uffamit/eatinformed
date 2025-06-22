@@ -2,13 +2,12 @@
 'use client';
 
 import Link from 'next/link';
-import { EatInformedLogo } from '@/components/icons/NutriScanLogo'; // Path remains, component name changes
+import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, PackageSearch, HomeIcon, LogIn, UserPlus, LogOut, UserCircle, Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
@@ -17,35 +16,25 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from '@/hooks/use-auth';
 
 const navItems = [
   { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/check', label: 'Check Product', icon: PackageSearch },
 ];
 
-interface AppUser {
-  displayName?: string;
-  email?: string;
-}
-
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
-  const [user, setUser] = useState<AppUser | null>(null); 
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true); 
+  const { user, loading: isLoadingAuth, verifyAuth } = useAuth();
 
-  useEffect(() => {
-    setUser(null); 
-    setIsLoadingAuth(false);
-  }, []);
-
-  const handleLogout = async () => {
-    setUser(null);
-    toast({ title: "Logged Out", description: "You have been successfully logged out."});
-    router.push('/'); 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    verifyAuth(); // This will trigger the hook to update state to null
+    toast({ title: "Logged Out", description: "You have been successfully logged out." });
+    router.push('/');
   };
 
   const mobileNavLinks = navItems.map(item => (
@@ -96,7 +85,6 @@ export default function Navbar() {
     );
   }
 
-
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 max-w-screen-2xl items-center justify-between">
@@ -122,7 +110,7 @@ export default function Navbar() {
 
         <div className="flex items-center space-x-2">
           {isLoadingAuth ? (
-             <div className="hidden md:flex items-center space-x-2">
+             <div className="hidden md:flex items-center justify-center h-8 w-20">
                 <Loader2 className="h-5 w-5 animate-spin text-primary" />
              </div>
           ) : user ? (
@@ -135,12 +123,10 @@ export default function Navbar() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName || user.email?.split('@')[0] || "User"}</p>
-                    {user.email && (
-                       <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
-                    )}
+                    <p className="text-sm font-medium leading-none">{user.email.split('@')[0]}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user.email}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

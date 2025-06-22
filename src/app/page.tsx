@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadCloud, Activity, ShieldCheck, Loader2 } from 'lucide-react';
-import { EatInformedLogo } from '@/components/icons/NutriScanLogo'; // Path remains, component name changes
-import { useEffect, useState } from 'react';
+import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AlertDialog,
@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; 
+import { useAuth } from '@/hooks/use-auth';
 
 interface AuthAwareLinkButtonProps {
   href: string;
@@ -25,7 +26,6 @@ interface AuthAwareLinkButtonProps {
   buttonVariant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
   buttonSize?: "default" | "sm" | "lg" | "icon" | null | undefined;
   className?: string;
-  alwaysPrompt?: boolean; 
 }
 
 const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
@@ -35,26 +35,28 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
   buttonVariant = "default",
   buttonSize = "lg",
   className = "",
-  alwaysPrompt = false,
 }) => {
   const router = useRouter();
   const [showDialog, setShowDialog] = useState(false);
+  const { user, loading } = useAuth();
 
   const handleButtonClick = () => {
-    if (alwaysPrompt) { 
-      setShowDialog(true);
-    } else {
+    if (loading) return; // Prevent action while auth state is loading
+
+    if (user) {
       router.push(href);
+    } else {
+      setShowDialog(true);
     }
   };
 
   return (
-    <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-      <Button variant={buttonVariant} size={buttonSize} className={className} onClick={handleButtonClick}>
-        {icon}
-        {buttonText}
+    <>
+      <Button variant={buttonVariant} size={buttonSize} className={className} onClick={handleButtonClick} disabled={loading}>
+        {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : icon}
+        {loading ? 'Checking...' : buttonText}
       </Button>
-      {alwaysPrompt && ( 
+      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Authentication Required</AlertDialogTitle>
@@ -72,8 +74,8 @@ const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      )}
-    </AlertDialog>
+      </AlertDialog>
+    </>
   );
 };
 
@@ -100,7 +102,6 @@ export default function HomePage() {
                   icon={<UploadCloud className="mr-2 h-5 w-5" />}
                   buttonSize="lg"
                   className="shadow-lg hover:shadow-primary/50 transition-shadow"
-                  alwaysPrompt={true} 
                 />
                 <Button asChild variant="outline" size="lg">
                   <Link href="#how-it-works">
@@ -164,7 +165,6 @@ export default function HomePage() {
                 icon={<UploadCloud className="mr-2 h-5 w-5" />}
                 buttonSize="lg"
                 className="w-full shadow-lg hover:shadow-primary/50 transition-shadow"
-                alwaysPrompt={true} 
               />
           </div>
         </div>

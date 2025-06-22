@@ -1,4 +1,6 @@
 
+'use server';
+
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { createUser, findUserByEmail, type User } from './db';
@@ -32,13 +34,13 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
     }
 
     if (password.length < 6) {
-        return { error: 'Password must be at least 6 characters long.', status: 400 };
+      return { error: 'Password must be at least 6 characters long.', status: 400 };
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     const result = createUser(email, passwordHash);
 
-    if (result.lastInsertRowid) {
+    if (result && result.lastInsertRowid) {
       const userId = Number(result.lastInsertRowid);
       const token = jwt.sign({ userId, email }, JWT_SECRET!, { expiresIn: '1h' });
       return { token };
@@ -48,7 +50,7 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
   } catch (error: any) {
     console.error('SignUp error:', error);
     if (error.message === 'Email already exists.') {
-        return { error: 'Email already in use.', status: 409 };
+      return { error: 'Email already in use.', status: 409 };
     }
     return { error: 'An internal server error occurred.', status: 500 };
   }
@@ -71,5 +73,15 @@ export async function signIn(email: string, password: string): Promise<SignInRes
   } catch (error) {
     console.error('SignIn error:', error);
     return { error: 'An internal server error occurred.', status: 500 };
+  }
+}
+
+export function verifyToken(token: string): jwt.JwtPayload | string | null {
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET!);
+    return decoded;
+  } catch (error) {
+    console.error('Token verification error:', error);
+    return null;
   }
 }

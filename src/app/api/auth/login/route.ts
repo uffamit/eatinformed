@@ -1,7 +1,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { signIn } from '@/lib/auth';
-
+ 
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: result.status || 500 });
     }
-
+ 
     if (result.token) {
       return NextResponse.json({ token: result.token }, { status: 200 });
     }
@@ -27,3 +27,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'An internal server error occurred.' }, { status: 500 });
   }
 }
+

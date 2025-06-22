@@ -10,6 +10,7 @@ import { UserPlus, Loader2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function SignUpPage() {
   const [username, setUsername] = useState(''); // Username is collected but not used by backend in this version
@@ -19,6 +20,7 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { verifyAuth } = useAuth();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -50,6 +52,7 @@ export default function SignUpPage() {
 
       if (response.ok && data.token) {
         localStorage.setItem('token', data.token);
+        await verifyAuth(); // Update auth state immediately
         toast({
           title: 'Sign Up Successful!',
           description: 'Redirecting to your welcome page...',

@@ -5,26 +5,22 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PartyPopper, Home, Loader2 } from 'lucide-react';
-import { EatInformedLogo } from '@/components/icons/NutriScanLogo'; // Path remains, component name changes
-import { useEffect, useState } from 'react';
+import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-interface UserProfile {
-  username: string;
-  email?: string;
-}
+import { useAuth } from '@/hooks/use-auth';
 
 export default function WelcomePage() {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    setUserProfile({ username: "Valued User" });
-    setIsLoading(false);
-  }, [router]);
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
 
-  if (isLoading) {
+  if (authLoading || !user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">
         <Card className="w-full max-w-lg shadow-xl p-8">
@@ -36,7 +32,7 @@ export default function WelcomePage() {
     );
   }
   
-  const displayName = userProfile?.username || 'Guest';
+  const displayName = user.email.split('@')[0] || 'Valued User';
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">

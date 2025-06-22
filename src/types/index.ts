@@ -9,3 +9,9 @@
 
 // Currently, AI flow types are co-located with their definitions.
 // This file is a placeholder for additional app-wide types.
+
+export interface User {
+  id: string;
+  name: string;
+  displayName: string;
+}

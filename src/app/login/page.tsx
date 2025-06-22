@@ -10,6 +10,7 @@ import { LogIn, Loader2 } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { verifyAuth } = useAuth();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -39,6 +41,7 @@ export default function LoginPage() {
 
       if (response.ok && data.token) {
         localStorage.setItem('token', data.token);
+        await verifyAuth(); // Update auth state immediately
         toast({
           title: 'Login Successful!',
           description: 'Redirecting to your welcome page...',
