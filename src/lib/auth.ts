@@ -22,7 +22,8 @@ interface SignInResult {
 export async function signUp(email: string, password: string): Promise<SignUpResult> {
   const JWT_SECRET = process.env.JWT_SECRET;
   if (!JWT_SECRET) {
-    throw new Error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+    console.error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+    return { error: 'Server configuration error.', status: 500 };
   }
 
   try {
@@ -57,7 +58,8 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
 export async function signIn(email: string, password: string): Promise<SignInResult> {
   const JWT_SECRET = process.env.JWT_SECRET;
   if (!JWT_SECRET) {
-    throw new Error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+    console.error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+    return { error: 'Server configuration error.', status: 500 };
   }
   
   try {
@@ -82,7 +84,8 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 export async function verifyToken(token: string): Promise<jwt.JwtPayload | string | null> {
   const JWT_SECRET = process.env.JWT_SECRET;
   if (!JWT_SECRET) {
-    throw new Error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+    console.error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+    return null;
   }
 
   try {

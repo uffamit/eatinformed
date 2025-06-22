@@ -15,23 +15,28 @@ export default function WelcomePage() {
   const router = useRouter();
 
   useEffect(() => {
+    // If auth check is complete and there is no user, redirect to login.
+    // Using replace so the user can't click "back" to a broken welcome page.
     if (!authLoading && !user) {
-      router.push('/login');
+      router.replace('/login');
     }
   }, [user, authLoading, router]);
 
+  // While loading, or if there's no user yet (before redirect happens), show a full-page loader.
+  // This prevents any part of the welcome message from rendering with incomplete data.
   if (authLoading || !user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-10rem)] space-y-8 text-center">
         <Card className="w-full max-w-lg shadow-xl p-8">
           <Loader2 className="mx-auto h-12 w-12 text-primary animate-spin mb-4" />
-          <CardTitle className="text-3xl font-headline">Loading Welcome Page...</CardTitle>
-          <CardDescription>Please wait while we prepare your welcome.</CardDescription>
+          <CardTitle className="text-3xl font-headline">Verifying Session...</CardTitle>
+          <CardDescription>Please wait while we check your credentials.</CardDescription>
         </Card>
       </div>
     );
   }
   
+  // Only render the welcome content if loading is complete AND the user exists.
   const displayName = user.email.split('@')[0] || 'Valued User';
 
   return (
