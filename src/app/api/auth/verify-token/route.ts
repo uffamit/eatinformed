@@ -25,6 +25,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ id: user.id, email: user.email });
 
   } catch (error) {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    console.error('Verify token API error:', error);
+    return NextResponse.json({ error: 'An internal server error occurred.' }, { status: 500 });
   }
 }

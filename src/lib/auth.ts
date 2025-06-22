@@ -1,15 +1,9 @@
+
 'use server';
 
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { createUser, findUserByEmail, type User } from './db';
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  console.error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
-  process.exit(1);
-}
 
 const SALT_ROUNDS = 10;
 
@@ -26,6 +20,11 @@ interface SignInResult {
 }
 
 export async function signUp(email: string, password: string): Promise<SignUpResult> {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    throw new Error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+  }
+
   try {
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
@@ -41,7 +40,7 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
 
     if (result && result.lastInsertRowid) {
       const userId = Number(result.lastInsertRowid);
-      const token = jwt.sign({ userId, email }, JWT_SECRET!, { expiresIn: '1h' });
+      const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '1h' });
       return { token };
     } else {
       return { error: 'Failed to create user.', status: 500 };
@@ -56,6 +55,11 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
 }
 
 export async function signIn(email: string, password: string): Promise<SignInResult> {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    throw new Error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+  }
+  
   try {
     const user = await findUserByEmail(email);
     if (!user) {
@@ -67,7 +71,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
       return { error: 'Invalid email or password.', status: 401 };
     }
 
-    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET!, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
     return { token };
   } catch (error) {
     console.error('SignIn error:', error);
@@ -76,8 +80,13 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 }
 
 export async function verifyToken(token: string): Promise<jwt.JwtPayload | string | null> {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) {
+    throw new Error("FATAL ERROR: JWT_SECRET is not defined. Please set it in your .env file.");
+  }
+
   try {
-    const decoded = jwt.verify(token, JWT_SECRET!);
+    const decoded = jwt.verify(token, JWT_SECRET);
     return decoded;
   } catch (error) {
     console.error('Token verification error:', error);
