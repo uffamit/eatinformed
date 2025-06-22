@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -32,15 +33,15 @@ const AssessHealthSafetyOutputSchema = z.object({
 });
 export type AssessHealthSafetyOutput = z.infer<typeof AssessHealthSafetyOutputSchema>;
 
-export async function assessHealthSafety(input: AssessHealthSafetyInput): Promise<AssessHealthSafetyOutput> {
-  return assessHealthSafetyFlow(input);
-}
+let prompt: any = null;
+let assessHealthSafetyFlow: any = null;
 
-const prompt = ai.definePrompt({
-  name: 'assessHealthSafetyPrompt',
-  input: {schema: AssessHealthSafetyInputSchema},
-  output: {schema: AssessHealthSafetyOutputSchema},
-  prompt: `You are an AI assistant that specializes in assessing the health and safety of food products.
+if (ai) {
+  prompt = ai.definePrompt({
+    name: 'assessHealthSafetyPrompt',
+    input: {schema: AssessHealthSafetyInputSchema},
+    output: {schema: AssessHealthSafetyOutputSchema},
+    prompt: `You are an AI assistant that specializes in assessing the health and safety of food products.
 
 You will be provided with a list of ingredients and your task is to:
 
@@ -58,17 +59,24 @@ Your response should be structured as a JSON object with the following keys:
 *   warnings (array): A list of warnings about potentially harmful ingredients.
 
 Ensure that the rating is an integer between 1 and 5, and that pros, cons, and warnings are arrays of strings.`,
-});
+  });
 
-const assessHealthSafetyFlow = ai.defineFlow(
-  {
-    name: 'assessHealthSafetyFlow',
-    inputSchema: AssessHealthSafetyInputSchema,
-    outputSchema: AssessHealthSafetyOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  assessHealthSafetyFlow = ai.defineFlow(
+    {
+      name: 'assessHealthSafetyFlow',
+      inputSchema: AssessHealthSafetyInputSchema,
+      outputSchema: AssessHealthSafetyOutputSchema,
+    },
+    async input => {
+      const {output} = await prompt(input);
+      return output!;
+    }
+  );
+}
+
+export async function assessHealthSafety(input: AssessHealthSafetyInput): Promise<AssessHealthSafetyOutput> {
+  if (!assessHealthSafetyFlow) {
+    throw new Error('AI functionality is disabled. Please configure the GOOGLE_API_KEY in your .env file.');
   }
-);
-
+  return assessHealthSafetyFlow(input);
+}
