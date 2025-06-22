@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    const user = findUserByEmail(decoded.email);
+    const user = await findUserByEmail(decoded.email);
     if (!user) {
         return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }

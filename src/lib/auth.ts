@@ -28,7 +28,7 @@ interface SignInResult {
 
 export async function signUp(email: string, password: string): Promise<SignUpResult> {
   try {
-    const existingUser = findUserByEmail(email);
+    const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return { error: 'Email already in use.', status: 409 };
     }
@@ -38,7 +38,7 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const result = createUser(email, passwordHash);
+    const result = await createUser(email, passwordHash);
 
     if (result && result.lastInsertRowid) {
       const userId = Number(result.lastInsertRowid);
@@ -58,7 +58,7 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
 
 export async function signIn(email: string, password: string): Promise<SignInResult> {
   try {
-    const user = findUserByEmail(email);
+    const user = await findUserByEmail(email);
     if (!user) {
       return { error: 'Invalid email or password.', status: 401 };
     }

@@ -1,30 +1,27 @@
 
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs';
+import { createClient, type Client } from '@libsql/client';
 
-const DB_DIR = path.resolve(process.cwd());
-const DB_PATH = process.env.VERCEL ? '/tmp/database.sqlite' : path.join(DB_DIR, 'database.sqlite');
-
-// Ensure the directory exists (though for project root, it always will)
-if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
+if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+  console.warn(
+    "Turso environment variables not set. Authentication will not work. Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN in your .env file."
+  );
 }
 
-const db = new Database(DB_PATH);
+const db = createClient({
+  url: process.env.TURSO_DATABASE_URL ?? "",
+  authToken: process.env.TURSO_AUTH_TOKEN ?? "",
+});
 
-
-db.pragma('journal_mode = WAL');
-
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+async function initializeTable() {
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+}
 
 export interface User {
   id: number;
@@ -33,10 +30,14 @@ export interface User {
   created_at?: string;
 }
 
-export function createUser(email: string, passwordHash: string): Database.RunResult {
-  const stmt = db.prepare('INSERT INTO users (email, password_hash) VALUES (?, ?)');
+export async function createUser(email: string, passwordHash: string): Promise<{ lastInsertRowid: bigint | undefined }> {
+  await initializeTable();
   try {
-    return stmt.run(email, passwordHash);
+    const result = await db.execute({
+      sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
+      args: [email, passwordHash]
+    });
+    return { lastInsertRowid: result.lastInsertRowid };
   } catch (error: any) {
     if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
       throw new Error('Email already exists.');
@@ -45,10 +46,26 @@ export function createUser(email: string, passwordHash: string): Database.RunRes
   }
 }
 
-export function findUserByEmail(email: string): User | null {
-  const stmt = db.prepare('SELECT * FROM users WHERE email = ? COLLATE NOCASE');
-  const user = stmt.get(email) as User | undefined;
-  return user || null;
-}
+export async function findUserByEmail(email: string): Promise<User | null> {
+  await initializeTable();
+  const result = await db.execute({
+    sql: 'SELECT * FROM users WHERE email = ? COLLATE NOCASE',
+    args: [email],
+  });
 
-export default db;
+  if (result.rows.length === 0) {
+    return null;
+  }
+  
+  const row = result.rows[0];
+  
+  // Ensure the returned object matches the User interface
+  const user: User = {
+      id: row.id as number,
+      email: row.email as string,
+      password_hash: row.password_hash as string,
+      created_at: row.created_at as string | undefined,
+  };
+  
+  return user;
+}
