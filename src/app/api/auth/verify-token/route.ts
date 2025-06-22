@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     }
     const token = authHeader.split(' ')[1];
     
-    const decoded = verifyToken(token);
+    const decoded = await verifyToken(token);
     if (!decoded || typeof decoded === 'string' || !decoded.email) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }

@@ -76,7 +76,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
   }
 }
 
-export function verifyToken(token: string): jwt.JwtPayload | string | null {
+export async function verifyToken(token: string): Promise<jwt.JwtPayload | string | null> {
   try {
     const decoded = jwt.verify(token, JWT_SECRET!);
     return decoded;
