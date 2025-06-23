@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Activity, ShieldCheck, Loader2 } from 'lucide-react';
+import { UploadCloud, Activity, ShieldCheck, Loader2, ScanLine } from 'lucide-react';
 import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -96,10 +96,13 @@ export default function HomePage() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button size="lg" className="shadow-lg" disabled>
-                    <UploadCloud className="mr-2 h-5 w-5" />
-                    Check a Product (Temporarily Disabled)
-                </Button>
+                <AuthAwareLinkButton
+                    href="/check"
+                    buttonText="Check a Product"
+                    icon={<ScanLine className="mr-2 h-5 w-5" />}
+                    buttonSize="lg"
+                    className="shadow-lg"
+                  />
                 <Button asChild variant="outline" size="lg">
                   <Link href="#how-it-works">
                     Learn More
@@ -156,10 +159,13 @@ export default function HomePage() {
             </p>
           </div>
           <div className="mx-auto w-full max-w-sm space-y-2">
-             <Button size="lg" className="w-full shadow-lg" disabled>
-                <UploadCloud className="mr-2 h-5 w-5" />
-                Start Scanning (Temporarily Disabled)
-              </Button>
+             <AuthAwareLinkButton
+                href="/check"
+                buttonText="Start Scanning Now"
+                icon={<ScanLine className="mr-2 h-5 w-5" />}
+                buttonSize="lg"
+                className="w-full shadow-lg"
+              />
           </div>
         </div>
       </section>

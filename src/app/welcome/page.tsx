@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PartyPopper, Home, Loader2 } from 'lucide-react';
+import { PartyPopper, Home, Loader2, ScanLine } from 'lucide-react';
 import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -60,8 +60,11 @@ export default function WelcomePage() {
             What would you like to do next?
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="shadow-md" disabled>
-                 Scan a Product (Temporarily Disabled)
+            <Button size="lg" className="shadow-md" asChild>
+               <Link href="/check">
+                <ScanLine className="mr-2 h-5 w-5" />
+                Scan a Product
+              </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
               <Link href="/">
