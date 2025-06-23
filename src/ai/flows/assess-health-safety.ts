@@ -40,7 +40,7 @@ const prompt = ai.definePrompt({
   name: 'assessHealthSafetyPrompt',
   input: {schema: AssessHealthSafetyInputSchema},
   output: {schema: AssessHealthSafetyOutputSchema},
-  prompt: `You are a world-class nutritionist and food safety expert. Your task is to analyze the following list of food ingredients and provide a concise health and safety assessment.
+  prompt: `You are a world-class nutritionist and food safety expert. Your task is to analyze the following list of food ingredients and provide a concise, objective, and non-overlapping health and safety assessment.
 
 Ingredients list:
 "{{ingredients}}"
@@ -48,11 +48,11 @@ Ingredients list:
 Based on the ingredients, perform the following actions and return the result in the specified JSON format:
 
 1.  **Health Rating (1-5):** Provide an overall health score from 1 (very unhealthy) to 5 (very healthy). Consider factors like processing level, presence of whole foods, additives, sugar content, etc.
-2.  **Pros:** List 2-3 key positive aspects. Focus on healthy, natural, or beneficial ingredients. If there are none, state that.
-3.  **Cons:** List 2-3 key negative aspects. Focus on artificial additives, high sugar/sodium indicators, unhealthy fats, or heavily processed components.
-4.  **Warnings:** Identify any ingredients that are particularly controversial, banned in some regions (e.g., certain food dyes), or known allergens not explicitly highlighted. If there are none, return an empty array.
+2.  **Pros:** List 2-3 distinct positive aspects. Focus on healthy, natural, or beneficial ingredients. Do not simply state the absence of a negative as a positive (e.g., instead of "Low in sugar", focus on "Made with whole grains").
+3.  **Cons:** List 2-3 distinct negative aspects that are separate from the 'Pros'. Focus on artificial additives, high sugar/sodium indicators, unhealthy fats, or heavily processed components. Ensure these are genuine drawbacks.
+4.  **Warnings:** This section is for CRITICAL alerts only. List only ingredients that are banned in major regions (e.g., certain food dyes in the EU), are part of a major scientific controversy regarding health dangers, or pose a significant, non-obvious risk. Do not use this section for common allergens or generally unhealthy items; those belong in 'Cons' or dietary information. If there are no such critical warnings, return an empty array.
 
-Your analysis should be objective and based on general nutritional science. Be concise and clear.`,
+Your analysis must be objective and based on general nutritional science. Be concise, clear, and ensure the 'Pros' and 'Cons' provide a balanced view without contradicting each other.`,
    config: {
     safetySettings: [
       {
