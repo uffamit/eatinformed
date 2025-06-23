@@ -75,7 +75,6 @@ export default function CheckPage() {
       reader.onloadend = () => {
         const dataUri = reader.result as string;
         setImagePreviewUrl(dataUri);
-        handleScan(dataUri);
       };
       reader.readAsDataURL(file);
     }
@@ -92,7 +91,6 @@ export default function CheckPage() {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataUri = canvas.toDataURL('image/png');
         setImagePreviewUrl(dataUri);
-        handleScan(dataUri);
       }
     }
   };
@@ -105,11 +103,11 @@ export default function CheckPage() {
     
     try {
       // Step 1: Extract ingredients from image
-      const extracted = await extractIngredients({ photoDataUri });
+      const extracted = await extractIngredients({ image: photoDataUri });
       setIngredientsData(extracted);
 
       // Step 2: Assess health safety based on extracted ingredients
-      const assessment = await assessHealthSafety({ ingredients: extracted.ingredients });
+      const assessment = await assessHealthSafety({ ingredients: extracted.ingredients.join(', ') });
       setAssessmentData(assessment);
 
     } catch (e: any) {
@@ -165,7 +163,7 @@ export default function CheckPage() {
             Scan a Product
         </CardTitle>
         <CardDescription>
-          Upload a clear image of a food label or use your camera to get an instant health analysis.
+          {imagePreviewUrl ? "Confirm the image is clear, then start the analysis." : "Upload a clear image of a food label or use your camera to get an instant health analysis."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -174,6 +172,28 @@ export default function CheckPage() {
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
             <p className="text-lg text-muted-foreground">Analyzing your product...</p>
             <p className="text-sm text-muted-foreground">This may take a moment.</p>
+          </div>
+        ) : imagePreviewUrl ? (
+          <div className="flex flex-col items-center space-y-4 p-4">
+            <p className="font-semibold text-lg">Is this image clear?</p>
+            <img 
+              src={imagePreviewUrl} 
+              alt="Selected food label preview" 
+              className="max-h-60 w-auto rounded-md border-2 border-primary object-contain"
+            />
+            <p className="text-sm text-muted-foreground text-center">
+              A clear photo of the ingredients list provides the best results.
+            </p>
+            <div className="flex w-full justify-center space-x-4 pt-4">
+              <Button variant="outline" onClick={handleReset}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Try Again
+              </Button>
+              <Button onClick={() => handleScan(imagePreviewUrl!)}>
+                <ScanLine className="mr-2 h-4 w-4" />
+                Analyze Image
+              </Button>
+            </div>
           </div>
         ) : (
           <Tabs defaultValue="upload" className="w-full" onValueChange={handleTabChange}>
