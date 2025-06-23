@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI agent that assesses the health and safety of food ingredients.
@@ -47,7 +48,32 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
     };
   }
 
-  return assessHealthSafetyFlow(input);
+  try {
+    return await assessHealthSafetyFlow(input);
+  } catch (error: any) {
+    console.error("Error in assessHealthSafetyFlow:", error);
+    // Construct a user-friendly error response that fits the schema
+    let warningMessage = "The AI model failed to provide an assessment due to an unexpected error.";
+    if (error.message && (error.message.includes('503') || error.message.includes('Service Unavailable'))) {
+      warningMessage = "The AI analysis service is temporarily overloaded. Please wait a moment and try again.";
+    } else if (error.message && error.message.includes('Deadline exceeded')) {
+      warningMessage = "The analysis took too long to complete. Please try again.";
+    }
+    
+    return {
+      rating: 0,
+      pros: ["None (analysis failed)."],
+      cons: ["None (analysis failed)."],
+      warnings: [warningMessage],
+      dietaryInfo: {
+        allergens: [],
+        isVegetarian: false,
+       isVegan: false,
+       isGlutenFree: false,
+        summary: "Could not perform dietary analysis because the AI service is unavailable.",
+      },
+    };
+  }
 }
 
 const prompt = ai.definePrompt({
