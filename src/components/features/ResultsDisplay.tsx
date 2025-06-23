@@ -1,8 +1,8 @@
 
 'use client';
 
-import type { ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients';
-import type { AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety';
+import type { ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients-types';
+import type { AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety-types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Star, ThumbsUp, ThumbsDown, AlertTriangle, Leaf, Info, ListChecks, Target, Share2 } from 'lucide-react';
@@ -75,7 +75,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
             <>
                 <Separator />
                 <DisclosureSection title="Ingredients List" icon={<ListChecks className="h-5 w-5 text-primary" />}>
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData.ingredients || 'No ingredients extracted.'}</p>
+                  <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData.ingredients?.join(', ') || 'No ingredients extracted.'}</p>
                 </DisclosureSection>
 
                 <DisclosureSection title="Nutritional Information" icon={<Target className="h-5 w-5 text-primary" />}>
@@ -194,4 +194,3 @@ function DisclosureSection({ title, icon, children }: DisclosureSectionProps) {
         </Accordion>
     )
 }
-

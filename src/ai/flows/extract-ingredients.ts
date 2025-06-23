@@ -4,7 +4,6 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit'; // Assuming genkit/z is used for Zod functionality
 import { ExtractIngredientsInput, ExtractIngredientsInputSchema, ExtractIngredientsOutput, ExtractIngredientsOutputSchema } from './extract-ingredients-types';
 
 
@@ -23,16 +22,16 @@ const prompt = ai.definePrompt({
 
 Analyze the image carefully.
 
-1.  Identify and transcribe the complete list of ingredients.
-2.  Identify and transcribe the nutritional facts panel (e.g., Calories, Total Fat, Sodium, Total Carbohydrate, Protein).
+1.  Identify and transcribe the complete list of ingredients as an array of strings.
+2.  Identify and transcribe the nutritional facts panel (e.g., Calories, Total Fat, Sodium, Total Carbohydrate, Protein) as a single string.
 3.  Based on your analysis, set the status:
     - 'success' if you found either ingredients or nutritional information.
     - 'no_data' if the image is clear but contains no discernible food label text.
     - 'unreadable' if the image is too blurry, poorly lit, or otherwise impossible to read.
 
-Return the extracted text in the specified JSON format. If a section is not found, return an empty string for that field.
+Return the extracted text in the specified JSON format. If a section is not found, return an empty array or empty string for that field.
 
-Image to analyze: {{media url=photoDataUri}}`,
+Image to analyze: {{media url=image}}`,
 });
 
 const extractIngredientsFlow = ai.defineFlow(
@@ -45,13 +44,13 @@ const extractIngredientsFlow = ai.defineFlow(
     const {output} = await prompt(input);
     if (!output) {
       return {
-        ingredients: '',
+        ingredients: [],
         nutritionInformation: '',
         status: 'unreadable',
       };
     }
     // A simple check to refine status if model returns success but no data
-    if (output.status === 'success' && !output.ingredients && !output.nutritionInformation) {
+    if (output.status === 'success' && output.ingredients.length === 0 && !output.nutritionInformation) {
         output.status = 'no_data';
     }
 
