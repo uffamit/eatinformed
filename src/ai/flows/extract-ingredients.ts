@@ -4,23 +4,9 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'genkit'; // Assuming genkit/z is used for Zod functionality
+import { ExtractIngredientsInput, ExtractIngredientsInputSchema, ExtractIngredientsOutput, ExtractIngredientsOutputSchema } from './extract-ingredients-types';
 
-export const ExtractIngredientsInputSchema = z.object({
-  photoDataUri: z
-    .string()
-    .describe(
-      "A photo of a food label, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-    ),
-});
-export type ExtractIngredientsInput = z.infer<typeof ExtractIngredientsInputSchema>;
-
-export const ExtractIngredientsOutputSchema = z.object({
-  ingredients: z.string().describe('The full list of ingredients extracted from the label. If none are found, this should be an empty string.'),
-  nutritionInformation: z.string().describe('The nutritional information (calories, fat, protein, etc.) extracted from the label. If none is found, this should be an empty string.'),
-  status: z.enum(['success', 'no_data', 'unreadable']).describe('The status of the extraction.'),
-});
-export type ExtractIngredientsOutput = z.infer<typeof ExtractIngredientsOutputSchema>;
 
 export async function extractIngredients(input: ExtractIngredientsInput): Promise<ExtractIngredientsOutput> {
   if (!ai) {
