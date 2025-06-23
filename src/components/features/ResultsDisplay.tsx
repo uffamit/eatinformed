@@ -86,16 +86,39 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
         
         <Separator />
 
-        <div>
-            <h3 className="text-lg font-semibold mb-2 flex items-center"><Info className="h-5 w-5 mr-2 text-primary" /> Dietary Information</h3>
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold flex items-center"><Info className="h-5 w-5 mr-2 text-primary" /> Dietary Information</h3>
+          {assessmentData.dietaryInfo && (assessmentData.dietaryInfo.summary || assessmentData.dietaryInfo.allergens?.length > 0) ? (
+            <>
+              {assessmentData.dietaryInfo.summary && <p className="text-sm text-muted-foreground">{assessmentData.dietaryInfo.summary}</p>}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {assessmentData.dietaryInfo.isVegan && (
+                  <Badge variant="outline" className="text-green-700 border-green-500/80 bg-green-50 dark:bg-green-900/20 dark:text-green-400 dark:border-green-500/50">
+                    Vegan
+                  </Badge>
+                )}
+                {assessmentData.dietaryInfo.isVegetarian && !assessmentData.dietaryInfo.isVegan && (
+                   <Badge variant="outline" className="text-green-700 border-green-500/80 bg-green-50 dark:bg-green-900/20 dark:text-green-400 dark:border-green-500/50">
+                    Vegetarian
+                  </Badge>
+                )}
+                {assessmentData.dietaryInfo.isGlutenFree && (
+                   <Badge variant="outline" className="text-green-700 border-green-500/80 bg-green-50 dark:bg-green-900/20 dark:text-green-400 dark:border-green-500/50">
+                    Gluten-Free
+                  </Badge>
+                )}
+                {assessmentData.dietaryInfo.allergens?.map((allergen) => (
+                  <Badge key={allergen} variant="destructive">
+                    Contains {allergen}
+                  </Badge>
+                ))}
+              </div>
+            </>
+          ) : (
             <p className="text-sm text-muted-foreground">
-                Allergen flags and dietary preference matching will be shown here in a future update. For example: "Contains: Gluten, Dairy. Suitable for Vegetarians."
+              Dietary information could not be determined from the provided label.
             </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-                <Badge variant="outline">Gluten-Free</Badge>
-                <Badge variant="outline">Vegan</Badge>
-                <Badge variant="destructive">Contains Peanuts</Badge>
-            </div>
+          )}
         </div>
 
       </CardContent>

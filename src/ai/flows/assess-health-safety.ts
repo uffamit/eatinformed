@@ -20,6 +20,13 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
       pros: [],
       cons: [],
       warnings: ["AI functionality is currently offline. The server administrator needs to configure the GOOGLE_API_KEY."],
+      dietaryInfo: {
+        allergens: [],
+        isVegetarian: false,
+        isVegan: false,
+        isGlutenFree: false,
+        summary: "AI system is offline; dietary analysis is not available.",
+      },
     };
   }
 
@@ -30,6 +37,13 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
       pros: ["None (no data to analyze)."],
       cons: ["None (no data to analyze)."],
       warnings: ["Unable to evaluate due to missing or unreadable label. Please upload a clear image."],
+      dietaryInfo: {
+        allergens: [],
+        isVegetarian: false,
+        isVegan: false,
+        isGlutenFree: false,
+        summary: "Could not perform dietary analysis because no ingredients were found.",
+      },
     };
   }
 
@@ -51,6 +65,12 @@ Based on the ingredients, perform the following actions and return the result in
 2.  **Pros:** List 2-3 distinct positive aspects. Focus on healthy, natural, or beneficial ingredients. Do not simply state the absence of a negative as a positive (e.g., instead of "Low in sugar", focus on "Made with whole grains").
 3.  **Cons:** List 2-3 distinct negative aspects that are separate from the 'Pros'. Focus on artificial additives, high sugar/sodium indicators, unhealthy fats, or heavily processed components. Ensure these are genuine drawbacks.
 4.  **Warnings:** This section is for CRITICAL alerts only. List only ingredients that are banned in major regions (e.g., certain food dyes in the EU), are part of a major scientific controversy regarding health dangers, or pose a significant, non-obvious risk. Do not use this section for common allergens or generally unhealthy items; those belong in 'Cons' or dietary information. If there are no such critical warnings, return an empty array.
+5.  **Dietary Information:** Based on the ingredients, analyze for common dietary concerns. If the label explicitly states a status (e.g., "Certified Gluten-Free"), trust it. Otherwise, infer based on the ingredients.
+    - **allergens:** Identify and list common allergens such as Gluten, Dairy, Soy, Peanuts, Tree Nuts, Fish, Shellfish. Do not list an allergen if a "-free" version is specified (e.g. "soy lecithin" is an allergen, but if the label also says "soy-free", do not list it).
+    - **isVegetarian:** Determine if the product is vegetarian (contains no meat, poultry, or fish).
+    - **isVegan:** Determine if the product is vegan (contains no animal products, including dairy, eggs, or honey).
+    - **isGlutenFree:** Determine if the product is gluten-free (contains no wheat, barley, rye, or their derivatives).
+    - **summary:** Provide a brief, human-readable summary of the key dietary points. For example: "Contains Dairy and Soy. Suitable for vegetarians but not vegans." If no specific concerns are found, state that.
 
 Your analysis must be objective and based on general nutritional science. Be concise, clear, and ensure the 'Pros' and 'Cons' provide a balanced view without contradicting each other.`,
    config: {
