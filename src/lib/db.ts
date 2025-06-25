@@ -12,31 +12,26 @@ export interface User {
 
 // Singleton instance for the database client
 let dbInstance: Client | null = null;
-let dbInitializationPromise: Promise<void> | null = null;
+// Flag to ensure initialization only runs once per server instance lifetime.
+let dbInitialized = false;
 
-// This function ensures the database is initialized, but only runs the initialization logic once.
-function initializeDatabase(client: Client): Promise<void> {
-    if (!dbInitializationPromise) {
-        dbInitializationPromise = (async () => {
-            try {
-                await client.execute(`
-                    CREATE TABLE IF NOT EXISTS users (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        email TEXT NOT NULL UNIQUE,
-                        password_hash TEXT NOT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                `);
-                console.log('Users table checked/initialized successfully.');
-            } catch (error) {
-                console.error('Failed to initialize users table:', error);
-                // Reset the promise on failure to allow retries on subsequent calls
-                dbInitializationPromise = null; 
-                throw error;
-            }
-        })();
+// This function initializes the database.
+async function initializeDatabase(client: Client): Promise<void> {
+    try {
+        await client.execute(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+        console.log('Users table checked/initialized successfully.');
+        dbInitialized = true; // Set flag on success
+    } catch (error) {
+        console.error('Failed to initialize users table:', error);
+        throw error; // Re-throw the error to be handled by the caller
     }
-    return dbInitializationPromise;
 }
 
 function getDbClient(): Client {
@@ -61,9 +56,12 @@ function getDbClient(): Client {
   return dbInstance;
 }
 
+// This wrapper ensures initialization only runs once.
 async function getInitializedDbClient(): Promise<Client> {
     const client = getDbClient();
-    await initializeDatabase(client);
+    if (!dbInitialized) {
+      await initializeDatabase(client);
+    }
     return client;
 }
 
