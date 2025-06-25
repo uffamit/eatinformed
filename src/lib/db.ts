@@ -10,10 +10,37 @@ export interface User {
   created_at?: string;
 }
 
-let db: Client;
+// Singleton instance for the database client
+let dbInstance: Client | null = null;
+let dbInitializationPromise: Promise<void> | null = null;
+
+// This function ensures the database is initialized, but only runs the initialization logic once.
+function initializeDatabase(client: Client): Promise<void> {
+    if (!dbInitializationPromise) {
+        dbInitializationPromise = (async () => {
+            try {
+                await client.execute(`
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        email TEXT NOT NULL UNIQUE,
+                        password_hash TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                `);
+                console.log('Users table checked/initialized successfully.');
+            } catch (error) {
+                console.error('Failed to initialize users table:', error);
+                // Reset the promise on failure to allow retries on subsequent calls
+                dbInitializationPromise = null; 
+                throw error;
+            }
+        })();
+    }
+    return dbInitializationPromise;
+}
 
 function getDbClient(): Client {
-  if (!db) {
+  if (!dbInstance) {
     const url = process.env.TURSO_DATABASE_URL;
     const authToken = process.env.TURSO_AUTH_TOKEN;
 
@@ -26,41 +53,22 @@ function getDbClient(): Client {
        console.warn('WARNING: TURSO_AUTH_TOKEN is not defined. Connecting to the database without authentication.');
     }
 
-    db = createClient({
+    dbInstance = createClient({
       url,
       authToken,
     });
   }
-  return db;
+  return dbInstance;
 }
 
-// Function to initialize the users table
-export async function initializeTable() {
-  const client = getDbClient();
-  try {
-    await client.execute(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT NOT NULL UNIQUE,
-        password_hash TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log('Users table checked/initialized successfully.');
-  } catch (error) {
-    console.error('Failed to initialize users table:', error);
-    throw error; // Re-throw the error to be handled by the caller
-  }
+async function getInitializedDbClient(): Promise<Client> {
+    const client = getDbClient();
+    await initializeDatabase(client);
+    return client;
 }
-
-// Initialize the table when the module loads
-initializeTable().catch(err => {
-    console.error("Database initialization failed on startup:", err);
-});
-
 
 export async function createUser(email: string, passwordHash: string): Promise<ResultSet> {
-  const client = getDbClient();
+  const client = await getInitializedDbClient();
   try {
     const result = await client.execute({
       sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
@@ -78,7 +86,7 @@ export async function createUser(email: string, passwordHash: string): Promise<R
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const client = getDbClient();
+  const client = await getInitializedDbClient();
   try {
     const result = await client.execute({
       sql: 'SELECT id, email, password_hash, created_at FROM users WHERE email = ?',
