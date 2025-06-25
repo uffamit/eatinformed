@@ -1,4 +1,3 @@
-
 'use server';
 
 import { createClient, type Client, type ResultSet } from '@libsql/client';
@@ -10,15 +9,42 @@ export interface User {
   created_at?: string;
 }
 
-// Singleton instance for the database client
-let dbInstance: Client | null = null;
-// Flag to ensure initialization only runs once per server instance lifetime.
-let dbInitialized = false;
+let db: Client | null = null;
+let initialized = false;
+let initializationError: Error | null = null;
 
-// This function initializes the database.
-async function initializeDatabase(client: Client): Promise<void> {
+// This function provides a singleton, initialized database client.
+async function getDb(): Promise<Client> {
+    if (db && initialized) {
+        return db;
+    }
+    
+    // If initialization previously failed, don't retry.
+    if (initializationError) {
+        throw initializationError;
+    }
+
+    if (!db) {
+        const url = process.env.TURSO_DATABASE_URL;
+        const authToken = process.env.TURSO_AUTH_TOKEN;
+
+        if (!url) {
+            const err = new Error('Server is not configured for database access. TURSO_DATABASE_URL is missing.');
+            initializationError = err;
+            console.error('FATAL: TURSO_DATABASE_URL is not defined.');
+            throw err;
+        }
+        
+        if (!authToken) {
+           console.warn('WARNING: TURSO_AUTH_TOKEN is not defined. Connecting to the database without authentication.');
+        }
+
+        db = createClient({ url, authToken });
+    }
+
     try {
-        await client.execute(`
+        // Run the initialization query.
+        await db.execute(`
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT NOT NULL UNIQUE,
@@ -26,47 +52,19 @@ async function initializeDatabase(client: Client): Promise<void> {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        console.log('Users table checked/initialized successfully.');
-        dbInitialized = true; // Set flag on success
-    } catch (error) {
-        console.error('Failed to initialize users table:', error);
-        throw error; // Re-throw the error to be handled by the caller
+        initialized = true;
+        console.log("Database table 'users' checked/initialized successfully.");
+        return db;
+    } catch (e: any) {
+        initializationError = new Error("Could not initialize the database.");
+        console.error("Failed to initialize users table:", e);
+        throw initializationError;
     }
 }
 
-function getDbClient(): Client {
-  if (!dbInstance) {
-    const url = process.env.TURSO_DATABASE_URL;
-    const authToken = process.env.TURSO_AUTH_TOKEN;
-
-    if (!url) {
-      console.error('FATAL: TURSO_DATABASE_URL is not defined. Please set it in your .env file.');
-      throw new Error('Server is not configured for database access.');
-    }
-    
-    if (!authToken) {
-       console.warn('WARNING: TURSO_AUTH_TOKEN is not defined. Connecting to the database without authentication.');
-    }
-
-    dbInstance = createClient({
-      url,
-      authToken,
-    });
-  }
-  return dbInstance;
-}
-
-// This wrapper ensures initialization only runs once.
-async function getInitializedDbClient(): Promise<Client> {
-    const client = getDbClient();
-    if (!dbInitialized) {
-      await initializeDatabase(client);
-    }
-    return client;
-}
 
 export async function createUser(email: string, passwordHash: string): Promise<ResultSet> {
-  const client = await getInitializedDbClient();
+  const client = await getDb();
   try {
     const result = await client.execute({
       sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
@@ -84,7 +82,7 @@ export async function createUser(email: string, passwordHash: string): Promise<R
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {
-  const client = await getInitializedDbClient();
+  const client = await getDb();
   try {
     const result = await client.execute({
       sql: 'SELECT id, email, password_hash, created_at FROM users WHERE email = ?',

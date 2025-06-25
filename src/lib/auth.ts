@@ -1,4 +1,3 @@
-
 'use server';
 
 import bcrypt from 'bcrypt';
@@ -48,6 +47,9 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
     }
   } catch (error: any) {
     console.error('SignUp error:', error);
+    if (error.message.includes('initialize the database')) {
+        return { error: 'Database service is currently unavailable. Please try again later.', status: 503 };
+    }
     if (error.message === 'Email already exists.') {
       return { error: 'Email already in use.', status: 409 };
     }
@@ -75,8 +77,11 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 
     const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '1h' });
     return { token };
-  } catch (error) {
+  } catch (error: any) {
     console.error('SignIn error:', error);
+    if (error.message.includes('initialize the database')) {
+        return { error: 'Database service is currently unavailable. Please try again later.', status: 503 };
+    }
     return { error: 'An internal server error occurred.', status: 500 };
   }
 }
