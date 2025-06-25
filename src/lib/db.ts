@@ -30,9 +30,8 @@ function getDb(): Client {
 
 export async function createUser(email: string, passwordHash: string): Promise<ResultSet> {
   const client = getDb();
-  // The try-catch block was removed from this function.
-  // The calling function (e.g., `signUp` in `auth.ts`) is now responsible
-  // for handling specific database errors, making the error handling more robust.
+  // The calling function (e.g., `signUp` in `auth.ts`) is responsible
+  // for handling specific database errors.
   const result = await client.execute({
     sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
     args: [email.toLowerCase(), passwordHash],
@@ -42,27 +41,22 @@ export async function createUser(email: string, passwordHash: string): Promise<R
 
 export async function findUserByEmail(email: string): Promise<User | null> {
   const client = getDb();
-  try {
-    const result = await client.execute({
-      sql: 'SELECT id, email, password_hash, created_at FROM users WHERE email = ?',
-      args: [email.toLowerCase()],
-    });
+  // Let errors bubble up to the caller for more specific handling.
+  const result = await client.execute({
+    sql: 'SELECT id, email, password_hash, created_at FROM users WHERE email = ?',
+    args: [email.toLowerCase()],
+  });
 
-    if (result.rows.length === 0) {
-      return null;
-    }
-    
-    const row = result.rows[0];
-    const user: User = {
-        id: row.id as number,
-        email: row.email as string,
-        password_hash: row.password_hash as string,
-        created_at: row.created_at as string,
-    };
-    return user;
-
-  } catch (error) {
-    console.error('Failed to find user by email:', error);
-    throw new Error('An internal server error occurred while retrieving user data.');
+  if (result.rows.length === 0) {
+    return null;
   }
+  
+  const row = result.rows[0];
+  const user: User = {
+      id: row.id as number,
+      email: row.email as string,
+      password_hash: row.password_hash as string,
+      created_at: row.created_at as string,
+  };
+  return user;
 }
