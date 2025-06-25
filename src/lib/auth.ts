@@ -36,14 +36,21 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const result = await createUser(email, passwordHash);
+    const createResult = await createUser(email, passwordHash);
 
-    if (result && result.lastInsertRowid) {
-      const userId = Number(result.lastInsertRowid);
-      const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '1h' });
+    // Check if the insert operation was successful by looking at rowsAffected.
+    if (createResult && createResult.rowsAffected > 0) {
+      // Fetch the newly created user to get their ID for the JWT.
+      const newUser = await findUserByEmail(email);
+      if (!newUser) {
+        // This is a safeguard; it should not be reached if the user was just created.
+        return { error: 'Failed to retrieve new user after creation.', status: 500 };
+      }
+      
+      const token = jwt.sign({ userId: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: '1h' });
       return { token };
     } else {
-      return { error: 'Failed to create user.', status: 500 };
+      return { error: 'Failed to create user in the database.', status: 500 };
     }
   } catch (error: any) {
     console.error('SignUp error:', error);
