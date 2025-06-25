@@ -1,3 +1,4 @@
+
 'use server';
 
 import bcrypt from 'bcrypt';
@@ -36,33 +37,33 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const createResult = await createUser(email, passwordHash);
+    
+    // Attempt to create the user. The `createUser` function will throw an error if it fails (e.g., unique constraint).
+    await createUser(email, passwordHash);
 
-    // Check if the insert operation was successful by looking at rowsAffected.
-    if (createResult && createResult.rowsAffected > 0) {
-      // Fetch the newly created user to get their ID for the JWT.
-      const newUser = await findUserByEmail(email);
-      if (!newUser) {
-        // This is a safeguard; it should not be reached if the user was just created.
-        return { error: 'Failed to retrieve new user after creation.', status: 500 };
-      }
-      
+    // If createUser didn't throw, the user should exist. Fetch them to get the ID for the token.
+    const newUser = await findUserByEmail(email);
+
+    if (newUser) {
       const token = jwt.sign({ userId: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: '1h' });
       return { token };
     } else {
-      return { error: 'Failed to create user in the database.', status: 500 };
+      // This is a safeguard; it indicates a problem if the user can't be found right after creation.
+      console.error("SignUp error: User was supposedly created but could not be found immediately after.");
+      return { error: 'Failed to finalize user account. Please try again.', status: 500 };
     }
   } catch (error: any) {
     console.error('SignUp error:', error);
-    // The specific error for 'Email already exists' is now thrown from db.ts
+    // Handle specific error for unique email constraint, thrown from db.ts
     if (error.message === 'Email already exists.') {
       return { error: 'Email already in use.', status: 409 };
     }
-    // Propagate other specific DB errors if they exist
+    // Handle specific error for database configuration/connection issues
     if (error.message.includes('database access')) {
       return { error: 'Database service is currently unavailable. Please try again later.', status: 503 };
     }
-    return { error: 'An internal server error occurred.', status: 500 };
+    // Generic catch-all for other unexpected errors
+    return { error: 'An internal server error occurred during signup.', status: 500 };
   }
 }
 
