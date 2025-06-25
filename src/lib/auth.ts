@@ -54,11 +54,13 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
     }
   } catch (error: any) {
     console.error('SignUp error:', error);
-    if (error.message.includes('initialize the database')) {
-        return { error: 'Database service is currently unavailable. Please try again later.', status: 503 };
-    }
+    // The specific error for 'Email already exists' is now thrown from db.ts
     if (error.message === 'Email already exists.') {
       return { error: 'Email already in use.', status: 409 };
+    }
+    // Propagate other specific DB errors if they exist
+    if (error.message.includes('database access')) {
+      return { error: 'Database service is currently unavailable. Please try again later.', status: 503 };
     }
     return { error: 'An internal server error occurred.', status: 500 };
   }
@@ -86,7 +88,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
     return { token };
   } catch (error: any) {
     console.error('SignIn error:', error);
-    if (error.message.includes('initialize the database')) {
+    if (error.message.includes('database access')) {
         return { error: 'Database service is currently unavailable. Please try again later.', status: 503 };
     }
     return { error: 'An internal server error occurred.', status: 500 };
