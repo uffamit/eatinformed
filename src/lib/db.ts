@@ -1,3 +1,4 @@
+
 'use server';
 
 import { createClient, type Client, type ResultSet } from '@libsql/client';
@@ -9,46 +10,34 @@ export interface User {
   created_at?: string;
 }
 
-function createDbClient(): Client {
+let db: Client | null = null;
+
+function getDb(): Client {
+    if (db) {
+        return db;
+    }
     const url = process.env.TURSO_DATABASE_URL;
     const authToken = process.env.TURSO_AUTH_TOKEN;
 
     if (!url) {
-        // This is a fatal server configuration error.
         console.error('FATAL: TURSO_DATABASE_URL is not set in .env file.');
         throw new Error('Server is not configured for database access.');
     }
     
-    return createClient({ url, authToken });
-}
-
-// Singleton client instance.
-// This is created once when the module is first loaded.
-const db = createDbClient();
-
-// This function provides the database client.
-// It assumes the `users` table already exists in the database.
-function getDb(): Client {
+    db = createClient({ url, authToken });
     return db;
 }
 
-
 export async function createUser(email: string, passwordHash: string): Promise<ResultSet> {
   const client = getDb();
-  try {
-    const result = await client.execute({
-      sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
-      args: [email.toLowerCase(), passwordHash],
-    });
-    return result;
-  } catch (error: any) {
-    // Check for unique constraint violation
-    if (error.code === 'SQLITE_CONSTRAINT' && error.message.includes('UNIQUE constraint failed: users.email')) {
-       throw new Error('Email already exists.');
-    }
-    console.error('Failed to create user:', error);
-    throw new Error('An internal server error occurred during user creation.');
-  }
+  // The try-catch block was removed from this function.
+  // The calling function (e.g., `signUp` in `auth.ts`) is now responsible
+  // for handling specific database errors, making the error handling more robust.
+  const result = await client.execute({
+    sql: 'INSERT INTO users (email, password_hash) VALUES (?, ?)',
+    args: [email.toLowerCase(), passwordHash],
+  });
+  return result;
 }
 
 export async function findUserByEmail(email: string): Promise<User | null> {

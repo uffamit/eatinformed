@@ -27,6 +27,7 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
   }
 
   try {
+    // It's good practice to check for existence first to provide a fast and clear error.
     const existingUser = await findUserByEmail(email);
     if (existingUser) {
       return { error: 'Email already in use.', status: 409 };
@@ -38,24 +39,25 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     
-    // Attempt to create the user. The `createUser` function will throw an error if it fails (e.g., unique constraint).
+    // The createUser function will now throw an error on its own if the email is a duplicate,
+    // which we'll catch below. This handles the race condition where a user signs up
+    // between the `findUserByEmail` check and this `createUser` call.
     await createUser(email, passwordHash);
 
-    // If createUser didn't throw, the user should exist. Fetch them to get the ID for the token.
     const newUser = await findUserByEmail(email);
 
     if (newUser) {
       const token = jwt.sign({ userId: newUser.id, email: newUser.email }, JWT_SECRET, { expiresIn: '1h' });
       return { token };
     } else {
-      // This is a safeguard; it indicates a problem if the user can't be found right after creation.
+      // This case should ideally not be reached if createUser is successful.
       console.error("SignUp error: User was supposedly created but could not be found immediately after.");
       return { error: 'Failed to finalize user account. Please try again.', status: 500 };
     }
   } catch (error: any) {
     console.error('SignUp error:', error);
-    // Handle specific error for unique email constraint, thrown from db.ts
-    if (error.message === 'Email already exists.') {
+    // Check for the specific unique constraint error from the database driver.
+    if (error.code === 'SQLITE_CONSTRAINT' && error.message.includes('UNIQUE constraint failed: users.email')) {
       return { error: 'Email already in use.', status: 409 };
     }
     // Handle specific error for database configuration/connection issues
