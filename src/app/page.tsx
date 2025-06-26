@@ -4,55 +4,81 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Activity, ShieldCheck, ScanLine } from 'lucide-react';
-import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
+import { UploadCloud, Activity, ShieldCheck, ScanLine, DollarSign, Star, Zap } from 'lucide-react';
+import Image from 'next/image';
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col items-center text-center space-y-12">
-      <section className="w-full py-12 md:py-24 lg:py-32">
+    <div className="flex flex-col items-center space-y-24 overflow-hidden">
+      {/* Hero Section */}
+      <section className="w-full pt-20 md:pt-32 lg:pt-40 text-center animate-slide-down [animation-delay:200ms] animate-fade-in">
         <div className="container px-4 md:px-6">
-          <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_500px]">
-            <div className="flex flex-col justify-center space-y-4 text-left">
-              <div className="space-y-2">
-                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                  EatInformed: Know Your Food's Truth
-                </h1>
-                <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                  Upload a photo of any packaged food label. Our AI instantly extracts ingredients, analyzes health impacts, and gives you a clear 1-5 rating. Make informed choices, effortlessly.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                 <Button asChild size="lg" className="shadow-lg">
-                  <Link href="/check">
-                    <ScanLine className="mr-2 h-5 w-5" />
-                    Check a Product
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg">
-                  <Link href="#how-it-works">
-                    Learn More
-                  </Link>
-                </Button>
-              </div>
-            </div>
-            <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[250px] shadow-xl bg-muted/30 p-8 rounded-xl">
-              <EatInformedLogo width={200} height={200} />
+          <div className="flex flex-col items-center space-y-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-tight">
+              Transform Your Nutrition with{' '}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500">
+                AI Power
+              </span>
+            </h1>
+            <p className="max-w-[700px] text-muted-foreground text-lg md:text-xl animate-fade-in [animation-delay:400ms]">
+              Upload a food label for instant AI analysis of ingredients, health, and dietary suitability. Make smarter choices, effortlessly.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 mt-4 animate-fade-in [animation-delay:600ms]">
+               <Button asChild size="lg" className="rounded-full text-lg py-7 px-8 shadow-lg shadow-primary/40 hover:scale-105 transition-transform">
+                <Link href="/check">
+                  <ScanLine className="mr-2 h-5 w-5" />
+                  Check a Product
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="rounded-full text-lg py-7 px-8 hover:bg-white/5 hover:scale-105 transition-transform">
+                <Link href="#how-it-works">
+                  Learn More
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 bg-muted/30">
+      {/* Features Section */}
+      <section id="features" className="w-full py-12 md:py-24">
+         <div className="container px-4 md:px-6">
+           <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+            <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground font-semibold">Key Features</div>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why You'll Love EatInformed</h2>
+            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed">
+              We provide the tools you need for food clarity.
+            </p>
+          </div>
+          <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3">
+             <FeatureCard
+              icon={<Zap className="h-8 w-8 text-primary" />}
+              title="Instant Analysis"
+              description="Get results in seconds. Our AI quickly processes label images to give you immediate health insights."
+            />
+            <FeatureCard
+              icon={<ShieldCheck className="h-8 w-8 text-accent" />}
+              title="Safety & Allergens"
+              description="We flag controversial ingredients and clearly list potential allergens so you can eat with confidence."
+            />
+             <FeatureCard
+              icon={<Star className="h-8 w-8 text-yellow-400" />}
+              title="Simple Health Score"
+              description="Our easy-to-understand 1-5 rating helps you quickly assess a product's overall healthiness."
+            />
+          </div>
+         </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section id="how-it-works" className="w-full py-12 md:py-24 bg-secondary/30 rounded-3xl">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
-            <div className="space-y-2">
-              <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground">How It Works</div>
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Simple Steps to Food Clarity</h2>
-              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Discovering what's in your food has never been easier. Follow these simple steps.
-              </p>
-            </div>
+            <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground font-semibold">How It Works</div>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Simple Steps to Food Clarity</h2>
+            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              Discovering what's in your food has never been easier.
+            </p>
           </div>
           <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 lg:gap-16 mt-12">
             <FeatureCard
@@ -68,24 +94,51 @@ export default function HomePage() {
             <FeatureCard
               icon={<ShieldCheck className="h-8 w-8 text-primary" />}
               title="3. Get Results"
-              description="Receive a 1-5 health rating, pros & cons, and warnings about harmful or banned ingredients."
+              description="Receive a health rating, pros & cons, and warnings about harmful or banned ingredients."
             />
           </div>
         </div>
       </section>
-      
-      <section className="w-full py-12 md:py-24 lg:py-32">
+
+      {/* Examples Section */}
+       <section id="examples" className="w-full py-12 md:py-24">
         <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
           <div className="space-y-3">
+             <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground font-semibold">Examples</div>
             <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">
-              Ready to Scan Your First Product?
+              See It In Action
             </h2>
-            <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Empower your choices with clear, unbiased information. It's free, fast, and easy.
+            <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed">
+              Check out a sample analysis of a popular product.
             </p>
           </div>
-          <div className="mx-auto w-full max-w-sm space-y-2">
-             <Button asChild size="lg" className="w-full shadow-lg">
+          <div className="mx-auto w-full max-w-3xl mt-8">
+            <Image 
+              src="https://placehold.co/1200x800.png"
+              data-ai-hint="product analysis results" 
+              alt="Example Analysis" 
+              width={1200}
+              height={800}
+              className="rounded-xl border border-white/10 shadow-2xl shadow-primary/10"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="w-full py-12 md:py-24">
+        <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
+          <div className="space-y-3">
+             <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground font-semibold">Pricing</div>
+            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">
+              Completely Free, For Everyone
+            </h2>
+            <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed">
+              Our mission is to make nutritional information accessible. EatInformed is free to use, supported by non-intrusive ads on the results page.
+            </p>
+          </div>
+          <div className="mx-auto w-full max-w-sm space-y-2 mt-4">
+             <Button asChild size="lg" className="w-full shadow-lg rounded-full">
                 <Link href="/check">
                     <ScanLine className="mr-2 h-5 w-5" />
                     Start Scanning Now
@@ -107,16 +160,19 @@ interface FeatureCardProps {
 
 function FeatureCard({ icon, title, description }: FeatureCardProps) {
   return (
-    <Card className="text-left shadow-lg hover:shadow-xl transition-shadow_transform hover:-translate-y-1">
-      <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-2">
-        <div className="bg-primary/10 p-3 rounded-full">
-          {icon}
+    <div className="group relative p-6 rounded-2xl bg-white/5 border border-white/10 shadow-lg hover:border-primary/50 transition-all duration-300 transform hover:-translate-y-1">
+        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"></div>
+        <div className="relative z-10">
+          <div className="flex items-start gap-4">
+              <div className="bg-secondary p-3 rounded-full">
+                  {icon}
+              </div>
+              <div className="flex-1">
+                  <h3 className="text-xl font-bold mb-2">{title}</h3>
+                  <p className="text-muted-foreground">{description}</p>
+              </div>
+          </div>
         </div>
-        <CardTitle className="text-xl font-semibold pt-2 font-headline">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <CardDescription>{description}</CardDescription>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

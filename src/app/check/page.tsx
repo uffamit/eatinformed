@@ -165,8 +165,8 @@ export default function CheckPage() {
     return (
       <div>
         <ResultsDisplay ingredientsData={ingredientsData} assessmentData={assessmentData} imagePreviewUrl={imagePreviewUrl} />
-        <div className="text-center mt-6">
-          <Button onClick={handleReset} size="lg">
+        <div className="text-center mt-8">
+          <Button onClick={handleReset} size="lg" className="rounded-full">
             <RefreshCw className="mr-2 h-5 w-5" />
             Scan Another Product
           </Button>
@@ -176,7 +176,7 @@ export default function CheckPage() {
   }
 
   return (
-    <Card className="w-full max-w-xl mx-auto shadow-xl">
+    <Card className="w-full max-w-xl mx-auto bg-white/5 backdrop-blur-lg border border-white/10 shadow-2xl shadow-black/20">
       <CardHeader>
         <CardTitle className="text-3xl font-headline flex items-center justify-center">
             <ScanLine className="mr-3 h-8 w-8 text-primary"/>
@@ -205,11 +205,11 @@ export default function CheckPage() {
               A clear photo of the ingredients list provides the best results.
             </p>
             <div className="flex w-full justify-center space-x-4 pt-4">
-              <Button variant="outline" onClick={handleReset}>
+              <Button variant="outline" onClick={handleReset} className="rounded-full">
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Try Again
               </Button>
-              <Button onClick={() => handleScan(imagePreviewUrl!)}>
+              <Button onClick={() => handleScan(imagePreviewUrl!)} className="rounded-full">
                 <ScanLine className="mr-2 h-4 w-4" />
                 Analyze Image
               </Button>
@@ -226,7 +226,7 @@ export default function CheckPage() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="upload" className="mt-6">
-                <div className="flex flex-col items-center space-y-4 p-6 border-2 border-dashed rounded-lg">
+                <div className="flex flex-col items-center space-y-4 p-6 border-2 border-dashed border-white/20 rounded-lg">
                     <UploadCloud className="h-12 w-12 text-muted-foreground" />
                     <Label htmlFor="file-upload" className="text-lg font-semibold text-primary cursor-pointer hover:underline">
                         Click to upload an image
@@ -257,7 +257,7 @@ export default function CheckPage() {
                 )}
                  {hasCameraPermission && (
                      <div className="mt-4 flex justify-center">
-                        <Button onClick={handleCapture} size="lg">
+                        <Button onClick={handleCapture} size="lg" className="rounded-full">
                             <Camera className="mr-2 h-5 w-5" /> Capture Image
                         </Button>
                      </div>

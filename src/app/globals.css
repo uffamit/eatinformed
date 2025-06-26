@@ -4,87 +4,70 @@
 
 @layer base {
   :root {
-    --background: 120 60% 97%; /* Light Green */
-    --foreground: 120 25% 15%; /* Darker Green for text for readability */
-
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 120 25% 15%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 120 25% 15%;
-
-    --primary: 96 38% 52%; /* Fresh Green */
-    --primary-foreground: 0 0% 100%; /* White text on primary */
-
-    --secondary: 35 29% 85%; /* Lighter Earthy Brown for secondary elements */
-    --secondary-foreground: 35 29% 30%;
-
-    --muted: 120 20% 90%; /* Muted Green */
-    --muted-foreground: 120 15% 45%;
-
-    --accent: 35 29% 51%; /* Earthy Brown */
-    --accent-foreground: 0 0% 100%; /* White text on accent */
-
-    --destructive: 0 72% 51%; /* Standard Destructive Red */
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 120 20% 85%;
-    --input: 120 20% 88%;
-    --ring: 96 38% 52%; /* Primary color for rings */
-
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 142.1 76.2% 36.3%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 262.1 83.3% 57.8%;
     --radius: 0.5rem;
 
-    --chart-1: 96 38% 52%;
-    --chart-2: 35 29% 51%;
+    --chart-1: 142.1 76.2% 36.3%;
+    --chart-2: 262.1 83.3% 57.8%;
     --chart-3: 120 30% 60%;
     --chart-4: 40 80% 60%;
     --chart-5: 20 70% 55%;
 
-    --sidebar-background: 120 40% 94%;
-    --sidebar-foreground: 120 25% 15%;
-    --sidebar-primary: 96 38% 45%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 35 29% 60%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 120 20% 80%;
-    --sidebar-ring: 96 38% 52%;
+    --sidebar-background: 120 10% 12%;
+    --sidebar-foreground: 120 15% 85%;
+    --sidebar-primary: 96 38% 52%;
+    --sidebar-primary-foreground: 120 25% 10%;
+    --sidebar-accent: 35 29% 40%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 120 10% 20%;
+    --sidebar-ring: 96 38% 60%;
   }
 
   .dark {
-    --background: 120 10% 10%; /* Dark Greenish */
-    --foreground: 120 15% 85%;
+    --background: 224 71.4% 4.1%;
+    --foreground: 210 20% 98%;
+    --card: 224 71.4% 4.1%;
+    --card-foreground: 210 20% 98%;
+    --popover: 224 71.4% 4.1%;
+    --popover-foreground: 210 20% 98%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 215 27.9% 16.9%;
+    --secondary-foreground: 210 20% 98%;
+    --muted: 215 27.9% 16.9%;
+    --muted-foreground: 217.9 10.6% 64.9%;
+    --accent: 142.1 76.2% 36.3%;
+    --accent-foreground: 210 20% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+    --border: 215 27.9% 16.9%;
+    --input: 215 27.9% 16.9%;
+    --ring: 262.1 83.3% 57.8%;
 
-    --card: 120 10% 15%;
-    --card-foreground: 120 15% 85%;
-
-    --popover: 120 10% 15%;
-    --popover-foreground: 120 15% 85%;
-
-    --primary: 96 38% 52%; /* Fresh Green */
-    --primary-foreground: 120 25% 10%;
-
-    --secondary: 35 29% 30%;
-    --secondary-foreground: 35 15% 85%;
-
-    --muted: 120 10% 20%;
-    --muted-foreground: 120 10% 65%;
-
-    --accent: 35 29% 51%; /* Earthy Brown */
-    --accent-foreground: 0 0% 0%;
-
-    --destructive: 0 60% 45%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 120 10% 25%;
-    --input: 120 10% 25%;
-    --ring: 96 38% 60%;
-
-    --chart-1: 96 38% 52%;
-    --chart-2: 35 29% 51%;
+    --chart-1: 142.1 76.2% 36.3%;
+    --chart-2: 262.1 83.3% 57.8%;
     --chart-3: 120 30% 60%;
     --chart-4: 40 80% 60%;
     --chart-5: 20 70% 55%;
-    
+
     --sidebar-background: 120 10% 12%;
     --sidebar-foreground: 120 15% 85%;
     --sidebar-primary: 96 38% 52%;
@@ -102,5 +85,22 @@
   }
   body {
     @apply bg-background text-foreground font-body antialiased;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 2rem 2rem;
+    z-index: -1;
+    pointer-events: none;
   }
 }
