@@ -100,31 +100,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Examples Section */}
-       <section id="examples" className="w-full py-12 md:py-24">
-        <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
-          <div className="space-y-3">
-             <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground font-semibold">Examples</div>
-            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">
-              See It In Action
-            </h2>
-            <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed">
-              Check out a sample analysis of a popular product.
-            </p>
-          </div>
-          <div className="mx-auto w-full max-w-3xl mt-8">
-            <Image 
-              src="https://placehold.co/1200x800.png"
-              data-ai-hint="scanning product" 
-              alt="Example of a person scanning a product in a grocery store" 
-              width={1200}
-              height={800}
-              className="rounded-xl border border-white/10 shadow-2xl shadow-primary/10"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* Pricing Section */}
       <section id="pricing" className="w-full py-12 md:py-24">
         <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
