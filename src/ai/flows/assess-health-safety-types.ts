@@ -12,6 +12,7 @@ export const AssessHealthSafetyOutputSchema = z.object({
   warnings: z.array(z.string()).describe('A list of warnings about potentially harmful, controversial, or banned ingredients.'),
   dietaryInfo: z.object({
     allergens: z.array(z.string()).describe('A list of common allergens found, e.g., "Gluten", "Dairy", "Soy", "Peanuts".'),
+    suitability: z.array(z.string()).describe('A list of reasons why this product may not be suitable for certain diets, e.g., "Not suitable for vegans", "Not suitable for lactose intolerant individuals".'),
     isVegetarian: z.boolean().describe('True if the product is suitable for vegetarians.'),
     isVegan: z.boolean().describe('True if the product is suitable for vegans.'),
     isGlutenFree: z.boolean().describe('True if the product is gluten-free.'),

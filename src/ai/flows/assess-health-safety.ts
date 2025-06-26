@@ -23,6 +23,7 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
       warnings: ["AI functionality is currently offline. The server administrator needs to configure the GOOGLE_API_KEY."],
       dietaryInfo: {
         allergens: [],
+        suitability: [],
         isVegetarian: false,
         isVegan: false,
         isGlutenFree: false,
@@ -40,6 +41,7 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
       warnings: ["Unable to evaluate due to missing or unreadable label. Please upload a clear image."],
       dietaryInfo: {
         allergens: [],
+        suitability: [],
         isVegetarian: false,
         isVegan: false,
         isGlutenFree: false,
@@ -67,6 +69,7 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
       warnings: [warningMessage],
       dietaryInfo: {
         allergens: [],
+        suitability: [],
         isVegetarian: false,
        isVegan: false,
        isGlutenFree: false,
@@ -88,11 +91,12 @@ Ingredients list:
 Based on the ingredients, perform the following actions and return the result in the specified JSON format:
 
 1.  **Health Rating (1-5):** Provide an overall health score from 1 (very unhealthy) to 5 (very healthy). Consider factors like processing level, presence of whole foods, additives, sugar content, etc.
-2.  **Pros:** List 2-3 distinct positive aspects. Focus on healthy, natural, or beneficial ingredients. Do not simply state the absence of a negative as a positive (e.g., instead of "Low in sugar", focus on "Made with whole grains").
-3.  **Cons:** List 2-3 distinct negative aspects that are separate from the 'Pros'. Focus on artificial additives, high sugar/sodium indicators, unhealthy fats, or heavily processed components. Ensure these are genuine drawbacks.
-4.  **Warnings:** This section is for CRITICAL alerts only. List only ingredients that are banned in major regions (e.g., certain food dyes in the EU), are part of a major scientific controversy regarding health dangers, or pose a significant, non-obvious risk. Do not use this section for common allergens or generally unhealthy items; those belong in 'Cons' or dietary information. If there are no such critical warnings, return an empty array.
+2.  **Pros:** List 2-4 distinct positive aspects. Focus on healthy, natural, or beneficial ingredients. Do not simply state the absence of a negative as a positive (e.g., instead of "Low in sugar", focus on "Made with whole grains"). Ensure these are genuine benefits.
+3.  **Cons:** List 2-4 distinct negative aspects that are separate from the 'Pros'. Focus on artificial additives, high sugar/sodium indicators, unhealthy fats, or heavily processed components. Ensure these are genuine drawbacks.
+4.  **Warnings:** This section is for CRITICAL alerts only. List only ingredients that are banned in major regions (e.g., certain food dyes in the EU), are part of a major scientific controversy regarding health dangers, or pose a significant, non-obvious risk (e.g., high saturated fat for heart conditions). Do not use this section for common allergens or generally unhealthy items; those belong in 'Cons' or dietary information. If there are no such critical warnings, return an empty array.
 5.  **Dietary Information:** Based on the ingredients, analyze for common dietary concerns. If the label explicitly states a status (e.g., "Certified Gluten-Free"), trust it. Otherwise, infer based on the ingredients.
     - **allergens:** Identify and list common allergens such as Gluten, Dairy, Soy, Peanuts, Tree Nuts, Fish, Shellfish. Do not list an allergen if a "-free" version is specified (e.g. "soy lecithin" is an allergen, but if the label also says "soy-free", do not list it).
+    - **suitability:** Create a list of statements explaining why the product is NOT suitable for certain groups. For example: "Not suitable for vegans" if it contains honey or gelatin. "Not suitable for lactose intolerant individuals" if it contains milk. "Not suitable for people on low-sodium diets" if sodium is high. If there are no specific suitability issues, return an empty array.
     - **isVegetarian:** Determine if the product is vegetarian (contains no meat, poultry, or fish).
     - **isVegan:** Determine if the product is vegan (contains no animal products, including dairy, eggs, or honey).
     - **isGlutenFree:** Determine if the product is gluten-free (contains no wheat, barley, rye, or their derivatives).
