@@ -17,8 +17,8 @@ export type Nutrient = z.infer<typeof NutrientSchema>;
 export const ExtractIngredientsOutputSchema = z.object({
   ingredients: z.array(z.string()).describe('A list of ingredients found in the image.'),
   nutrition: z.object({
-      rawText: z.string().describe('The full, original text from the nutritional facts panel for display, as a single string.'),
-      nutrients: z.array(NutrientSchema).describe('A structured list of nutritional facts parsed from the label.'),
+      rawText: z.string().optional().describe('The full, original text from the nutritional facts panel for display, as a single string.'),
+      nutrients: z.array(NutrientSchema).optional().describe('A structured list of nutritional facts parsed from the label.'),
       servingSizeLabel: z.string().optional().describe("The serving size text from the label, e.g., 'Serving size: 250mL'"),
   }).optional().describe("Contains raw text and structured data for nutritional facts."),
   status: z.enum(['success', 'no_data', 'unreadable']).describe("The status of the extraction: 'success' if data was found, 'no_data' if the label was clear but empty, 'unreadable' if the image was not usable."),
