@@ -4,81 +4,8 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Activity, ShieldCheck, Loader2, ScanLine } from 'lucide-react';
-import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { AlertDialogAction, AlertDialogCancel } from '@/components/ui/alert-dialog'; 
-import { useAuth } from '@/hooks/use-auth';
-
-interface AuthAwareLinkButtonProps {
-  href: string;
-  buttonText: string;
-  icon?: React.ReactNode;
-  buttonVariant?: "link" | "default" | "destructive" | "outline" | "secondary" | "ghost" | null | undefined;
-  buttonSize?: "default" | "sm" | "lg" | "icon" | null | undefined;
-  className?: string;
-}
-
-const AuthAwareLinkButton: React.FC<AuthAwareLinkButtonProps> = ({
-  href,
-  buttonText,
-  icon,
-  buttonVariant = "default",
-  buttonSize = "lg",
-  className = "",
-}) => {
-  const router = useRouter();
-  const [showDialog, setShowDialog] = useState(false);
-  const { user, loading } = useAuth();
-
-  const handleButtonClick = () => {
-    if (loading) return; // Prevent action while auth state is loading
-
-    if (user) {
-      router.push(href);
-    } else {
-      setShowDialog(true);
-    }
-  };
-
-  return (
-    <>
-      <Button variant={buttonVariant} size={buttonSize} className={className} onClick={handleButtonClick} disabled={loading}>
-        {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : icon}
-        {loading ? 'Checking...' : buttonText}
-      </Button>
-      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Authentication Required</AlertDialogTitle>
-            <AlertDialogDescription>
-              You need to be logged in to access this feature. Please log in or create an account.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDialog(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction asChild onClick={() => { setShowDialog(false); router.push('/login'); }}>
-               <span className="cursor-pointer">Log In</span>
-            </AlertDialogAction>
-            <AlertDialogAction asChild onClick={() => { setShowDialog(false); router.push('/signup'); }}>
-               <span className="cursor-pointer">Sign Up</span>
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
-  );
-};
-
+import { UploadCloud, Activity, ShieldCheck, ScanLine } from 'lucide-react';
+import { NutriScanLogo } from '@/components/icons/NutriScanLogo';
 
 export default function HomePage() {
   return (
@@ -89,20 +16,19 @@ export default function HomePage() {
             <div className="flex flex-col justify-center space-y-4 text-left">
               <div className="space-y-2">
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-                  EatInformed: Know Your Food's Truth
+                  NutriScan: Know Your Food's Truth
                 </h1>
                 <p className="max-w-[600px] text-muted-foreground md:text-xl">
                   Upload a photo of any packaged food label. Our AI instantly extracts ingredients, analyzes health impacts, and gives you a clear 1-5 rating. Make informed choices, effortlessly.
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <AuthAwareLinkButton
-                    href="/check"
-                    buttonText="Check a Product"
-                    icon={<ScanLine className="mr-2 h-5 w-5" />}
-                    buttonSize="lg"
-                    className="shadow-lg"
-                  />
+                 <Button asChild size="lg" className="shadow-lg">
+                  <Link href="/check">
+                    <ScanLine className="mr-2 h-5 w-5" />
+                    Check a Product
+                  </Link>
+                </Button>
                 <Button asChild variant="outline" size="lg">
                   <Link href="#how-it-works">
                     Learn More
@@ -111,7 +37,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="mx-auto flex justify-center items-center aspect-square sm:w-full lg:order-last lg:max-w-[250px] shadow-xl bg-muted/30 p-8 rounded-xl">
-              <EatInformedLogo width={200} height={200} />
+              <NutriScanLogo width={200} height={200} />
             </div>
           </div>
         </div>
@@ -159,13 +85,12 @@ export default function HomePage() {
             </p>
           </div>
           <div className="mx-auto w-full max-w-sm space-y-2">
-             <AuthAwareLinkButton
-                href="/check"
-                buttonText="Start Scanning Now"
-                icon={<ScanLine className="mr-2 h-5 w-5" />}
-                buttonSize="lg"
-                className="w-full shadow-lg"
-              />
+             <Button asChild size="lg" className="w-full shadow-lg">
+                <Link href="/check">
+                    <ScanLine className="mr-2 h-5 w-5" />
+                    Start Scanning Now
+                </Link>
+              </Button>
           </div>
         </div>
       </section>

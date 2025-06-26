@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { extractIngredients, type ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients';
 import { assessHealthSafety, type AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety';
@@ -16,8 +14,6 @@ import { Loader2, UploadCloud, Camera, RefreshCw, AlertCircle, ScanLine } from '
 import ResultsDisplay from '@/components/features/ResultsDisplay';
 
 export default function CheckPage() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
   const { toast } = useToast();
 
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
@@ -30,18 +26,6 @@ export default function CheckPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.replace('/login');
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Required',
-        description: 'You must be logged in to access this page.',
-      });
-    }
-  }, [user, authLoading, router, toast]);
 
   // Request camera permission when camera tab is activated
   const handleTabChange = (value: string) => {
@@ -132,14 +116,6 @@ export default function CheckPage() {
       fileInputRef.current.value = '';
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[calc(100vh-10rem)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   if (assessmentData) {
     return (

@@ -1,13 +1,13 @@
 import type { SVGProps } from 'react';
 
-export function EatInformedLogo(props: SVGProps<SVGSVGElement>) {
+export function NutriScanLogo(props: SVGProps<SVGSVGElement>) {
   const { width = 40, height = 40, ...restProps } = props; // Default icon size
 
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 64 64"
-      aria-label="EatInformed Icon"
+      aria-label="NutriScan Icon"
       width={width}
       height={height}
       {...restProps}

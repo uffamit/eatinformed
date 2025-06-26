@@ -127,7 +127,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
             <Button variant="outline"><Share2 className="mr-2 h-4 w-4" /> Share Results</Button>
         </div>
         <p className="text-xs text-muted-foreground px-4 text-center">
-          Disclaimer: Information provided by EatInformed is for general guidance only and not a substitute for professional medical or nutritional advice. Always consult with a qualified healthcare provider for any health concerns or before making any decisions related to your health or diet. Ingredient data and regulations can change; verify critical information with product packaging and official sources.
+          Disclaimer: Information provided by NutriScan is for general guidance only and not a substitute for professional medical or nutritional advice. Always consult with a qualified healthcare provider for any health concerns or before making any decisions related to your health or diet. Ingredient data and regulations can change; verify critical information with product packaging and official sources.
         </p>
         <div className="w-full h-24 bg-muted/50 rounded-md flex items-center justify-center text-muted-foreground text-sm mt-4">
             [ Placeholder for Non-Intrusive Ad ]

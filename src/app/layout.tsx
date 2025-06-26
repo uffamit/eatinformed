@@ -8,7 +8,7 @@ import Navbar from '@/components/layout/Navbar';
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'EatInformed - Know Your Food',
+  title: 'NutriScan - Know Your Food',
   description: 'Upload food package photos to get health insights and safety ratings.',
 };
 
@@ -32,7 +32,7 @@ export default function RootLayout({
         </main>
         <Toaster />
         <footer className="bg-muted/50 text-muted-foreground text-center py-4 text-sm">
-          © {new Date().getFullYear()} EatInformed. All rights reserved. Created by AmitDevX.
+          © {new Date().getFullYear()} NutriScan. All rights reserved.
         </footer>
       </body>
     </html>
