@@ -4,6 +4,8 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import Navbar from '@/components/layout/Navbar';
+import ParticleBackground from '@/components/layout/ParticleBackground';
+import FloatingIcons from '@/components/layout/FloatingIcons';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -26,6 +28,8 @@ export default function RootLayout({
         <link rel="icon" type="image/png" href="/favicon.png" />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
+        <ParticleBackground />
+        <FloatingIcons />
         <Navbar />
         <main className="flex-grow container mx-auto px-4 py-8">
           {children}
