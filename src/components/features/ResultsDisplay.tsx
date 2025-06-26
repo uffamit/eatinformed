@@ -82,6 +82,15 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
   return (
     <Card className="w-full max-w-3xl mx-auto shadow-xl mt-8">
       <CardHeader className="text-center">
+        {imagePreviewUrl && (
+          <div className="mb-6 flex justify-center">
+            <img 
+              src={imagePreviewUrl} 
+              alt="Scanned product label"
+              className="max-h-60 w-auto rounded-md border object-contain"
+            />
+          </div>
+        )}
         <CardTitle className="text-3xl font-headline">
             {isZeroRatingScenario ? "Analysis Incomplete" : "Analysis Complete"}
         </CardTitle>
