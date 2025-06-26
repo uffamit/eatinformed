@@ -35,20 +35,36 @@ export default function CheckPage() {
   };
 
   const getCameraPermission = async () => {
+    // Prefer the rear-facing camera for scanning product labels on mobile.
+    const videoConstraints = {
+      video: { facingMode: 'environment' }
+    };
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // First, try to get the rear camera
+      const stream = await navigator.mediaDevices.getUserMedia(videoConstraints);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
       setHasCameraPermission(true);
     } catch (err) {
-      console.error('Error accessing camera:', err);
-      setHasCameraPermission(false);
-      toast({
-        variant: 'destructive',
-        title: 'Camera Access Denied',
-        description: 'Please enable camera permissions in your browser settings to use this feature.',
-      });
+      console.error('Failed to get rear camera, trying default camera:', err);
+      // If the rear camera fails (e.g., on a desktop), fall back to any available camera.
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+        setHasCameraPermission(true);
+      } catch (fallbackErr) {
+        console.error('Error accessing any camera:', fallbackErr);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description: 'Could not access camera. Please enable camera permissions in your browser settings to use this feature.',
+        });
+      }
     }
   };
   
