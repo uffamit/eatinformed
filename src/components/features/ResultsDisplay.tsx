@@ -8,7 +8,6 @@ import { Star, ThumbsUp, ThumbsDown, AlertTriangle, ListChecks, FileText, Clipbo
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { Share2 } from 'lucide-react';
-import NutritionChart from './NutritionChart';
 
 interface ResultsDisplayProps {
   ingredientsData: ExtractIngredientsOutput | null;
@@ -135,12 +134,6 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
         
         <ResultSection title="Nutritional Information" icon={<FileText className="h-5 w-5 text-primary" />} hidden={!nutrition?.rawText}>
           <p className="text-sm text-foreground whitespace-pre-wrap">{nutrition?.rawText}</p>
-           {nutrition?.nutrients && nutrition.nutrients.length > 0 && (
-            <NutritionChart 
-              data={nutrition.nutrients} 
-              servingSizeLabel={nutrition.servingSizeLabel}
-            />
-          )}
         </ResultSection>
       
       </CardContent>
