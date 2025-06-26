@@ -20,16 +20,19 @@ const prompt = ai.definePrompt({
   output: {schema: ExtractIngredientsOutputSchema},
   prompt: `You are an expert Optical Character Recognition (OCR) system specializing in food labels. Your task is to extract the ingredients list and nutritional information from the provided image.
 
-Analyze the image carefully.
+Analyze the image carefully and return the data in the specified JSON format.
 
-1.  **Ingredients**: Identify and transcribe the complete list of ingredients.
-2.  **Nutritional Information**: If present, transcribe the ENTIRE nutritional facts panel into a single, formatted string (\`rawText\`). Preserve line breaks.
+1.  **Ingredients**: Identify and transcribe the complete list of ingredients into the \`ingredients\` array.
+2.  **Nutritional Information**:
+    - **rawText**: Transcribe the ENTIRE nutritional facts panel into a single, formatted string, preserving line breaks. This is for display purposes.
+    - **servingSizeLabel**: Extract the text that defines the serving size, e.g., "Serving size: 250mL".
+    - **nutrients**: Parse the nutritional table into a structured array. For each row in the table (e.g., Energy, Protein, Fat), create a JSON object with keys "nutrient", "perServing", and "per100mL". Include the units (like kJ, g, mg) in the string values. If a value is missing for a nutrient, omit the corresponding key.
 3.  **Status**: Based on your analysis, set the status:
     - 'success' if you found either ingredients or nutritional information.
     - 'no_data' if the image is clear but contains no discernible food label text.
     - 'unreadable' if the image is too blurry, poorly lit, or otherwise impossible to read.
 
-Return the extracted text in the specified JSON format. If a section is not found, return empty values for that field.
+If a section is not found, return empty values for it, but adhere to the schema.
 
 Image to analyze: {{media url=image}}`,
 });
@@ -50,7 +53,7 @@ const extractIngredientsFlow = ai.defineFlow(
       };
     }
     // A simple check to refine status if model returns success but no data
-    if (output.status === 'success' && output.ingredients.length === 0 && !output.nutrition?.rawText) {
+    if (output.status === 'success' && output.ingredients.length === 0 && !output.nutrition?.rawText && !output.nutrition?.nutrients) {
         output.status = 'no_data';
     }
 

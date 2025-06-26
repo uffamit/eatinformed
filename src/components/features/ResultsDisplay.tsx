@@ -8,6 +8,7 @@ import { Star, ThumbsUp, ThumbsDown, AlertTriangle, ListChecks, FileText, Clipbo
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { Share2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 interface ResultsDisplayProps {
   ingredientsData: ExtractIngredientsOutput | null;
@@ -63,6 +64,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
   const isZeroRatingScenario = assessmentData.rating === 0;
   const dietInfo = assessmentData.dietaryInfo;
   const nutrition = ingredientsData?.nutrition;
+  const hasStructuredNutrition = nutrition?.nutrients && nutrition.nutrients.length > 0;
 
   const renderStars = (rating: number) => {
     const totalStars = 5;
@@ -132,8 +134,31 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
           <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData?.ingredients?.join(', ')}</p>
         </ResultSection>
         
-        <ResultSection title="Nutritional Information" icon={<FileText className="h-5 w-5 text-primary" />} hidden={!nutrition?.rawText}>
-          <p className="text-sm text-foreground whitespace-pre-wrap">{nutrition?.rawText}</p>
+        <ResultSection title="Nutritional Information" icon={<FileText className="h-5 w-5 text-primary" />} hidden={!nutrition || (!hasStructuredNutrition && !nutrition.rawText)}>
+          {hasStructuredNutrition ? (
+            <div className="overflow-hidden rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-bold">Nutrient</TableHead>
+                    <TableHead className="text-right font-bold">{nutrition.servingSizeLabel ? `Per ${nutrition.servingSizeLabel.split(':')[1]?.trim() || 'Serving'}` : 'Per Serving'}</TableHead>
+                    <TableHead className="text-right font-bold">Per 100mL/g</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {nutrition.nutrients?.map((item, index) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{item.nutrient}</TableCell>
+                      <TableCell className="text-right">{item.perServing ?? 'N/A'}</TableCell>
+                      <TableCell className="text-right">{item.per100mL ?? 'N/A'}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <p className="text-sm text-foreground whitespace-pre-wrap">{nutrition?.rawText}</p>
+          )}
         </ResultSection>
       
       </CardContent>
