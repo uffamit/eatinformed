@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
@@ -26,11 +27,34 @@ export default function CheckPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
-  // Request camera permission when camera tab is activated
+  // Function to stop the camera stream and release resources
+  const stopCameraStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    // Reset permission state so it can be re-requested if the user revisits the tab.
+    setHasCameraPermission(null);
+  }, []);
+
+  // Cleanup camera on component unmount
+  useEffect(() => {
+    return () => {
+      stopCameraStream();
+    };
+  }, [stopCameraStream]);
+  
+  // Request camera permission when camera tab is activated, and clean up when leaving it.
   const handleTabChange = (value: string) => {
     if (value === 'camera' && hasCameraPermission === null) {
       getCameraPermission();
+    } else if (value !== 'camera') {
+      stopCameraStream();
     }
   };
 
@@ -43,6 +67,7 @@ export default function CheckPage() {
     try {
       // First, try to get the rear camera
       const stream = await navigator.mediaDevices.getUserMedia(videoConstraints);
+      streamRef.current = stream; // Store the stream
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
@@ -52,6 +77,7 @@ export default function CheckPage() {
       // If the rear camera fails (e.g., on a desktop), fall back to any available camera.
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        streamRef.current = stream; // Store the stream
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -91,6 +117,7 @@ export default function CheckPage() {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataUri = canvas.toDataURL('image/png');
         setImagePreviewUrl(dataUri);
+        stopCameraStream(); // Stop the camera after capture
       }
     }
   };
@@ -124,6 +151,7 @@ export default function CheckPage() {
   }, [toast]);
   
   const handleReset = () => {
+    stopCameraStream(); // Ensure camera is off on reset
     setImagePreviewUrl(null);
     setIngredientsData(null);
     setAssessmentData(null);
