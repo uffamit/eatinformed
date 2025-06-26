@@ -115,8 +115,8 @@ export default function HomePage() {
           <div className="mx-auto w-full max-w-3xl mt-8">
             <Image 
               src="https://placehold.co/1200x800.png"
-              data-ai-hint="nutrition label analysis" 
-              alt="Example Analysis" 
+              data-ai-hint="scanning product" 
+              alt="Example of a person scanning a product in a grocery store" 
               width={1200}
               height={800}
               className="rounded-xl border border-white/10 shadow-2xl shadow-primary/10"
