@@ -1,9 +1,9 @@
 'use client';
 
 import { Package, Cookie, Croissant, Beef, Apple, Lollipop } from 'lucide-react';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 
-const icons = [
+const iconComponents = [
   { Icon: Package, size: 'w-12 h-12' },
   { Icon: Cookie, size: 'w-10 h-10' },
   { Icon: Croissant, size: 'w-14 h-14' },
@@ -13,18 +13,23 @@ const icons = [
 ];
 
 const FloatingIcons = () => {
-  const iconData = useMemo(() => {
-    return Array.from({ length: 15 }).map((_, i) => {
-      const component = icons[i % icons.length];
+  const [iconData, setIconData] = useState<any[]>([]);
+
+  useEffect(() => {
+    // This code now runs only on the client, after the initial render.
+    // This avoids the server/client mismatch.
+    const generatedIcons = Array.from({ length: 15 }).map((_, i) => {
+      const component = iconComponents[i % iconComponents.length];
       return {
         ...component,
         style: {
           left: `${Math.random() * 100}vw`,
           animation: `drift ${Math.random() * 20 + 20}s linear ${Math.random() * 20}s infinite`,
         },
-      }
+      };
     });
-  }, []);
+    setIconData(generatedIcons);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
   return (
     <div className="fixed top-0 left-0 w-full h-full -z-20 overflow-hidden pointer-events-none">
