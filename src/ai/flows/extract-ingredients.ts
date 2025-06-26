@@ -22,14 +22,20 @@ const prompt = ai.definePrompt({
 
 Analyze the image carefully.
 
-1.  Identify and transcribe the complete list of ingredients as an array of strings.
-2.  Identify and transcribe the nutritional facts panel (e.g., Calories, Total Fat, Sodium, Total Carbohydrate, Protein) as a single string.
-3.  Based on your analysis, set the status:
+1.  **Ingredients**: Identify and transcribe the complete list of ingredients as an array of strings.
+2.  **Nutritional Information**:
+    - \`rawText\`: Transcribe the ENTIRE nutritional facts panel (the table with columns like "Per Serving", "Per 100g/mL", etc.) into a single, formatted string. Preserve the line breaks and original text.
+    - \`servingSizeLabel\`: Extract the full serving size line from the label, for example "Serving size: 250mL".
+    - \`nutrients\`: Parse the nutritional facts table into a structured array of objects. Each object must contain:
+        - \`nutrient\`: The name of the nutrient (e.g., "Energy", "Protein", "Fat - Total", "- Saturated", "Carbohydrate", "- Sugars", "Sodium", "Calcium"). Retain sub-indentation markers like "-".
+        - \`perServing\`: The value from the "per serving" column as a string, including its unit (e.g., "775kJ", "9.0g"). If the column doesn't exist, omit this field.
+        - \`per100mL\`: The value from the "per 100mL" or "per 100g" column as a string, including its unit (e.g., "310kJ", "3.6g"). If the column doesn't exist, omit this field.
+3.  **Status**: Based on your analysis, set the status:
     - 'success' if you found either ingredients or nutritional information.
     - 'no_data' if the image is clear but contains no discernible food label text.
     - 'unreadable' if the image is too blurry, poorly lit, or otherwise impossible to read.
 
-Return the extracted text in the specified JSON format. If a section is not found, return an empty array or empty string for that field.
+Return the extracted text in the specified JSON format. If a section is not found, return empty values for that field.
 
 Image to analyze: {{media url=image}}`,
 });
@@ -45,12 +51,12 @@ const extractIngredientsFlow = ai.defineFlow(
     if (!output) {
       return {
         ingredients: [],
-        nutritionInformation: '',
+        nutrition: undefined,
         status: 'unreadable',
       };
     }
     // A simple check to refine status if model returns success but no data
-    if (output.status === 'success' && output.ingredients.length === 0 && !output.nutritionInformation) {
+    if (output.status === 'success' && output.ingredients.length === 0 && !output.nutrition) {
         output.status = 'no_data';
     }
 

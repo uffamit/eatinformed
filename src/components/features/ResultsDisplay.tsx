@@ -8,6 +8,7 @@ import { Star, ThumbsUp, ThumbsDown, AlertTriangle, ListChecks, FileText, Clipbo
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import { Share2 } from 'lucide-react';
+import NutritionChart from './NutritionChart';
 
 interface ResultsDisplayProps {
   ingredientsData: ExtractIngredientsOutput | null;
@@ -61,6 +62,8 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
   }
 
   const isZeroRatingScenario = assessmentData.rating === 0;
+  const dietInfo = assessmentData.dietaryInfo;
+  const nutrition = ingredientsData?.nutrition;
 
   const renderStars = (rating: number) => {
     const totalStars = 5;
@@ -76,8 +79,6 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
       </div>
     );
   };
-  
-  const dietInfo = assessmentData.dietaryInfo;
 
   return (
     <Card className="w-full max-w-3xl mx-auto shadow-xl mt-8">
@@ -132,8 +133,14 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
           <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData?.ingredients?.join(', ')}</p>
         </ResultSection>
         
-        <ResultSection title="Nutritional Information" icon={<FileText className="h-5 w-5 text-primary" />} hidden={!ingredientsData?.nutritionInformation}>
-          <p className="text-sm text-foreground whitespace-pre-wrap">{ingredientsData?.nutritionInformation}</p>
+        <ResultSection title="Nutritional Information" icon={<FileText className="h-5 w-5 text-primary" />} hidden={!nutrition?.rawText}>
+          <p className="text-sm text-foreground whitespace-pre-wrap">{nutrition?.rawText}</p>
+           {nutrition?.nutrients && nutrition.nutrients.length > 0 && (
+            <NutritionChart 
+              data={nutrition.nutrients} 
+              servingSizeLabel={nutrition.servingSizeLabel}
+            />
+          )}
         </ResultSection>
       
       </CardContent>
