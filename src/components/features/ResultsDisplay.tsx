@@ -1,15 +1,18 @@
 
 'use client';
 
+import { useRef } from 'react';
+import html2canvas from 'html2canvas';
+import { useToast } from '@/hooks/use-toast';
 import type { ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients-types';
 import type { AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety-types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Star, ThumbsUp, ThumbsDown, AlertTriangle, ListChecks, FileText, ClipboardX, ShieldAlert, CheckCircle, XCircle } from 'lucide-react';
+import { Star, ThumbsUp, ThumbsDown, AlertTriangle, ListChecks, FileText, ClipboardX, ShieldAlert, CheckCircle, XCircle, Share2, Download, Copy, Twitter } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
-import { Share2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import NutritionChart from './NutritionChart';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 
 interface ResultsDisplayProps {
   ingredientsData: ExtractIngredientsOutput | null;
@@ -50,8 +53,26 @@ const BulletList = ({ items, variant }: { items: string[], variant: 'pros' | 'co
   );
 };
 
+const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 448 512"
+    {...props}
+  >
+    <path
+      fill="currentColor"
+      d="M380.9 97.1C346.6 62.8 298.7 44 249.9 44c-104.7 0-190 85.3-190 190 0 33.6 8.7 65.4 24.8 93.6L44.8 464.1l102.7-27.1c27.1 15.3 57.9 24.2 89.8 24.2 104.7 0 190-85.3 190-190 0-48.8-18.8-96.7-52.8-131zM249.9 414c-28.7 0-56.3-9.7-80.3-26.8l-5.7-3.4-59.9 15.8 16.1-58.6-3.8-6c-18.2-28.7-29.1-62.5-29.1-98.4 0-82.8 67.2-150 150-150 40.8 0 79.2 16.1 108.3 45.2 29.1 29.1 45.2 67.5 45.2 108.3.1 82.8-67.1 150-149.9 150zm74.6-96.6c-3.9-2-22.9-11.3-26.5-12.6-3.6-1.3-6.2-2-8.8 2-2.6 4-10 12.6-12.3 15.2-2.3 2.6-4.5 2.9-8.4 1-3.9-1.9-16.4-6.1-31.2-19.2-11.5-10.1-19.5-22.6-21.8-26.5-2.3-4-0.2-6.1 1.8-8.1 1.8-1.8 3.9-4.5 5.9-6.8 2-2.3 2.6-3.9 3.9-6.5 1.3-2.6 0.7-4.9-0.3-6.8-1-1.9-8.8-21.1-12-28.9-3.1-7.8-6.3-6.7-8.8-6.8-2.3-0.1-4.9-0.1-7.5-0.1-2.6 0-6.8 1-10.5 4.9-3.7 3.9-14.2 13.9-14.2 33.9 0 20 14.5 39.3 16.5 41.8 2 2.6 28.7 46.2 69.8 61.1 9.8 3.6 18.6 5.8 25.1 7.5 9.7 2.5 18.6 2.2 25.6 1.3 7.8-0.9 22.9-9.4 26.2-18.5 3.3-9.1 3.3-17.1 2.3-18.5-1-1.4-3.6-2.3-7.5-4.3z"
+    ></path>
+  </svg>
+);
 
 export default function ResultsDisplay({ ingredientsData, assessmentData, imagePreviewUrl }: ResultsDisplayProps) {
+  const resultsCardRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
+  
   if (!assessmentData) {
     return null;
   }
@@ -60,6 +81,66 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
   const dietInfo = assessmentData.dietaryInfo;
   const nutrition = ingredientsData?.nutrition;
   const hasStructuredNutrition = nutrition?.nutrients && nutrition.nutrients.length > 0;
+
+  const handleDownloadImage = async () => {
+    if (!resultsCardRef.current) return;
+    try {
+      const canvas = await html2canvas(resultsCardRef.current, {
+        backgroundColor: '#030712',
+        useCORS: true, 
+      });
+      const dataUrl = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = 'eatinformed-results.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error generating image:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Image Generation Failed',
+        description: 'Could not create an image of the results.',
+      });
+    }
+  };
+
+  const generateSummaryText = () => {
+    if (!assessmentData) return '';
+    const { rating, pros, cons } = assessmentData;
+    const url = typeof window !== "undefined" ? window.location.origin : "https://eatinformed.app";
+    let summary = `I analyzed a product with EatInformed & it scored ${rating.toFixed(1)}/5!`;
+    if (pros.length > 0) summary += `\n✅ Pro: ${pros[0]}`;
+    if (cons.length > 0) summary += `\n❌ Con: ${cons[0]}`;
+    summary += `\n\nFind out what's in your food: ${url}`;
+    return summary;
+  };
+
+  const handleCopySummary = () => {
+    const summary = generateSummaryText();
+    navigator.clipboard.writeText(summary).then(() => {
+      toast({ title: 'Copied to Clipboard!', description: 'Results summary has been copied.' });
+    }).catch(err => {
+      console.error('Failed to copy text:', err);
+      toast({ variant: 'destructive', title: 'Copy Failed', description: 'Could not copy summary to clipboard.' });
+    });
+  };
+
+  const handleShare = (platform: 'twitter' | 'whatsapp') => {
+    const text = encodeURIComponent(generateSummaryText());
+    let shareUrl = '';
+
+    if (platform === 'twitter') {
+      shareUrl = `https://twitter.com/intent/tweet?text=${text}`;
+    } else if (platform === 'whatsapp') {
+      shareUrl = `https://api.whatsapp.com/send?text=${text}`;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
 
   const renderStars = (rating: number) => {
     const totalStars = 5;
@@ -77,7 +158,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/30 mt-8">
+    <Card ref={resultsCardRef} className="w-full max-w-4xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/30 mt-8">
       <CardHeader className="text-center p-8">
         {imagePreviewUrl && (
           <div className="mb-6 flex justify-center">
@@ -162,7 +243,32 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
       </CardContent>
       <CardFooter className="flex flex-col items-center space-y-4 p-8">
         <div className="flex space-x-4">
-            <Button variant="outline" className="rounded-full"><Share2 className="mr-2 h-4 w-4" /> Share Results</Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full">
+                  <Share2 className="mr-2 h-4 w-4" /> Share Results
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handleDownloadImage}>
+                  <Download className="mr-2 h-4 w-4" />
+                  <span>Download as Image</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopySummary}>
+                  <Copy className="mr-2 h-4 w-4" />
+                  <span>Copy Summary</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleShare('twitter')}>
+                  <Twitter className="mr-2 h-4 w-4" />
+                  <span>Share on X (Twitter)</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare('whatsapp')}>
+                  <WhatsAppIcon className="mr-2 h-4 w-4" />
+                  <span>Share on WhatsApp</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
         <p className="text-xs text-muted-foreground/60 px-4 text-center mt-4">
           Disclaimer: Information provided by EatInformed is for general guidance only and not a substitute for professional medical or nutritional advice. Always consult with a qualified healthcare provider for any health concerns or before making any decisions related to your health or diet. Ingredient data and regulations can change; verify critical information with product packaging and official sources.
