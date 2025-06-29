@@ -33,11 +33,11 @@ export default function NutritionChart({ data, servingSizeLabel }: NutritionChar
   const chartConfig = {
     'Per Serving': {
       label: servingLabelText,
-      color: 'hsl(197 71% 73%)', // sky blue
+      color: 'hsl(var(--primary))',
     },
     'Per 100mL/g': {
       label: 'Per 100mL/g',
-      color: 'hsl(120 73% 75%)', // light green
+      color: 'hsl(var(--accent))',
     },
   } satisfies ChartConfig;
 

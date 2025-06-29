@@ -4,7 +4,6 @@ import {googleAI} from '@genkit-ai/googleai';
 
 let ai: any = null;
 
-// Only initialize Genkit if the API key is present.
 // This prevents a startup crash if the key is not configured.
 if (process.env.GOOGLE_API_KEY) {
   ai = genkit({
