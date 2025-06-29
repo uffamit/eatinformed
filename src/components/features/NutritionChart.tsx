@@ -20,7 +20,25 @@ export default function NutritionChart({ data, servingSizeLabel }: NutritionChar
     return null;
   }
 
-  const chartData = data.map(item => ({
+  // Filter data to only include nutrients measured in 'g' or 'mg' to make the chart comparable.
+  // This avoids plotting energy (kJ/kcal) on the same scale as weight-based nutrients.
+  const comparableData = data.filter(item => {
+    const nutrientName = (item.nutrient || '').toLowerCase();
+    if (nutrientName === 'energy') {
+      return false; // Always exclude energy
+    }
+    const perServing = (item.perServing || '').toLowerCase();
+    const per100mL = (item.per100mL || '').toLowerCase();
+    // Include if units are present and are some form of grams.
+    return perServing.includes('g') || per100mL.includes('g');
+  });
+
+  if (comparableData.length === 0) {
+    // Don't render the chart if there's no comparable data to show.
+    return null;
+  }
+
+  const chartData = comparableData.map(item => ({
     name: item.nutrient,
     'Per Serving': parseValue(item.perServing),
     'Per 100mL/g': parseValue(item.per100mL),
@@ -46,7 +64,7 @@ export default function NutritionChart({ data, servingSizeLabel }: NutritionChar
       <CardHeader>
         <CardTitle>Nutrition Comparison Chart</CardTitle>
         <CardDescription>
-         A visual comparison of nutrients per serving vs. per 100mL/g.
+         A visual comparison of key nutrients (in g/mg) per serving vs. per 100mL/g.
         </CardDescription>
       </CardHeader>
       <CardContent>
