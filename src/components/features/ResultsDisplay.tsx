@@ -132,8 +132,44 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
     });
   };
 
-  const handleShare = (platform: 'twitter' | 'whatsapp') => {
-    const text = encodeURIComponent(generateSummaryText());
+  const handleShare = async (platform: 'twitter' | 'whatsapp') => {
+    const summaryText = generateSummaryText();
+    const title = 'My Food Scan Results from EatInformed';
+
+    // Advanced Share (Image + Text) using Web Share API
+    if (navigator.share && resultsCardRef.current) {
+      try {
+        const canvas = await html2canvas(resultsCardRef.current, {
+          backgroundColor: '#030712',
+          useCORS: true,
+        });
+        const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+        
+        if (blob) {
+          const file = new File([blob], 'eatinformed-results.png', { type: 'image/png' });
+          // Check if the browser can share this file
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: title,
+              text: summaryText,
+              files: [file],
+            });
+            return; // Exit after successful advanced share
+          }
+        }
+      } catch (error: any) {
+        // If user cancels the share dialog, it's not an error. Otherwise, log it and fall back.
+        if (error.name !== 'AbortError') {
+          console.error('Error using Web Share API with image, falling back:', error);
+        } else {
+          // User cancelled, so we don't proceed to the fallback.
+          return;
+        }
+      }
+    }
+
+    // Fallback to simple text sharing
+    const text = encodeURIComponent(summaryText);
     let shareUrl = '';
 
     if (platform === 'twitter') {
@@ -146,6 +182,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
       window.open(shareUrl, '_blank', 'noopener,noreferrer');
     }
   };
+
 
   const renderStars = (rating: number) => {
     const totalStars = 5;
