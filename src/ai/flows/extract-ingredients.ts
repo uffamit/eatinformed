@@ -9,9 +9,25 @@ import { ExtractIngredientsInput, ExtractIngredientsInputSchema, ExtractIngredie
 
 export async function extractIngredients(input: ExtractIngredientsInput): Promise<ExtractIngredientsOutput> {
   if (!ai) {
-    throw new Error('AI system not initialized. The server administrator needs to configure the GOOGLE_API_KEY.');
+    console.error("AI system not initialized. Check GOOGLE_API_KEY.");
+    // Return a structured error if AI is offline
+    return {
+      ingredients: [],
+      nutrition: { rawText: "AI system is offline.", nutrients: [] },
+      status: 'unreadable',
+    };
   }
-  return extractIngredientsFlow(input);
+  try {
+    return await extractIngredientsFlow(input);
+  } catch (error) {
+    console.error("Error in extractIngredientsFlow:", error);
+    // Return a structured error on any unexpected exception
+    return {
+      ingredients: [],
+      nutrition: { rawText: 'The AI model failed to process the image due to an unexpected error.', nutrients: [] },
+      status: 'unreadable',
+    };
+  }
 }
 
 const prompt = ai.definePrompt({

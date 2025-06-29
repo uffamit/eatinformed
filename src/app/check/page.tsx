@@ -168,10 +168,24 @@ export default function CheckPage() {
     try {
       // Step 1: Extract ingredients from image
       const extracted = await extractIngredients({ image: photoDataUri });
+
+      // Step 1a: Check extraction status before proceeding
+      if (extracted.status !== 'success') {
+        if (extracted.status === 'unreadable') {
+          setError('The image was unreadable. Please upload or capture a clearer photo of the product label.');
+        } else if (extracted.status === 'no_data') {
+          setError("We couldn't find any ingredient or nutrition text on the label. Please try a different image.");
+        }
+        setIngredientsData(extracted); // Still set data to show raw text if available
+        setIsLoading(false);
+        return; // Stop the process
+      }
+      
       setIngredientsData(extracted);
 
       // Step 2: Assess health safety based on extracted ingredients
-      const assessment = await assessHealthSafety({ ingredients: extracted.ingredients.join(', ') });
+      const ingredientsList = extracted.ingredients ? extracted.ingredients.join(', ') : '';
+      const assessment = await assessHealthSafety({ ingredients: ingredientsList });
       setAssessmentData(assessment);
 
     } catch (e: any) {
