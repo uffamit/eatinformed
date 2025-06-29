@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useRef, useEffect, useCallback, type ChangeEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, type ChangeEvent, type DragEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { extractIngredients, type ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients';
 import { assessHealthSafety, type AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety';
@@ -13,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, UploadCloud, Camera, RefreshCw, AlertCircle, ScanLine } from 'lucide-react';
 import ResultsDisplay from '@/components/features/ResultsDisplay';
+import { cn } from '@/lib/utils';
 
 export default function CheckPage() {
   const { toast } = useToast();
@@ -23,6 +23,7 @@ export default function CheckPage() {
   const [ingredientsData, setIngredientsData] = useState<ExtractIngredientsOutput | null>(null);
   const [assessmentData, setAssessmentData] = useState<AssessHealthSafetyOutput | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -94,9 +95,17 @@ export default function CheckPage() {
     }
   };
   
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const processFile = (file: File | null | undefined) => {
     if (file) {
+      const acceptedTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (!acceptedTypes.includes(file.type)) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid File Type',
+          description: 'Please upload a PNG, JPG, or WEBP image.',
+        });
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUri = reader.result as string;
@@ -104,6 +113,34 @@ export default function CheckPage() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    processFile(event.target.files?.[0]);
+  };
+  
+  const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDragEnter = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    processFile(e.dataTransfer.files?.[0]);
   };
 
   const handleCapture = () => {
@@ -226,12 +263,22 @@ export default function CheckPage() {
               </TabsTrigger>
             </TabsList>
             <TabsContent value="upload" className="mt-6">
-                <div className="flex flex-col items-center space-y-4 p-6 border-2 border-dashed border-white/20 rounded-lg">
+                <div
+                  onDragEnter={handleDragEnter}
+                  onDragLeave={handleDragLeave}
+                  onDragOver={handleDragOver}
+                  onDrop={handleDrop}
+                  className={cn(
+                    "flex flex-col items-center justify-center space-y-2 p-6 border-2 border-dashed rounded-lg transition-colors",
+                    isDragging ? "border-primary bg-primary/10" : "border-white/20"
+                  )}
+                >
                     <UploadCloud className="h-12 w-12 text-muted-foreground" />
                     <Label htmlFor="file-upload" className="text-lg font-semibold text-primary cursor-pointer hover:underline">
                         Click to upload an image
                     </Label>
-                    <p className="text-sm text-muted-foreground">PNG, JPG, or WEBP</p>
+                    <p className="text-sm text-muted-foreground">or drag and drop</p>
+                    <p className="text-xs text-muted-foreground">PNG, JPG, or WEBP</p>
                     <Input
                         id="file-upload"
                         type="file"
