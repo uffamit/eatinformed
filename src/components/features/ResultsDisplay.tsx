@@ -110,10 +110,15 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
     if (!assessmentData) return '';
     const { rating, pros, cons } = assessmentData;
     const url = typeof window !== "undefined" ? window.location.origin : "https://eatinformed.app";
-    let summary = `I analyzed a product with EatInformed & it scored ${rating.toFixed(1)}/5!`;
-    if (pros.length > 0) summary += `\n✅ Pro: ${pros[0]}`;
-    if (cons.length > 0) summary += `\n❌ Con: ${cons[0]}`;
-    summary += `\n\nFind out what's in your food: ${url}`;
+    // A concise summary formatted for social media, especially Twitter.
+    let summary = `This product scored ${rating.toFixed(1)}/5 on EatInformed.`;
+    if (pros.length > 0) {
+      summary += `\n👍 Pro: ${pros[0]}`;
+    }
+    if (cons.length > 0) {
+      summary += `\n👎 Con: ${cons[0]}`;
+    }
+    summary += `\n\nCheck your food's score: ${url}`;
     return summary;
   };
 
