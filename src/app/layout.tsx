@@ -9,10 +9,20 @@ import FloatingIcons from '@/components/layout/FloatingIcons';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
+// Default metadata, can be overridden by individual pages
 export const metadata: Metadata = {
   title: 'EatInformed - AI Nutrition Analysis',
   description: 'Transform your nutrition with AI power. Upload a food label for instant analysis of ingredients, health, and dietary suitability.',
 };
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'EatInformed',
+  url: 'https://eatinformed-eosin.vercel.app/',
+  logo: 'https://eatinformed-eosin.vercel.app/favicon.png', 
+};
+
 
 export default function RootLayout({
   children,
@@ -26,6 +36,10 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
         <link rel="icon" type="image/png" href="/favicon.png" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
         <ParticleBackground />

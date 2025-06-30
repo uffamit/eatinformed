@@ -83,7 +83,7 @@ const prompt = ai.definePrompt({
   name: 'assessHealthSafetyPrompt',
   input: {schema: AssessHealthSafetyInputSchema},
   output: {schema: AssessHealthSafetyOutputSchema},
-  prompt: `You are a world-class nutritionist and food safety expert. Your task is to analyze the following list of food ingredients and provide a concise, objective, and non-overlapping health and safety assessment.
+  prompt: `You are a world-class nutritionist and food safety expert. Your task is to analyze the following list of food ingredients and provide a concise, objective, and non-overlapping health and safety assessment. Your analysis must be grounded in established nutritional science and presented with the authority and trustworthiness of a professional expert. Prioritize factual accuracy and clarity for the user.
 
 Ingredients list:
 "{{ingredients}}"

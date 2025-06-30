@@ -211,7 +211,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
             />
           </div>
         )}
-        <CardTitle className="text-4xl font-black">
+        <CardTitle as="h2" className="text-4xl font-black">
             {isZeroRatingScenario ? "Analysis Incomplete" : "Analysis Complete"}
         </CardTitle>
         <div className="mt-6 flex flex-col items-center gap-2">

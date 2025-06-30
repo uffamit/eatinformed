@@ -1,11 +1,18 @@
-
-'use client';
-
 import Link from 'next/link';
+import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadCloud, Activity, ShieldCheck, ScanLine, DollarSign, Star, Zap } from 'lucide-react';
 import Image from 'next/image';
+
+export const metadata: Metadata = {
+  title: 'EatInformed - AI-Powered Nutrition & Ingredient Analysis',
+  description: 'Make smarter food choices. EatInformed uses AI to instantly analyze food labels. Get health ratings, allergen warnings, and detailed nutritional information just by taking a photo.',
+  keywords: ['nutrition analysis', 'AI nutritionist', 'food scanner', 'ingredient checker', 'healthy eating', 'diet app'],
+  alternates: {
+    canonical: '/',
+  },
+};
 
 export default function HomePage() {
   return (
