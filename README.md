@@ -1,4 +1,4 @@
-# eatinfromed
+# eatinfromed.
 
 eatinformed is a Next.js application designed to help users understand the nutritional content and potential health implications of food products by analyzing images of food labels.
 
