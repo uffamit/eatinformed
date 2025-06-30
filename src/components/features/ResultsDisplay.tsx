@@ -109,7 +109,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
   const generateSummaryText = () => {
     if (!assessmentData) return '';
     const { rating, pros, cons } = assessmentData;
-    const url = typeof window !== "undefined" ? window.location.origin : "https://eatinformed.app";
+    const url = typeof window !== "undefined" ? window.location.origin : "https://eatinformed-eosin.vercel.app";
     // A concise summary formatted for social media, especially Twitter.
     let summary = `This product scored ${rating.toFixed(1)}/5 on EatInformed.`;
     if (pros.length > 0) {
