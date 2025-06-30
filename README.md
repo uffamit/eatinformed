@@ -66,6 +66,18 @@ This builds the application for production to the `.next` folder.
 npm start
 ```
 
+## Deployment on Vercel
+
+This application is optimized for deployment on [Vercel](https://vercel.com), the platform from the creators of Next.js.
+
+1.  **Push to a Git Repository**: Push your project to a GitHub, GitLab, or Bitbucket repository.
+2.  **Import Project**: Sign up for a Vercel account and import your project from the Git repository. Vercel will automatically detect that it's a Next.js application and configure the build settings.
+3.  **Configure Environment Variables**: This is a critical step for the AI features to work.
+    - In your Vercel project dashboard, navigate to **Settings** > **Environment Variables**.
+    - Add a new variable with the key `GOOGLE_API_KEY` and paste your API key as the value.
+    - Ensure the variable is available in the **Production** environment (and Preview/Development if needed).
+4.  **Deploy**: Trigger a deployment. Vercel will build and deploy your application.
+
 ## Project Structure
 
 - `src/app`: Contains the main application pages and routing.
