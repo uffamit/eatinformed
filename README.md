@@ -91,6 +91,3 @@ This application is optimized for deployment on [Vercel](https://vercel.com), th
 
 Contributions are welcome! Please feel free to open issues or submit pull requests.
 
-## License
-
-[Specify your license here, e.g., MIT]
