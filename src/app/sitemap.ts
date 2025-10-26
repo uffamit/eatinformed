@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
  
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://eatinformed-eosin.vercel.app';
+  const baseUrl = 'https://eatinformed.amitdivekar.qzz.io';
 
   return [
     {

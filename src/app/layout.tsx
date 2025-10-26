@@ -19,8 +19,8 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Organization',
   name: 'EatInformed',
-  url: 'https://eatinformed-eosin.vercel.app/',
-  logo: 'https://eatinformed-eosin.vercel.app/favicon.png', 
+  url: 'https://eatinformed.amitdivekar.qzz.io/',
+  logo: 'https://eatinformed.amitdivekar.qzz.io/favicon.png', 
 };
 
 
