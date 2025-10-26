@@ -1,18 +1,10 @@
+'use client';
+
 import Link from 'next/link';
-import type { Metadata } from 'next';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UploadCloud, Activity, ShieldCheck, ScanLine, DollarSign, Star, Zap } from 'lucide-react';
 import Image from 'next/image';
-
-export const metadata: Metadata = {
-  title: 'EatInformed - AI-Powered Nutrition & Ingredient Analysis',
-  description: 'Make smarter food choices. EatInformed uses AI to instantly analyze food labels. Get health ratings, allergen warnings, and detailed nutritional information just by taking a photo.',
-  keywords: ['nutrition analysis', 'AI nutritionist', 'food scanner', 'ingredient checker', 'healthy eating', 'diet app'],
-  alternates: {
-    canonical: '/',
-  },
-};
 
 export default function HomePage() {
   return (
@@ -23,7 +15,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center space-y-6">
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-tight">
               Transform Your Nutrition with{' '}
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-pink-500">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                 AI Power
               </span>
             </h1>

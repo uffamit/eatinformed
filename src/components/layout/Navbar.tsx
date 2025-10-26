@@ -36,7 +36,7 @@ export default function Navbar() {
       <div className="container flex h-20 max-w-screen-2xl items-center justify-between">
         <Link href="/" className="flex items-center space-x-2" aria-label="EatInformed Home">
           <EatInformedLogo width={36} height={36} />
-           <span className="font-bold text-xl hidden sm:inline-block bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-green-600">EatInformed</span>
+           <span className="font-bold text-xl hidden sm:inline-block bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">EatInformed</span>
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
@@ -73,7 +73,7 @@ export default function Navbar() {
                 <div className="flex flex-col p-6">
                   <Link href="/" className="flex items-center space-x-2 mb-8" aria-label="EatInformed Home">
                     <EatInformedLogo width={32} height={32} />
-                     <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-green-600">EatInformed</span>
+                     <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">EatInformed</span>
                   </Link>
                   <div className="flex flex-col space-y-4">
                     {mobileNavLinks}

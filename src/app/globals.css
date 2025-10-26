@@ -4,33 +4,45 @@
 
 @layer base {
   :root {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 142.1 76.2% 36.3%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 262.1 83.3% 57.8%;
+    /* New Color Palette: Science meets Nutrition */
+    --background: 222 47% 11%; /* #0F172A */
+    --foreground: 210 40% 96%; /* #E2E8F0 */
+    
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 96%;
+    
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 96%;
+    
+    --primary: 142.1 70.6% 45.3%; /* #22C55E */
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 215 28% 21%; /* #334155 */
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 222 47% 16%; /* #1E293B */
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 204 94% 60%; /* #38BDF8 */
+    --accent-foreground: 222 47% 11%;
+    
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 222 47% 16%; /* #1E293B */
+    --input: 222 47% 16%;
+    --ring: 142.1 70.6% 45.3%;
+    
     --radius: 0.5rem;
 
-    --chart-1: 142.1 76.2% 36.3%;
-    --chart-2: 262.1 83.3% 57.8%;
-    --chart-3: 120 30% 60%;
+    /* Chart Colors */
+    --chart-1: 142.1 70.6% 45.3%; /* Green */
+    --chart-2: 204 94% 60%; /* Blue */
+    --chart-3: 215 28% 40%;
     --chart-4: 40 80% 60%;
     --chart-5: 20 70% 55%;
 
+    /* Sidebar - Unchanged for now, can be themed separately if needed */
     --sidebar-background: 120 10% 12%;
     --sidebar-foreground: 120 15% 85%;
     --sidebar-primary: 96 38% 52%;
@@ -42,32 +54,43 @@
   }
 
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 142.1 76.2% 36.3%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 262.1 83.3% 57.8%;
+    /* Same as :root for a consistent dark theme */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 96%;
+    
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 96%;
+    
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 96%;
+    
+    --primary: 142.1 70.6% 45.3%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 215 28% 21%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 222 47% 16%;
+    --muted-foreground: 215 20% 65%;
+    
+    --accent: 204 94% 60%;
+    --accent-foreground: 222 47% 11%;
+    
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 222 47% 16%;
+    --input: 222 47% 16%;
+    --ring: 142.1 70.6% 45.3%;
 
-    --chart-1: 142.1 76.2% 36.3%;
-    --chart-2: 262.1 83.3% 57.8%;
-    --chart-3: 120 30% 60%;
+    /* Chart Colors */
+    --chart-1: 142.1 70.6% 45.3%;
+    --chart-2: 204 94% 60%;
+    --chart-3: 215 28% 40%;
     --chart-4: 40 80% 60%;
     --chart-5: 20 70% 55%;
 
+    /* Sidebar */
     --sidebar-background: 120 10% 12%;
     --sidebar-foreground: 120 15% 85%;
     --sidebar-primary: 96 38% 52%;
