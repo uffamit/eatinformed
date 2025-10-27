@@ -86,7 +86,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
     if (!resultsCardRef.current) return;
     try {
       const canvas = await html2canvas(resultsCardRef.current, {
-        backgroundColor: '#030712',
+        backgroundColor: '#0F172A',
         useCORS: true, 
       });
       const dataUrl = canvas.toDataURL('image/png');
@@ -140,7 +140,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
     if (navigator.share && resultsCardRef.current) {
       try {
         const canvas = await html2canvas(resultsCardRef.current, {
-          backgroundColor: '#030712',
+          backgroundColor: '#0F172A',
           useCORS: true,
         });
         const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
