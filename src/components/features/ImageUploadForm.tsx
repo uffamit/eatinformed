@@ -52,16 +52,7 @@ export function CheckPageClient() {
     };
   }, [stopCameraStream]);
   
-  // Request camera permission when camera tab is activated, and clean up when leaving it.
-  const handleTabChange = (value: string) => {
-    if (value === 'camera' && hasCameraPermission === null) {
-      getCameraPermission();
-    } else if (value !== 'camera') {
-      stopCameraStream();
-    }
-  };
-
-  const getCameraPermission = async () => {
+  const getCameraPermission = useCallback(async () => {
     // Prefer the rear-facing camera for scanning product labels on mobile.
     const videoConstraints = {
       video: { facingMode: 'environment' }
@@ -95,8 +86,18 @@ export function CheckPageClient() {
         });
       }
     }
-  };
+  }, [toast]);
   
+  // Request camera permission when camera tab is activated, and clean up when leaving it.
+  const handleTabChange = useCallback((value: string) => {
+    if (value === 'camera' && hasCameraPermission === null) {
+      getCameraPermission();
+    } else if (value !== 'camera') {
+      stopCameraStream();
+    }
+  }, [getCameraPermission, hasCameraPermission, stopCameraStream]);
+
+
   const processFile = (file: File | null | undefined) => {
     if (file) {
       const acceptedTypes = ['image/png', 'image/jpeg', 'image/webp'];

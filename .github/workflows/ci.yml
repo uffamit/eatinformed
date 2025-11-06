@@ -94,9 +94,8 @@ jobs:
       - name: Run tests (skip if no script)
         shell: bash
         run: |
-          node -e "const p=require('./package.json'); process.exit(p?.scripts?.test?0:1)"
-          if [ $? -eq 0 ]; then
-            yarn test --if-present
+          if node -e "const p=require('./package.json'); process.exit(p?.scripts?.test?0:1)"; then
+            yarn test
           else
             echo 'No "test" script. Skipping.'
           fi

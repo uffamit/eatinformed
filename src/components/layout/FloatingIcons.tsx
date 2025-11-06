@@ -12,8 +12,14 @@ const iconComponents = [
   { Icon: Lollipop, size: 'w-8 h-8' },
 ];
 
+interface IconData {
+  Icon: React.ElementType;
+  size: string;
+  style: React.CSSProperties;
+}
+
 const FloatingIcons = () => {
-  const [iconData, setIconData] = useState<any[]>([]);
+  const [iconData, setIconData] = useState<IconData[]>([]);
 
   useEffect(() => {
     // This code now runs only on the client, after the initial render.

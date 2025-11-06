@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
 import type { ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients-types';
@@ -73,14 +73,21 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
   const resultsCardRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   
-  if (!assessmentData) {
-    return null;
-  }
-
-  const isZeroRatingScenario = assessmentData.rating === 0;
-  const dietInfo = assessmentData.dietaryInfo;
-  const nutrition = ingredientsData?.nutrition;
-  const hasStructuredNutrition = nutrition?.nutrients && nutrition.nutrients.length > 0;
+  const generateSummaryText = useCallback(() => {
+    if (!assessmentData) return '';
+    const { rating, pros, cons } = assessmentData;
+    const url = typeof window !== "undefined" ? window.location.origin : "https://eatinformed.amitdivekar.qzz.io/";
+    // A concise summary formatted for social media, especially Twitter.
+    let summary = `This product scored ${rating.toFixed(1)}/5 on EatInformed.`;
+    if (pros.length > 0) {
+      summary += `\n👍 Pro: ${pros[0]}`;
+    }
+    if (cons.length > 0) {
+      summary += `\n👎 Con: ${cons[0]}`;
+    }
+    summary += `\n\nCheck your food's score: ${url}`;
+    return summary;
+  }, [assessmentData]);
 
   const handleDownloadImage = async () => {
     if (!resultsCardRef.current) return;
@@ -106,23 +113,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
     }
   };
 
-  const generateSummaryText = () => {
-    if (!assessmentData) return '';
-    const { rating, pros, cons } = assessmentData;
-    const url = typeof window !== "undefined" ? window.location.origin : "https://eatinformed.amitdivekar.qzz.io/";
-    // A concise summary formatted for social media, especially Twitter.
-    let summary = `This product scored ${rating.toFixed(1)}/5 on EatInformed.`;
-    if (pros.length > 0) {
-      summary += `\n👍 Pro: ${pros[0]}`;
-    }
-    if (cons.length > 0) {
-      summary += `\n👎 Con: ${cons[0]}`;
-    }
-    summary += `\n\nCheck your food's score: ${url}`;
-    return summary;
-  };
-
-  const handleCopySummary = () => {
+  const handleCopySummary = useCallback(() => {
     const summary = generateSummaryText();
     navigator.clipboard.writeText(summary).then(() => {
       toast({ title: 'Copied to Clipboard!', description: 'Results summary has been copied.' });
@@ -130,9 +121,9 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
       console.error('Failed to copy text:', err);
       toast({ variant: 'destructive', title: 'Copy Failed', description: 'Could not copy summary to clipboard.' });
     });
-  };
+  }, [generateSummaryText, toast]);
 
-  const handleShare = async (platform: 'twitter' | 'whatsapp') => {
+  const handleShare = useCallback(async (platform: 'twitter' | 'whatsapp') => {
     const summaryText = generateSummaryText();
     const title = 'My Food Scan Results from EatInformed';
 
@@ -181,8 +172,16 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
     if (shareUrl) {
       window.open(shareUrl, '_blank', 'noopener,noreferrer');
     }
-  };
+  }, [generateSummaryText]);
 
+  if (!assessmentData) {
+    return null;
+  }
+
+  const isZeroRatingScenario = assessmentData.rating === 0;
+  const dietInfo = assessmentData.dietaryInfo;
+  const nutrition = ingredientsData?.nutrition;
+  const hasStructuredNutrition = nutrition?.nutrients && nutrition.nutrients.length > 0;
 
   const renderStars = (rating: number) => {
     const totalStars = 5;
