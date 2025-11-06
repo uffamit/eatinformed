@@ -34,7 +34,6 @@ jobs:
     name: ESLint
     runs-on: ubuntu-latest
     needs: env_check
-    continue-on-error: true  # Allows workflow to continue even if this job fails
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
@@ -51,7 +50,6 @@ jobs:
     name: TypeScript Check
     runs-on: ubuntu-latest
     needs: env_check
-    continue-on-error: true  # Allows workflow to continue even if this job fails
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
@@ -67,7 +65,7 @@ jobs:
   build:
     name: Build Check
     runs-on: ubuntu-latest
-    needs: [lint, typecheck] # This job will now run even if lint or typecheck fail
+    needs: [lint, typecheck]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
