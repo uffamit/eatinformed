@@ -18,24 +18,12 @@ export async function extractIngredients(input: ExtractIngredientsInput): Promis
       status: 'unreadable',
     };
   }
-  try {
-    return await extractIngredientsFlow(input);
-  } catch (error) {
-    console.error("Error in extractIngredientsFlow:", error);
-    // Return a structured error on any unexpected exception
-    return {
-      ingredients: [],
-      nutrition: { rawText: 'The AI model failed to process the image due to an unexpected error.', nutrients: [] },
-      status: 'unreadable',
-    };
-  }
-}
-
-const prompt = ai.definePrompt({
-  name: 'extractIngredientsPrompt',
-  input: {schema: ExtractIngredientsInputSchema},
-  output: {schema: ExtractIngredientsOutputSchema},
-  prompt: `You are an expert Optical Character Recognition (OCR) system specializing in food labels. Your task is to extract the ingredients list and nutritional information from the provided image.
+  
+  const prompt = ai.definePrompt({
+    name: 'extractIngredientsPrompt',
+    input: {schema: ExtractIngredientsInputSchema},
+    output: {schema: ExtractIngredientsOutputSchema},
+    prompt: `You are an expert Optical Character Recognition (OCR) system specializing in food labels. Your task is to extract the ingredients list and nutritional information from the provided image.
 
 Analyze the image carefully and return the data in the specified JSON format.
 
@@ -52,28 +40,41 @@ Analyze the image carefully and return the data in the specified JSON format.
 If a section is not found, return empty values for it, but adhere to the schema.
 
 Image to analyze: {{media url=image}}`,
-});
+  });
 
-const extractIngredientsFlow = ai.defineFlow(
-  {
-    name: 'extractIngredientsFlow',
-    inputSchema: ExtractIngredientsInputSchema,
-    outputSchema: ExtractIngredientsOutputSchema,
-  },
-  async (input) => {
-    const {output} = await prompt(input);
-    if (!output) {
-      return {
-        ingredients: [],
-        nutrition: undefined,
-        status: 'unreadable',
-      };
-    }
-    // A simple check to refine status if model returns success but no data
-    if (output.status === 'success' && output.ingredients.length === 0 && !output.nutrition?.rawText && !output.nutrition?.nutrients) {
-        output.status = 'no_data';
-    }
+  const extractIngredientsFlow = ai.defineFlow(
+    {
+      name: 'extractIngredientsFlow',
+      inputSchema: ExtractIngredientsInputSchema,
+      outputSchema: ExtractIngredientsOutputSchema,
+    },
+    async (input) => {
+      const {output} = await prompt(input);
+      if (!output) {
+        return {
+          ingredients: [],
+          nutrition: undefined,
+          status: 'unreadable',
+        };
+      }
+      // A simple check to refine status if model returns success but no data
+      if (output.status === 'success' && output.ingredients.length === 0 && !output.nutrition?.rawText && !output.nutrition?.nutrients) {
+          output.status = 'no_data';
+      }
 
-    return output;
+      return output;
+    }
+  );
+
+  try {
+    return await extractIngredientsFlow(input);
+  } catch (error) {
+    console.error("Error in extractIngredientsFlow:", error);
+    // Return a structured error on any unexpected exception
+    return {
+      ingredients: [],
+      nutrition: { rawText: 'The AI model failed to process the image due to an unexpected error.', nutrients: [] },
+      status: 'unreadable',
+    };
   }
-);
+}
