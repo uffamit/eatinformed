@@ -1,8 +1,40 @@
-lint:
+name: CI Checks
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  env_check:
+    name: Check for committed .env files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if any tracked .env* files exist
+        shell: bash
+        run: |
+          if git ls-files -z | tr '\0' '\n' | grep -E '^\.env($|[^/]*)' >/dev/null; then
+            echo "::error::A tracked .env* file was found in the repository. Remove it and add '.env*' to .gitignore."
+            exit 1
+          else
+            echo "No tracked .env* files found."
+          fi
+
+  lint:
     name: ESLint
     runs-on: ubuntu-latest
     needs: env_check
-    continue-on-error: true  # <-- ADD THIS LINE
+    continue-on-error: true  # Allows workflow to continue even if this job fails
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
@@ -19,7 +51,7 @@ lint:
     name: TypeScript Check
     runs-on: ubuntu-latest
     needs: env_check
-    continue-on-error: true  # <-- ADD THIS LINE
+    continue-on-error: true  # Allows workflow to continue even if this job fails
     steps:
       - uses: actions/checkout@v4
       - name: Set up Node.js
@@ -31,3 +63,41 @@ lint:
         run: yarn install --frozen-lockfile
       - name: Run type check
         run: yarn typecheck
+
+  build:
+    name: Build Check
+    runs-on: ubuntu-latest
+    needs: [lint, typecheck] # This job will now run even if lint or typecheck fail
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run build
+        run: yarn build
+
+  tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run tests (skip if no script)
+        shell: bash
+        run: |
+          if node -e "const p=require('./package.json'); process.exit(p?.scripts?.test?0:1)"; then
+            yarn test
+          else
+            echo 'No "test" script. Skipping.'
+          fi
