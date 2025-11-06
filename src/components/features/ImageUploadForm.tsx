@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect, useCallback, type ChangeEvent, type DragEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { extractIngredients, type ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients';
-import { assessHealthSafety, type AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety';
+import { extractIngredients } from '@/ai/flows/extract-ingredients';
+import { type ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients-types';
+import { assessHealthSafety } from '@/ai/flows/assess-health-safety';
+import { type AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety-types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -1,5 +1,5 @@
 
-import {genkit, GenkitPlugin} from 'genkit';
+import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
 
 let ai: any = null;
