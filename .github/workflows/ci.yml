@@ -36,34 +36,15 @@ jobs:
     needs: env_check
     steps:
       - uses: actions/checkout@v4
-      - name: Detect package manager
-        id: pm
-        run: |
-          if [ -f yarn.lock ]; then
-            echo "mgr=yarn" >> $GITHUB_OUTPUT
-            echo "install=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            echo "cache=yarn" >> $GITHUBOUTPUT  # fallback if next line fails
-          else
-            echo "mgr=npm" >> $GITHUB_OUTPUT
-            echo "install=ci" >> $GITHUB_OUTPUT
-            echo "cache=npm" >> $GITHUB_OUTPUT
-          fi
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: ${{ steps.pm.outputs.cache }}
+          cache: 'yarn'
       - name: Install dependencies
-        run: ${{ steps.pm.outputs.mgr }} ${{ steps.pm.outputs.install }}
-      - name: Run linter (if script exists)
-        shell: bash
-        run: |
-          node -e "const p=require('./package.json'); process.exit(p?.scripts?.lint?0:1)"
-          if [ $? -eq 0 ]; then
-            ${{ steps.pm.outputs.mgr }} run lint
-          else
-            echo 'No "lint" script in package.json. Skipping.'
-          fi
+        run: yarn install --frozen-lockfile
+      - name: Run linter
+        run: yarn lint
 
   typecheck:
     name: TypeScript Check
@@ -71,33 +52,15 @@ jobs:
     needs: env_check
     steps:
       - uses: actions/checkout@v4
-      - name: Detect package manager
-        id: pm
-        run: |
-          if [ -f yarn.lock ]; then
-            echo "mgr=yarn" >> $GITHUB_OUTPUT
-            echo "install=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            echo "cache=yarn" >> $GITHUB_OUTPUT
-          else
-            echo "mgr=npm" >> $GITHUB_OUTPUT
-            echo "install=ci" >> $GITHUB_OUTPUT
-            echo "cache=npm" >> $GITHUB_OUTPUT
-          fi
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: ${{ steps.pm.outputs.cache }}
+          cache: 'yarn'
       - name: Install dependencies
-        run: ${{ steps.pm.outputs.mgr }} ${{ steps.pm.outputs.install }}
-      - name: Run type check (if script exists)
-        shell: bash
-        run: |
-          node -e "const p=require('./package.json'); process.exit(p?.scripts?.typecheck?0:1)"
-          if [ $? -eq 0 ]; then
-            ${{ steps.pm.outputs.mgr }} run typecheck
-          else
-            echo 'No "typecheck" script. Skipping.'
-          fi
+        run: yarn install --frozen-lockfile
+      - name: Run type check
+        run: yarn typecheck
 
   build:
     name: Build Check
@@ -105,33 +68,15 @@ jobs:
     needs: [lint, typecheck]
     steps:
       - uses: actions/checkout@v4
-      - name: Detect package manager
-        id: pm
-        run: |
-          if [ -f yarn.lock ]; then
-            echo "mgr=yarn" >> $GITHUB_OUTPUT
-            echo "install=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            echo "cache=yarn" >> $GITHUB_OUTPUT
-          else
-            echo "mgr=npm" >> $GITHUB_OUTPUT
-            echo "install=ci" >> $GITHUB_OUTPUT
-            echo "cache=npm" >> $GITHUB_OUTPUT
-          fi
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: ${{ steps.pm.outputs.cache }}
+          cache: 'yarn'
       - name: Install dependencies
-        run: ${{ steps.pm.outputs.mgr }} ${{ steps.pm.outputs.install }}
-      - name: Run build (if script exists)
-        shell: bash
-        run: |
-          node -e "const p=require('./package.json'); process.exit(p?.scripts?.build?0:1)"
-          if [ $? -eq 0 ]; then
-            ${{ steps.pm.outputs.mgr }} run build
-          else
-            echo 'No "build" script. Skipping.'
-          fi
+        run: yarn install --frozen-lockfile
+      - name: Run build
+        run: yarn build
 
   tests:
     name: Unit Tests
@@ -139,30 +84,19 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - name: Detect package manager
-        id: pm
-        run: |
-          if [ -f yarn.lock ]; then
-            echo "mgr=yarn" >> $GITHUB_OUTPUT
-            echo "install=install --frozen-lockfile" >> $GITHUB_OUTPUT
-            echo "cache=yarn" >> $GITHUB_OUTPUT
-          else
-            echo "mgr=npm" >> $GITHUB_OUTPUT
-            echo "install=ci" >> $GITHUB_OUTPUT
-            echo "cache=npm" >> $GITHUB_OUTPUT
-          fi
-      - uses: actions/setup-node@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: ${{ steps.pm.outputs.cache }}
+          cache: 'yarn'
       - name: Install dependencies
-        run: ${{ steps.pm.outputs.mgr }} ${{ steps.pm.outputs.install }}
+        run: yarn install --frozen-lockfile
       - name: Run tests (skip if no script)
         shell: bash
         run: |
           node -e "const p=require('./package.json'); process.exit(p?.scripts?.test?0:1)"
           if [ $? -eq 0 ]; then
-            ${{ steps.pm.outputs.mgr }} test --if-present
+            yarn test --if-present
           else
             echo 'No "test" script. Skipping.'
           fi
