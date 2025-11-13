@@ -109,6 +109,16 @@ export function CheckPageClient() {
         });
         return;
       }
+      // Security: Limit file size to 10MB to prevent DoS attacks
+      const maxSizeInBytes = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSizeInBytes) {
+        toast({
+          variant: 'destructive',
+          title: 'File Too Large',
+          description: 'Please upload an image smaller than 10MB.',
+        });
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUri = reader.result as string;
