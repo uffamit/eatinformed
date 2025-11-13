@@ -43,7 +43,7 @@ export default function HomePage() {
          <div className="container px-4 md:px-6">
            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
             <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground font-semibold">Key Features</div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why You'll Love EatInformed</h2>
+            <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Why You&apos;ll Love EatInformed</h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed">
               We provide the tools you need for food clarity.
             </p>
@@ -75,7 +75,7 @@ export default function HomePage() {
             <div className="inline-block rounded-lg bg-secondary px-3 py-1 text-sm text-secondary-foreground font-semibold">How It Works</div>
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Simple Steps to Food Clarity</h2>
             <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-              Discovering what's in your food has never been easier.
+              Discovering what&apos;s in your food has never been easier.
             </p>
           </div>
           <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 lg:gap-16 mt-12">

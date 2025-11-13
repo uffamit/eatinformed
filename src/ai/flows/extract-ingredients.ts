@@ -48,7 +48,7 @@ Image to analyze: {{media url=image}}`,
       inputSchema: ExtractIngredientsInputSchema,
       outputSchema: ExtractIngredientsOutputSchema,
     },
-    async (input) => {
+    async (input: ExtractIngredientsInput) => {
       const {output} = await prompt(input);
       if (!output) {
         return {
