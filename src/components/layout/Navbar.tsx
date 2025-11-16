@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ScanLine, User as UserIcon, LogOut } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { Menu, User as UserIcon, LogOut } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,6 +20,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
+import { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
+import { AuthForm } from '../features/AuthForm';
 
 const navItems = [
   { href: '/#features', label: 'Features' },
@@ -29,11 +32,14 @@ const navItems = [
 
 const AuthButton = () => {
   const { user, userProfile, loading } = useAuth();
-  const routerPathname = usePathname();
+  const router = useRouter();
+  const [openAuthDialog, setOpenAuthDialog] = useState(false);
+
 
   const handleSignOut = async () => {
     if (auth) {
       await signOut(auth);
+      router.push('/'); // Redirect to home after sign out
     }
   };
 
@@ -78,12 +84,26 @@ const AuthButton = () => {
   }
 
   return (
-    <Button asChild className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/30">
-      <Link href="/login">
+    <>
+      <Button onClick={() => setOpenAuthDialog(true)} className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/30">
         Login / Sign Up
         <UserIcon className="ml-2 h-4 w-4" />
-      </Link>
-    </Button>
+      </Button>
+      <Dialog open={openAuthDialog} onOpenChange={setOpenAuthDialog}>
+        <DialogContent className="max-w-md">
+            <DialogHeader>
+                <DialogTitle className="text-center text-2xl">Welcome to EatInformed</DialogTitle>
+                <DialogDescription className="text-center">
+                    Sign in or create an account to get started.
+                </DialogDescription>
+            </DialogHeader>
+            <AuthForm onAuthSuccess={() => {
+                setOpenAuthDialog(false);
+                router.push('/check');
+            }} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

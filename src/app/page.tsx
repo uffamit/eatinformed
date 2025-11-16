@@ -1,11 +1,29 @@
 
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadCloud, Activity, ShieldCheck, ScanLine, DollarSign, Star, Zap } from 'lucide-react';
-import Image from 'next/image';
+import { UploadCloud, Activity, ShieldCheck, ScanLine, Star, Zap } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AuthForm } from '@/components/features/AuthForm';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function HomePage() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [openAuthDialog, setOpenAuthDialog] = useState(false);
+
+  const handleCheckProductClick = () => {
+    if (user) {
+      router.push('/check');
+    } else {
+      setOpenAuthDialog(true);
+    }
+  };
+  
   return (
     <div className="flex flex-col items-center space-y-24 overflow-hidden">
       {/* Hero Section */}
@@ -22,12 +40,24 @@ export default function HomePage() {
               Upload a food label for instant AI analysis of ingredients, health, and dietary suitability. Make smarter choices, effortlessly.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-4 animate-fade-in [animation-delay:600ms]">
-               <Button asChild size="lg" className="rounded-full text-lg py-7 px-8 shadow-lg shadow-primary/40 hover:scale-105 transition-transform">
-                <Link href="/check">
-                  <ScanLine className="mr-2 h-5 w-5" />
-                  Check a Product
-                </Link>
-              </Button>
+              <Dialog open={openAuthDialog} onOpenChange={setOpenAuthDialog}>
+                 <Button onClick={handleCheckProductClick} size="lg" className="rounded-full text-lg py-7 px-8 shadow-lg shadow-primary/40 hover:scale-105 transition-transform">
+                    <ScanLine className="mr-2 h-5 w-5" />
+                    Check a Product
+                </Button>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="text-center text-2xl">Welcome to EatInformed</DialogTitle>
+                        <DialogDescription className="text-center">
+                            Sign in or create an account to get started.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <AuthForm onAuthSuccess={() => {
+                        setOpenAuthDialog(false);
+                        router.push('/check');
+                    }} />
+                </DialogContent>
+              </Dialog>
               <Button asChild variant="outline" size="lg" className="rounded-full text-lg py-7 px-8 hover:bg-white/5 hover:scale-105 transition-transform">
                 <Link href="#how-it-works">
                   Learn More
@@ -110,17 +140,14 @@ export default function HomePage() {
               Our mission is to make nutritional information accessible. EatInformed is free to use, supported by non-intrusive ads on the results page.
             </p>
           </div>
-          <div className="mx-auto w-full max-w-sm space-y-2 mt-4">
-             <Button asChild size="lg" className="w-full shadow-lg rounded-full">
-                <Link href="/check">
-                    <ScanLine className="mr-2 h-5 w-5" />
-                    Start Scanning Now
-                </Link>
+           <div className="mx-auto w-full max-w-sm space-y-2 mt-4">
+               <Button onClick={handleCheckProductClick} size="lg" className="w-full shadow-lg rounded-full">
+                  <ScanLine className="mr-2 h-5 w-5" />
+                  Start Scanning Now
               </Button>
           </div>
         </div>
       </section>
-
     </div>
   );
 }
