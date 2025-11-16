@@ -7,6 +7,8 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { createUserProfileDocument } from '@/utils/authActions';
@@ -39,6 +41,16 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('login');
 
+  const handleAuthSuccess = async (idToken: string) => {
+    // Call the API route to set the session cookie
+    await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken }),
+    });
+    onAuthSuccess();
+  };
+
   const handleAuthAction = async (action: 'signUp' | 'signIn') => {
     if (!auth) {
       setError("Firebase is not configured. Please check your environment variables.");
@@ -47,17 +59,21 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
     setIsProcessing(true);
     setError(null);
     try {
+      // Set persistence to 'local' to survive browser restarts
+      await setPersistence(auth, browserLocalPersistence);
+
       const userCredential = action === 'signUp'
         ? await createUserWithEmailAndPassword(auth, email, password)
         : await signInWithEmailAndPassword(auth, email, password);
       
       await createUserProfileDocument(userCredential.user);
+      const idToken = await userCredential.user.getIdToken();
       
       toast({
         title: action === 'signUp' ? 'Account Created!' : 'Signed In!',
         description: 'You have been successfully logged in.',
       });
-      onAuthSuccess();
+      await handleAuthSuccess(idToken);
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
     } finally {
@@ -74,14 +90,18 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
+      // Set persistence to 'local' to survive browser restarts
+      await setPersistence(auth, browserLocalPersistence);
       const result = await signInWithPopup(auth, provider);
+      
       await createUserProfileDocument(result.user);
+      const idToken = await result.user.getIdToken();
       
       toast({
         title: 'Signed In with Google!',
         description: 'You have been successfully logged in.',
       });
-      onAuthSuccess();
+      await handleAuthSuccess(idToken);
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred during Google Sign-In.');
     } finally {

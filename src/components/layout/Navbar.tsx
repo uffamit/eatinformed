@@ -39,6 +39,8 @@ const AuthButton = () => {
   const handleSignOut = async () => {
     if (auth) {
       await signOut(auth);
+      // Call the API route to clear the cookie
+      await fetch('/api/auth/logout', { method: 'GET' });
       router.push('/'); // Redirect to home after sign out
     }
   };
