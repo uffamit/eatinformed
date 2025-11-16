@@ -1,16 +1,22 @@
 
 import admin from 'firebase-admin';
 
-const serviceAccount = {
-  projectId: process.env.FIREBASE_PROJECT_ID,
-  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-  privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-};
-
-export function initAdmin() {
-  if (!admin.apps.length) {
+// Check if the app is already initialized to prevent errors
+if (!admin.apps.length) {
+  try {
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON!);
+    
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
+  } catch (error) {
+    console.error("Failed to initialize Firebase Admin SDK:", error);
+    // You might want to throw an error here or handle it gracefully
+    // depending on whether server-side auth is critical at startup.
   }
 }
+
+// It's safer to export the initialized auth object
+const adminAuth = admin.apps.length ? admin.auth() : null;
+
+export { adminAuth };

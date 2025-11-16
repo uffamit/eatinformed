@@ -36,8 +36,8 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
   if (!input.ingredients || input.ingredients.trim() === '') {
     return {
       rating: 0,
-      pros: ["None (no data to analyze)."],
-      cons: ["None (no data to analyze)."],
+      pros: [],
+      cons: [],
       warnings: ["Unable to evaluate due to missing or unreadable label. Please upload a clear image."],
       dietaryInfo: {
         allergens: [],
@@ -115,18 +115,19 @@ Your analysis must be objective and based on general nutritional science. Be con
     return await assessHealthSafetyFlow(input);
   } catch (error: any) {
     console.error("Error in assessHealthSafetyFlow:", error);
-    // Construct a user-friendly error response that fits the schema
     let warningMessage = "The AI model failed to provide an assessment due to an unexpected error.";
-    if (error.message && (error.message.includes('503') || error.message.includes('Service Unavailable'))) {
-      warningMessage = "The AI analysis service is temporarily overloaded. Please wait a moment and try again.";
-    } else if (error.message && error.message.includes('Deadline exceeded')) {
-      warningMessage = "The analysis took too long to complete. Please try again.";
+    if (error.message) {
+        if (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable')) {
+            warningMessage = "The AI analysis service is temporarily overloaded. Please wait a moment and try again.";
+        } else if (error.message.toLowerCase().includes('deadline exceeded')) {
+            warningMessage = "The analysis took too long to complete. Please try again.";
+        }
     }
     
     return {
       rating: 0,
-      pros: ["None (analysis failed)."],
-      cons: ["None (analysis failed)."],
+      pros: [],
+      cons: [],
       warnings: [warningMessage],
       dietaryInfo: {
         allergens: [],

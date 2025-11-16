@@ -11,10 +11,9 @@ import { ExtractIngredientsInput, ExtractIngredientsInputSchema, ExtractIngredie
 export async function extractIngredients(input: ExtractIngredientsInput): Promise<ExtractIngredientsOutput> {
   if (!ai) {
     console.error("AI system not initialized. Check GOOGLE_API_KEY.");
-    // Return a structured error if AI is offline
     return {
       ingredients: [],
-      nutrition: { rawText: "AI system is offline.", nutrients: [] },
+      nutrition: { rawText: "AI system is offline. The administrator needs to configure the GOOGLE_API_KEY.", nutrients: [] },
       status: 'unreadable',
     };
   }
@@ -51,14 +50,10 @@ Image to analyze: {{media url=image}}`,
     async (input) => {
       const {output} = await prompt(input);
       if (!output) {
-        return {
-          ingredients: [],
-          nutrition: undefined,
-          status: 'unreadable',
-        };
+        throw new Error('The AI model failed to provide an output.');
       }
       // A simple check to refine status if model returns success but no data
-      if (output.status === 'success' && output.ingredients.length === 0 && !output.nutrition?.rawText && !output.nutrition?.nutrients) {
+      if (output.status === 'success' && output.ingredients.length === 0 && (!output.nutrition || (!output.nutrition.rawText && (!output.nutrition.nutrients || output.nutrition.nutrients.length === 0)))) {
           output.status = 'no_data';
       }
 
@@ -68,12 +63,19 @@ Image to analyze: {{media url=image}}`,
 
   try {
     return await extractIngredientsFlow(input);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in extractIngredientsFlow:", error);
-    // Return a structured error on any unexpected exception
+    let errorMessage = 'The AI model failed to process the image due to an unexpected error.';
+    if (error.message) {
+        if (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable')) {
+            errorMessage = "The AI service is temporarily overloaded. Please wait a moment and try again.";
+        } else if (error.message.toLowerCase().includes('deadline exceeded')) {
+            errorMessage = "The analysis took too long to complete. Please try again.";
+        }
+    }
     return {
       ingredients: [],
-      nutrition: { rawText: 'The AI model failed to process the image due to an unexpected error.', nutrients: [] },
+      nutrition: { rawText: errorMessage, nutrients: [] },
       status: 'unreadable',
     };
   }

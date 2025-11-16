@@ -41,7 +41,6 @@ export function CheckPageClient() {
     if (videoRef.current) {
       videoRef.current.srcObject = null;
     }
-    // Reset permission state so it can be re-requested if the user revisits the tab.
     setHasCameraPermission(null);
   }, []);
 
@@ -53,6 +52,16 @@ export function CheckPageClient() {
   }, [stopCameraStream]);
   
   const getCameraPermission = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+        setHasCameraPermission(false);
+        toast({
+            variant: 'destructive',
+            title: 'Camera Not Supported',
+            description: 'Your browser does not support camera access. Please use the upload option.',
+        });
+        return;
+    }
+    
     // Prefer the rear-facing camera for scanning product labels on mobile.
     const videoConstraints = {
       video: { facingMode: 'environment' }
@@ -61,17 +70,16 @@ export function CheckPageClient() {
     try {
       // First, try to get the rear camera
       const stream = await navigator.mediaDevices.getUserMedia(videoConstraints);
-      streamRef.current = stream; // Store the stream
+      streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
       setHasCameraPermission(true);
     } catch (err) {
-      console.error('Failed to get rear camera, trying default camera:', err);
-      // If the rear camera fails (e.g., on a desktop), fall back to any available camera.
+      console.warn('Failed to get rear camera, trying default camera:', err);
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        streamRef.current = stream; // Store the stream
+        streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
@@ -82,17 +90,16 @@ export function CheckPageClient() {
         toast({
           variant: 'destructive',
           title: 'Camera Access Denied',
-          description: 'Could not access camera. Please enable camera permissions in your browser settings to use this feature.',
+          description: 'Could not access camera. Please enable permissions in your browser settings.',
         });
       }
     }
   }, [toast]);
   
-  // Request camera permission when camera tab is activated, and clean up when leaving it.
   const handleTabChange = useCallback((value: string) => {
     if (value === 'camera' && hasCameraPermission === null) {
       getCameraPermission();
-    } else if (value !== 'camera') {
+    } else if (value !== 'camera' && streamRef.current) {
       stopCameraStream();
     }
   }, [getCameraPermission, hasCameraPermission, stopCameraStream]);
@@ -157,7 +164,7 @@ export function CheckPageClient() {
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
         const dataUri = canvas.toDataURL('image/png');
         setImagePreviewUrl(dataUri);
-        stopCameraStream(); // Stop the camera after capture
+        stopCameraStream();
       }
     }
   };
@@ -179,9 +186,9 @@ export function CheckPageClient() {
         } else if (extracted.status === 'no_data') {
           setError("We couldn't find any ingredient or nutrition text on the label. Please try a different image.");
         }
-        setIngredientsData(extracted); // Still set data to show raw text if available
+        setIngredientsData(extracted);
         setIsLoading(false);
-        return; // Stop the process
+        return;
       }
       
       setIngredientsData(extracted);
@@ -205,7 +212,7 @@ export function CheckPageClient() {
   }, [toast]);
   
   const handleReset = () => {
-    stopCameraStream(); // Ensure camera is off on reset
+    stopCameraStream();
     setImagePreviewUrl(null);
     setIngredientsData(null);
     setAssessmentData(null);
@@ -319,12 +326,17 @@ export function CheckPageClient() {
                         </AlertDescription>
                     </Alert>
                 )}
-                 {hasCameraPermission && (
+                 {hasCameraPermission === true && (
                      <div className="mt-4 flex justify-center">
                         <Button onClick={handleCapture} size="lg" className="rounded-full">
                             <Camera className="mr-2 h-5 w-5" /> Capture Image
                         </Button>
                      </div>
+                 )}
+                 {hasCameraPermission === null && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
                  )}
               </div>
             </TabsContent>

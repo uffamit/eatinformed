@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { Menu, User as UserIcon, LogOut } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -30,18 +30,16 @@ const navItems = [
   { href: '/#pricing', label: 'Pricing' },
 ];
 
-const AuthButton = () => {
+const AuthButton = ({ isMobile = false }) => {
   const { user, userProfile, loading } = useAuth();
   const router = useRouter();
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
 
-
   const handleSignOut = async () => {
     if (auth) {
       await signOut(auth);
-      // Call the API route to clear the cookie
       await fetch('/api/auth/logout', { method: 'GET' });
-      router.push('/'); // Redirect to home after sign out
+      router.push('/');
     }
   };
 
@@ -76,6 +74,11 @@ const AuthButton = () => {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => router.push('/check')}>
+             <UserIcon className="mr-2 h-4 w-4" />
+             <span>Dashboard</span>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
@@ -85,13 +88,13 @@ const AuthButton = () => {
     );
   }
 
+  // Auth Dialog Trigger & Content
   return (
     <>
-      <Button onClick={() => setOpenAuthDialog(true)} className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/30">
-        Login / Sign Up
-        <UserIcon className="ml-2 h-4 w-4" />
-      </Button>
       <Dialog open={openAuthDialog} onOpenChange={setOpenAuthDialog}>
+        <Button onClick={() => setOpenAuthDialog(true)} className={cn(isMobile ? 'w-full' : 'hidden md:flex', 'bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/30')}>
+          Login / Sign Up
+        </Button>
         <DialogContent className="max-w-md">
             <DialogHeader>
                 <DialogTitle className="text-center text-2xl">Welcome to EatInformed</DialogTitle>
@@ -112,19 +115,6 @@ const AuthButton = () => {
 
 export default function Navbar() {
   const pathname = usePathname();
-
-  const mobileNavLinks = navItems.map(item => (
-    <Link
-      key={`mobile-${item.href}`}
-      href={item.href}
-      className={cn(
-        "block rounded-md p-2 transition-colors hover:bg-secondary text-lg",
-        pathname === item.href ? "bg-secondary text-primary" : "text-foreground/80"
-      )}
-    >
-      {item.label}
-    </Link>
-  ));
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg">
@@ -159,18 +149,34 @@ export default function Navbar() {
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background/95 backdrop-blur-lg">
-                <div className="flex flex-col p-6">
-                  <Link href="/" className="flex items-center space-x-2 mb-8" aria-label="EatInformed Home">
-                    <EatInformedLogo width={32} height={32} />
-                     <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">EatInformed</span>
-                  </Link>
-                  <div className="flex flex-col space-y-4">
-                    {mobileNavLinks}
+              <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background/95 backdrop-blur-lg p-0">
+                <div className="flex flex-col h-full">
+                  <div className="p-6">
+                    <Link href="/" className="flex items-center space-x-2 mb-8" aria-label="EatInformed Home">
+                      <SheetClose asChild>
+                          <EatInformedLogo width={32} height={32} />
+                      </SheetClose>
+                      <span className="font-bold text-xl bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">EatInformed</span>
+                    </Link>
+                    <div className="flex flex-col space-y-2">
+                      {navItems.map(item => (
+                        <SheetClose asChild key={`mobile-${item.href}`}>
+                            <Link
+                              href={item.href}
+                              className={cn(
+                                "block rounded-md p-3 transition-colors hover:bg-secondary text-base",
+                                pathname === item.href ? "bg-secondary text-primary" : "text-foreground/80"
+                              )}
+                            >
+                              {item.label}
+                            </Link>
+                        </SheetClose>
+                      ))}
+                    </div>
                   </div>
-                  <Button asChild size="lg" className="mt-8 w-full">
-                    <Link href="/login">Login / Sign Up</Link>
-                  </Button>
+                  <div className="mt-auto p-6">
+                     <AuthButton isMobile={true} />
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>

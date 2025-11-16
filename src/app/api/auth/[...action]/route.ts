@@ -1,15 +1,13 @@
 
-import { auth as adminAuth } from 'firebase-admin';
+import { adminAuth } from '@/lib/firebase-admin';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-import { initAdmin } from '@/lib/firebase-admin';
 
-// Initialize Firebase Admin SDK
-initAdmin();
+const SESSION_COOKIE_NAME = 'session';
 
 // Define cookie options
 const getCookieOptions = (expires: number) => ({
-  name: 'session',
+  name: SESSION_COOKIE_NAME,
   value: '',
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
@@ -17,57 +15,59 @@ const getCookieOptions = (expires: number) => ({
   expires,
 });
 
-export async function POST(request: NextRequest, { params }: { params: { action: string[] } }) {
-  const action = params.action[0];
-
-  if (action === 'login') {
-    try {
-      const { idToken } = await request.json();
-      if (!idToken) {
-        return NextResponse.json({ error: 'idToken is required' }, { status: 400 });
-      }
-
-      const expiresIn = 60 * 60 * 24 * 14 * 1000; // 14 days
-      const decodedIdToken = await adminAuth().verifyIdToken(idToken);
-      const sessionCookie = await adminAuth().createSessionCookie(idToken, { expiresIn });
-
-      const options = getCookieOptions(Date.now() + expiresIn);
-      options.value = sessionCookie;
-
-      cookies().set(options.name, options.value, options);
-
-      return NextResponse.json({ status: 'success' }, { status: 200 });
-    } catch (error: any) {
-      console.error('Session login error:', error);
-      return NextResponse.json({ error: error.message }, { status: 401 });
-    }
+export async function POST(request: NextRequest) {
+  if (!adminAuth) {
+    return NextResponse.json({ error: 'Firebase Admin not initialized' }, { status: 500 });
   }
 
-  return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+  try {
+    const { idToken } = await request.json();
+    if (!idToken) {
+      return NextResponse.json({ error: 'idToken is required' }, { status: 400 });
+    }
+
+    const expiresIn = 60 * 60 * 24 * 14 * 1000; // 14 days
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
+
+    const options = getCookieOptions(Date.now() + expiresIn);
+    options.value = sessionCookie;
+
+    cookies().set(options.name, options.value, options);
+
+    return NextResponse.json({ status: 'success' }, { status: 200 });
+  } catch (error: any) {
+    console.error('Session login error:', error);
+    let errorMessage = 'An unexpected error occurred.';
+    if (error.code === 'auth/id-token-revoked') {
+      errorMessage = 'The ID token has been revoked. Please re-authenticate.';
+    } else if (error.code === 'auth/argument-error') {
+      errorMessage = 'Invalid ID token provided.';
+    }
+    return NextResponse.json({ error: errorMessage }, { status: 401 });
+  }
 }
 
-export async function GET(request: NextRequest, { params }: { params: { action: string[] } }) {
-    const action = params.action[0];
+export async function GET(request: NextRequest) {
+  if (!adminAuth) {
+    return NextResponse.json({ error: 'Firebase Admin not initialized' }, { status: 500 });
+  }
   
-    if (action === 'logout') {
-      try {
-        const sessionCookie = cookies().get('session')?.value;
-        if (sessionCookie) {
-          const decodedClaims = await adminAuth().verifySessionCookie(sessionCookie).catch(() => null);
-          if (decodedClaims) {
-            await adminAuth().revokeRefreshTokens(decodedClaims.sub);
-          }
-        }
-  
-        const options = getCookieOptions(0); // Expire the cookie
-        cookies().set(options.name, '', options);
-  
-        return NextResponse.json({ status: 'success' }, { status: 200 });
-      } catch (error: any) {
-        console.error('Session logout error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const sessionCookie = cookies().get(SESSION_COOKIE_NAME)?.value;
+    if (sessionCookie) {
+      // It's good practice to verify the cookie before revoking tokens
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie).catch(() => null);
+      if (decodedClaims) {
+        await adminAuth.revokeRefreshTokens(decodedClaims.sub);
       }
     }
-  
-    return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+
+    const options = getCookieOptions(0); // Expire the cookie immediately
+    cookies().set(options.name, '', options);
+
+    return NextResponse.json({ status: 'success' }, { status: 200 });
+  } catch (error: any) {
+    console.error('Session logout error:', error);
+    return NextResponse.json({ error: 'Failed to log out.' }, { status: 500 });
   }
+}
