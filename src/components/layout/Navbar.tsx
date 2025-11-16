@@ -5,15 +5,88 @@ import Link from 'next/link';
 import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Menu, ScanLine } from 'lucide-react';
+import { Menu, ScanLine, User as UserIcon, LogOut } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { auth } from '@/lib/firebase';
+import { signOut } from 'firebase/auth';
 
 const navItems = [
   { href: '/#features', label: 'Features' },
   { href: '/#how-it-works', label: 'How it Works' },
   { href: '/#pricing', label: 'Pricing' },
 ];
+
+const AuthButton = () => {
+  const { user, userProfile, loading } = useAuth();
+  const routerPathname = usePathname();
+
+  const handleSignOut = async () => {
+    if (auth) {
+      await signOut(auth);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Button variant="ghost" className="rounded-full" size="icon">
+        <div className="h-8 w-8 animate-pulse rounded-full bg-muted" />
+      </Button>
+    );
+  }
+
+  if (user && userProfile) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={user.photoURL ?? ''} alt={userProfile.name} />
+              <AvatarFallback>
+                {userProfile.name?.charAt(0).toUpperCase() || <UserIcon />}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{userProfile.name}</p>
+              <p className="text-xs leading-none text-muted-foreground">
+                {user.email}
+              </p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            <span>Log out</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+
+  return (
+    <Button asChild className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/30">
+      <Link href="/login">
+        Login / Sign Up
+        <UserIcon className="ml-2 h-4 w-4" />
+      </Link>
+    </Button>
+  );
+};
+
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -55,12 +128,7 @@ export default function Navbar() {
         </nav>
 
         <div className="flex items-center space-x-2">
-          <Button asChild className="hidden md:flex bg-primary hover:bg-primary/90 text-primary-foreground rounded-full shadow-lg shadow-primary/30">
-            <Link href="/check">
-              Get Started
-              <ScanLine className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          <AuthButton />
           
           <div className="md:hidden">
             <Sheet>
@@ -79,7 +147,7 @@ export default function Navbar() {
                     {mobileNavLinks}
                   </div>
                   <Button asChild size="lg" className="mt-8 w-full">
-                    <Link href="/check">Get Started</Link>
+                    <Link href="/login">Login / Sign Up</Link>
                   </Button>
                 </div>
               </SheetContent>
