@@ -32,12 +32,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         setLoading(true);
         if (firebaseUser && firestore) {
-          setUser(firebaseUser);
-          const userDocRef = doc(firestore, "users", firebaseUser.uid);
-          const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists()) {
-            setUserProfile(userDoc.data() as UserProfile);
+          // If the user ID is different from the current one, fetch their profile
+          if (firebaseUser.uid !== user?.uid) {
+            const userDocRef = doc(firestore, "users", firebaseUser.uid);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+              setUserProfile(userDoc.data() as UserProfile);
+            }
           }
+          setUser(firebaseUser);
         } else {
           setUser(null);
           setUserProfile(null);
@@ -52,7 +55,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(null);
       setUserProfile(null);
     }
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]); // Rerun effect only when user UID changes
 
   return (
     <AuthContext.Provider value={{ user, userProfile, loading }}>
