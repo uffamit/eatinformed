@@ -40,6 +40,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
+    "firebase": "^10.12.2",
     "genkit": "^1.8.0",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.475.0",

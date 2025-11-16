@@ -1,4 +1,5 @@
 
+
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
@@ -6,6 +7,7 @@ import { Toaster } from '@/components/ui/toaster';
 import Navbar from '@/components/layout/Navbar';
 import ParticleBackground from '@/components/layout/ParticleBackground';
 import FloatingIcons from '@/components/layout/FloatingIcons';
+import { AuthProvider } from '@/context/AuthContext';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
@@ -42,16 +44,18 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
-        <ParticleBackground />
-        <FloatingIcons />
-        <Navbar />
-        <main className="flex-grow container mx-auto px-4 py-8">
-          {children}
-        </main>
-        <Toaster />
-        <footer className="bg-transparent text-muted-foreground text-center py-6 text-sm">
-          © {new Date().getFullYear()} EatInformed. All rights reserved.
-        </footer>
+        <AuthProvider>
+          <ParticleBackground />
+          <FloatingIcons />
+          <Navbar />
+          <main className="flex-grow container mx-auto px-4 py-8">
+            {children}
+          </main>
+          <Toaster />
+          <footer className="bg-transparent text-muted-foreground text-center py-6 text-sm">
+            © {new Date().getFullYear()} EatInformed. All rights reserved.
+          </footer>
+        </AuthProvider>
       </body>
     </html>
   );
