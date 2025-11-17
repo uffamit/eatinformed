@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useRef, useCallback } from 'react';
@@ -13,6 +12,8 @@ import { Separator } from '../ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import NutritionChart from './NutritionChart';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import Image from 'next/image';
 
 interface ResultsDisplayProps {
   ingredientsData: ExtractIngredientsOutput | null;
@@ -203,9 +204,11 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
       <CardHeader className="text-center p-8">
         {imagePreviewUrl && (
           <div className="mb-6 flex justify-center">
-            <img 
+            <Image 
               src={imagePreviewUrl} 
               alt="Scanned product label"
+              width={240}
+              height={240}
               className="max-h-60 w-auto rounded-lg border-2 border-white/10 object-contain"
             />
           </div>
@@ -247,8 +250,24 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
         
         <Separator className="bg-white/10" />
 
-        <ResultSection title="Full Ingredient List" icon={<ListChecks className="h-6 w-6 text-primary" />} hidden={!ingredientsData?.ingredients || ingredientsData.ingredients.length === 0}>
-          <p className="text-base text-muted-foreground whitespace-pre-wrap leading-relaxed">{ingredientsData?.ingredients?.join(', ')}</p>
+        <ResultSection title="Ingredient Analysis" icon={<ListChecks className="h-6 w-6 text-primary" />} hidden={!assessmentData.ingredientAnalysis || assessmentData.ingredientAnalysis.length === 0}>
+          <Accordion type="single" collapsible className="w-full">
+            {assessmentData.ingredientAnalysis.map((item, index) => (
+              <AccordionItem value={`item-${index}`} key={index}>
+                <AccordionTrigger className="text-base font-medium hover:no-underline">
+                  <div className="flex items-center">
+                    {item.isAllergen && <ShieldAlert className="h-5 w-5 text-yellow-400 mr-2" />}
+                    {item.isControversial && <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />}
+                    <span>{item.ingredient}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground text-sm space-y-2 pl-4 border-l-2 border-primary/20 ml-2">
+                  <p><span className="font-semibold text-foreground/80">What it is:</span> {item.description}</p>
+                  <p><span className="font-semibold text-foreground/80">Why it&apos;s here:</span> {item.purpose}</p>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </ResultSection>
         
         <Separator className="bg-white/10" />

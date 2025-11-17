@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, UploadCloud, Camera, RefreshCw, AlertCircle, ScanLine } from 'lucide-react';
 import ResultsDisplay from '@/components/features/ResultsDisplay';
 import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export function CheckPageClient() {
   const { toast } = useToast();
@@ -257,9 +258,11 @@ export function CheckPageClient() {
         ) : imagePreviewUrl ? (
           <div className="flex flex-col items-center space-y-4 p-4">
             <p className="font-semibold text-lg">Is this image clear?</p>
-            <img 
+            <Image 
               src={imagePreviewUrl} 
               alt="Selected food label preview" 
+              width={240}
+              height={240}
               className="max-h-60 w-auto rounded-md border-2 border-primary object-contain"
             />
             <p className="text-sm text-muted-foreground text-center">
