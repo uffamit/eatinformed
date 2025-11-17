@@ -5,7 +5,7 @@ import { User } from "firebase/auth";
 
 // Call this function right after a user successfully signs up or logs in for the first time
 export const createUserProfileDocument = async (user: User) => {
-  if (!user) return;
+  if (!user || !firestore) return;
 
   const userRef = doc(firestore, "users", user.uid);
   const userData = {

@@ -7,8 +7,8 @@
     "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
     "build": "npx next build",
     "start": "npx next start",
-    "lint": "npx next lint --max-warnings=0 --no-error-on-unmatched-pattern",
-    "typecheck": "tsc --noEmit"
+    "lint": "next lint",
+    "typecheck": "yarn tsc --noEmit"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",

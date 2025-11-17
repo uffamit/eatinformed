@@ -5,6 +5,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {Flow} from 'genkit';
 import { ExtractIngredientsInput, ExtractIngredientsInputSchema, ExtractIngredientsOutput, ExtractIngredientsOutputSchema } from './extract-ingredients-types';
 
 
@@ -41,13 +42,13 @@ If a section is not found, return empty values for it, but adhere to the schema.
 Image to analyze: {{media url=image}}`,
   });
 
-  const extractIngredientsFlow = ai.defineFlow(
+  const extractIngredientsFlow: Flow<typeof ExtractIngredientsInputSchema, typeof ExtractIngredientsOutputSchema> = ai.defineFlow(
     {
       name: 'extractIngredientsFlow',
       inputSchema: ExtractIngredientsInputSchema,
       outputSchema: ExtractIngredientsOutputSchema,
     },
-    async (input) => {
+    async (input: ExtractIngredientsInput) => {
       const {output} = await prompt(input);
       if (!output) {
         throw new Error('The AI model failed to provide an output.');

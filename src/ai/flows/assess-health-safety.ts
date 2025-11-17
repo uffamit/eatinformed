@@ -5,6 +5,7 @@
  */
 
 import {ai} from '@/ai/genkit';
+import {Flow} from 'genkit';
 import {
   AssessHealthSafetyInput,
   AssessHealthSafetyInputSchema,
@@ -96,13 +97,13 @@ Your analysis must be objective and based on general nutritional science. Be con
     },
   });
 
-  const assessHealthSafetyFlow = ai.defineFlow(
+  const assessHealthSafetyFlow: Flow<typeof AssessHealthSafetyInputSchema, typeof AssessHealthSafetyOutputSchema> = ai.defineFlow(
     {
       name: 'assessHealthSafetyFlow',
       inputSchema: AssessHealthSafetyInputSchema,
       outputSchema: AssessHealthSafetyOutputSchema,
     },
-    async (input) => {
+    async (input: AssessHealthSafetyInput) => {
       const {output} = await prompt(input);
       if (!output) {
         throw new Error('The AI model failed to provide an assessment.');

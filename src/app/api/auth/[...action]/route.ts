@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
     const options = getCookieOptions(Date.now() + expiresIn);
     options.value = sessionCookie;
 
-    cookies().set(options.name, options.value, options);
+        const cookieStore = await cookies();
+    cookieStore.set(options.name, options.value, options);
 
     return NextResponse.json({ status: 'success' }, { status: 200 });
   } catch (error: any) {
@@ -53,7 +54,8 @@ export async function GET(request: NextRequest) {
   }
   
   try {
-    const sessionCookie = cookies().get(SESSION_COOKIE_NAME)?.value;
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get(SESSION_COOKIE_NAME)?.value;
     if (sessionCookie) {
       // It's good practice to verify the cookie before revoking tokens
       const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie).catch(() => null);
@@ -63,7 +65,7 @@ export async function GET(request: NextRequest) {
     }
 
     const options = getCookieOptions(0); // Expire the cookie immediately
-    cookies().set(options.name, '', options);
+    cookieStore.set(options.name, '', options);
 
     return NextResponse.json({ status: 'success' }, { status: 200 });
   } catch (error: any) {
