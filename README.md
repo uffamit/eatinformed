@@ -1,5 +1,6 @@
 #  EatInformed
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/uffamit/eatinformed)
 [![Next.js](https://img.shields.io/badge/Next.js-15.3.3-black?style=flat&logo=next.js&logoColor=white)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-97.7%25-blue?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Google Gemini](https://img.shields.io/badge/Google%20Gemini-AI%20Powered-4285F4?style=flat&logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
