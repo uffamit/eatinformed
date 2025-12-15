@@ -4,11 +4,18 @@ import admin from 'firebase-admin';
 // Check if the app is already initialized to prevent errors
 if (!admin.apps.length) {
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON!);
+    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
     
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+    // Only initialize if the environment variable is properly set
+    if (serviceAccountJson && serviceAccountJson !== 'undefined') {
+      const serviceAccount = JSON.parse(serviceAccountJson);
+      
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    } else {
+      console.warn("Firebase Admin SDK not initialized: FIREBASE_SERVICE_ACCOUNT_JSON is not set or is undefined");
+    }
   } catch (error) {
     console.error("Failed to initialize Firebase Admin SDK:", error);
     // You might want to throw an error here or handle it gracefully
