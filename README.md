@@ -298,7 +298,7 @@ eatinformed/
 ├── postcss.config.mjs      # PostCSS configuration
 ├── tailwind.config.ts      # Tailwind CSS configuration
 ├── tsconfig.json           # TypeScript configuration
-└── README.md               # This file
+└── README.md               
 ```
 
 ---
