@@ -310,10 +310,12 @@ eatinformed/
 - Authentication setup
 - Firestore configuration
 
+
 ### Firebase Admin (`src/lib/firebase-admin.ts`)
 - Server-side Firebase Admin SDK
 - Secure backend operations
 - Token verification
+
 
 ### Genkit Configuration (`src/ai/genkit.ts`)
 - AI model initialization
