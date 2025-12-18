@@ -6,6 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInAnonymously,
   GoogleAuthProvider,
   setPersistence,
   browserLocalPersistence
@@ -109,6 +110,32 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
     }
   };
 
+  const handleAnonymousSignIn = async () => {
+    if (!auth) {
+      setError("Firebase is not configured. Please check your environment variables.");
+      return;
+    }
+    setIsProcessing(true);
+    setError(null);
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      const result = await signInAnonymously(auth);
+      
+      await createUserProfileDocument(result.user);
+      const idToken = await result.user.getIdToken();
+      
+      toast({
+        title: 'Signed in as Guest',
+        description: 'Your progress will be saved for this session.',
+      });
+      await handleAuthSuccess(idToken);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during Guest Sign-In.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -125,6 +152,19 @@ export function AuthForm({ onAuthSuccess }: AuthFormProps) {
                     <GoogleIcon className="mr-2 h-5 w-5" />
                 )}
                 Continue with Google
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              className="border border-dashed border-white/20 hover:bg-white/5"
+              onClick={handleAnonymousSignIn} 
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <span className="text-sm font-medium">Continue as Guest</span>
+              )}
             </Button>
             </div>
             <div className="relative">

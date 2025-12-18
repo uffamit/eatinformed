@@ -10,6 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +72,11 @@ const AuthButton = ({ isMobile = false }) => {
               <p className="text-xs leading-none text-muted-foreground">
                 {user.email}
               </p>
+              {userProfile?.isAnonymous && (
+                <Badge variant="outline" className="text-[10px] border-yellow-500/50 text-yellow-500 w-fit mt-2">
+                  Guest Mode
+                </Badge>
+              )}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />

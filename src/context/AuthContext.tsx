@@ -11,6 +11,7 @@ interface UserProfile extends DocumentData {
   uid: string;
   email: string;
   name: string;
+  isAnonymous?: boolean;
 }
 
 interface AuthContextType {
