@@ -48,3 +48,8 @@ firestore-debug.log
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+
+# Migration & AI Context Docs
+mig.md
+context_of_ai.md
+nvidia_models.txt

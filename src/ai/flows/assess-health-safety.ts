@@ -2,26 +2,25 @@
 'use server';
 /**
  * @fileOverview An AI agent that assesses the health and safety of food ingredients.
+ * Migrated from Genkit/Gemini to NVIDIA NIM using deepseek-ai/deepseek-v4-pro.
  */
 
-import {ai} from '@/ai/genkit';
-import {Flow} from 'genkit';
+import { nimClient, parseNIMResponse } from '@/ai/nim';
 import {
   AssessHealthSafetyInput,
-  AssessHealthSafetyInputSchema,
   AssessHealthSafetyOutput,
   AssessHealthSafetyOutputSchema,
 } from './assess-health-safety-types';
 
 export async function assessHealthSafety(input: AssessHealthSafetyInput): Promise<AssessHealthSafetyOutput> {
-   if (!ai) {
-    console.error("AI system not initialized. Check GOOGLE_API_KEY.");
+   if (!nimClient) {
+    console.error("AI system not initialized. Check NVIDIA_API_KEY.");
     // Return a specific error structure if AI is offline
     return {
       rating: 0,
       pros: [],
       cons: [],
-      warnings: ["AI functionality is currently offline. The server administrator needs to configure the GOOGLE_API_KEY."],
+      warnings: ["AI functionality is currently offline. The server administrator needs to configure the NVIDIA_API_KEY."],
       ingredientAnalysis: [],
       dietaryInfo: {
         allergens: [],
@@ -73,85 +72,93 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
     };
   }
 
-  const prompt = ai.definePrompt({
-    name: 'assessHealthSafetyPrompt',
-    input: {schema: AssessHealthSafetyInputSchema},
-    output: {schema: AssessHealthSafetyOutputSchema},
-    prompt: `You are a world-class nutritionist and food safety expert. Your task is to analyze the following list of food ingredients and provide a concise, objective, and non-overlapping health and safety assessment. Your analysis must be grounded in established nutritional science and presented with the authority and trustworthiness of a professional expert. Prioritize factual accuracy and clarity for the user.
+  const systemPrompt = `You are a world-class clinical nutritionist and food safety expert. Your task is to deeply analyze the following list of food ingredients and provide a concise, highly objective, and non-overlapping health and safety assessment. 
 
-Ingredients list:
-"{{ingredients}}"
+Leverage your advanced reasoning capabilities to cross-reference these ingredients against modern nutritional science, FDA/EFSA guidelines, and established dietary safety protocols. Present your analysis with the absolute authority, precision, and trustworthiness of a professional expert. Prioritize factual accuracy and clarity.
 
-Based on the ingredients, perform the following actions and return the result in the specified JSON format:
+You MUST respond ONLY with a valid JSON object. Do NOT include any explanation, markdown, or text outside the JSON.
 
-1.  **Detailed Ingredient Analysis:** For each ingredient, provide a detailed analysis.
-    - **ingredient**: The name of the ingredient.
-    - **description**: A simple, clear description of what the ingredient is.
-    - **purpose**: Explain why the ingredient is used in the product.
-    - **isAllergen**: Flag if it's a common allergen (e.g., gluten, soy, nuts).
-    - **isControversial**: Flag if it's a controversial ingredient (e.g., MSG, high-fructose corn syrup, artificial dyes).
-2.  **Health Rating (1-5):** Provide an overall health score from 1 (very unhealthy) to 5 (very healthy). Consider factors like processing level, presence of whole foods, additives, sugar content, etc.
-3.  **Pros:** List 2-4 distinct positive aspects. Focus on healthy, natural, or beneficial ingredients. Do not simply state the absence of a negative as a positive (e.g., instead of "Low in sugar", focus on "Made with whole grains"). Ensure these are genuine benefits.
-4.  **Cons:** List 2-4 distinct negative aspects that are separate from the 'Pros'. Focus on artificial additives, high sugar/sodium indicators, unhealthy fats, or heavily processed components. Ensure these are genuine drawbacks.
-5.  **Warnings:** This section is for CRITICAL alerts only. List only ingredients that are banned in major regions (e.g., certain food dyes in the EU), are part of a major scientific controversy regarding health dangers, or pose a significant, non-obvious risk (e.g., high saturated fat for heart conditions). Do not use this section for common allergens or generally unhealthy items; those belong in 'Cons' or dietary information. If there are no such critical warnings, return an empty array.
-6.  **Dietary Information:** Based on the ingredients, analyze for common dietary concerns. If the label explicitly states a status (e.g., "Certified Gluten-Free"), trust it. Otherwise, infer based on the ingredients.
-    - **allergens:** Identify and list common allergens such as Gluten, Dairy, Soy, Peanuts, Tree Nuts, Fish, Shellfish. Do not list an allergen if a "-free" version is specified (e.g. "soy lecithin" is an allergen, but if the label also says "soy-free", do not list it).
-    - **suitability:** Create a list of statements explaining why the product is NOT suitable for certain groups. For example: "Not suitable for vegans" if it contains honey or gelatin. "Not suitable for lactose intolerant individuals" if it contains milk. "Not suitable for people on low-sodium diets" if sodium is high. If there are no specific suitability issues, return an empty array.
-    - **isVegetarian:** Determine if the product is vegetarian (contains no meat, poultry, or fish).
-    - **isVegan:** Determine if the product is vegan (contains no animal products, including dairy, eggs, or honey).
-    - **isGlutenFree:** Determine if the product is gluten-free (contains no wheat, barley, rye, or their derivatives).
-    - **summary:** Provide a brief, human-readable summary of the key dietary points. For example: "Contains Dairy and Soy. Suitable for vegetarians but not vegans." If no specific concerns are found, state that.
-
-
-Your analysis must be objective and based on general nutritional science. Be concise, clear, and ensure the 'Pros' and 'Cons' provide a balanced view without contradicting each other.`,
-     config: {
-      safetySettings: [
-        {
-          category: 'HARM_CATEGORY_HARASSMENT',
-          threshold: 'BLOCK_NONE',
-        },
-         {
-          category: 'HARM_CATEGORY_HATE_SPEECH',
-          threshold: 'BLOCK_NONE',
-        },
-         {
-          category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
-          threshold: 'BLOCK_NONE',
-        },
-         {
-          category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
-          threshold: 'BLOCK_NONE',
-        },
-      ],
-    },
-  });
-
-  const assessHealthSafetyFlow: Flow<typeof AssessHealthSafetyInputSchema, typeof AssessHealthSafetyOutputSchema> = ai.defineFlow(
+The JSON must have this exact structure:
+{
+  "rating": <number 1-5>,
+  "pros": ["pro1", "pro2"],
+  "cons": ["con1", "con2"],
+  "warnings": ["warning1"] or [],
+  "ingredientAnalysis": [
     {
-      name: 'assessHealthSafetyFlow',
-      inputSchema: AssessHealthSafetyInputSchema,
-      outputSchema: AssessHealthSafetyOutputSchema,
-    },
-    async (input: AssessHealthSafetyInput) => {
-      const {output} = await prompt(input);
-      if (!output) {
-        throw new Error('The AI model failed to provide an assessment.');
-      }
-      return output;
+      "ingredient": "name",
+      "description": "what it is",
+      "purpose": "why it's used",
+      "isAllergen": true/false,
+      "isControversial": true/false
     }
-  );
+  ],
+  "dietaryInfo": {
+    "allergens": ["Gluten", "Dairy"],
+    "suitability": ["Not suitable for vegans"],
+    "isVegetarian": true/false,
+    "isVegan": true/false,
+    "isGlutenFree": true/false,
+    "summary": "Brief dietary summary"
+  }
+}
+
+Analysis rules:
+1. **Detailed Ingredient Analysis:** For each distinct ingredient, provide a meticulous analysis including the standard name, a clear description, its functional purpose in the food, an isAllergen flag, and an isControversial flag (for artificial colors, controversial preservatives, etc.).
+2. **Health Rating (1-5):** Calculate an overall health score. Strictly evaluate the processing level (e.g., NOVA classification), whole foods presence, synthetic additives, sugar content, and unhealthy fats.
+3. **Pros:** 2-4 distinct positive aspects. Focus on nutrient-dense, natural, or beneficial components. Do not state the absence of negatives as positives.
+4. **Cons:** 2-4 distinct negative aspects entirely separate from Pros. Highlight artificial additives, excessive sugar/sodium, unhealthy fats, or heavily ultra-processed components.
+5. **Warnings:** CRITICAL alerts ONLY. Flag ingredients banned or heavily restricted in major regulatory regions (EU, CA, Japan), major scientific controversies, or significant non-obvious health risks. Return an empty array if none exist.
+6. **Dietary Information:** Conduct a strict dietary analysis. Identify common allergens (Gluten, Dairy, Soy, Peanuts, Tree Nuts, Fish, Shellfish). Provide definitive suitability statements. Determine isVegetarian, isVegan, and isGlutenFree flags. Write a highly concise summary of the dietary profile.
+
+Be completely objective, scientifically grounded, and uncompromising in your assessment. Ensure Pros and Cons provide a balanced view without any logical contradictions.`;
+
+  const userPrompt = `Ingredients list:\n"${input.ingredients}"`;
 
   try {
-    return await assessHealthSafetyFlow(input);
+    const response = await nimClient.chat.completions.create({
+      model: 'deepseek-ai/deepseek-v4-pro',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        {
+          role: 'user',
+          content: userPrompt,
+        },
+      ],
+      max_tokens: 4096,
+      temperature: 0.2,
+      top_p: 0.9,
+      response_format: { type: 'json_object' },
+      // @ts-expect-error: extra_body is used to pass custom parameters to NVIDIA NIM
+      extra_body: { chat_template_kwargs: { thinking: false } },
+    });
+
+    const rawContent = response.choices?.[0]?.message?.content;
+
+    if (!rawContent) {
+      throw new Error('The AI model failed to provide an assessment.');
+    }
+
+    const parsed = parseNIMResponse(rawContent);
+
+    // Validate with Zod schema
+    const output = AssessHealthSafetyOutputSchema.parse(parsed);
+
+    return output;
   } catch (error: any) {
-    console.error("Error in assessHealthSafetyFlow:", error);
+    console.error("Error in assessHealthSafety (NIM):", error);
     let warningMessage = "The AI model failed to provide an assessment due to an unexpected error.";
     if (error.message) {
-        if (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable')) {
-            warningMessage = "The AI analysis service is temporarily overloaded. Please wait a moment and try again.";
-        } else if (error.message.toLowerCase().includes('deadline exceeded')) {
-            warningMessage = "The analysis took too long to complete. Please try again.";
-        }
+      if (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable')) {
+        warningMessage = "The AI analysis service is temporarily overloaded. Please wait a moment and try again.";
+      } else if (error.message.toLowerCase().includes('deadline exceeded') || error.message.toLowerCase().includes('timeout')) {
+        warningMessage = "The analysis took too long to complete. Please try again.";
+      } else if (error.message.includes('429') || error.message.toLowerCase().includes('rate limit')) {
+        warningMessage = "Too many requests. Please wait a moment and try again.";
+      }
     }
     
     return {

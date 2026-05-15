@@ -2,19 +2,19 @@
 'use server';
 /**
  * @fileOverview Extracts ingredient lists and nutritional information from an image of a food label using OCR.
+ * Migrated from Genkit/Gemini to NVIDIA NIM using meta/llama-3.2-90b-vision-instruct.
  */
 
-import {ai} from '@/ai/genkit';
-import {Flow} from 'genkit';
-import { ExtractIngredientsInput, ExtractIngredientsInputSchema, ExtractIngredientsOutput, ExtractIngredientsOutputSchema } from './extract-ingredients-types';
+import { nimClient, parseNIMResponse } from '@/ai/nim';
+import { ExtractIngredientsInput, ExtractIngredientsOutput, ExtractIngredientsOutputSchema } from './extract-ingredients-types';
 
 
 export async function extractIngredients(input: ExtractIngredientsInput): Promise<ExtractIngredientsOutput> {
-  if (!ai) {
-    console.error("AI system not initialized. Check GOOGLE_API_KEY.");
+  if (!nimClient) {
+    console.error("AI system not initialized. Check NVIDIA_API_KEY.");
     return {
       ingredients: [],
-      nutrition: { rawText: "AI system is offline. The administrator needs to configure the GOOGLE_API_KEY.", nutrients: [] },
+      nutrition: { rawText: "AI system is offline. The administrator needs to configure the NVIDIA_API_KEY.", nutrients: [] },
       status: 'unreadable',
     };
   }
@@ -47,61 +47,89 @@ export async function extractIngredients(input: ExtractIngredientsInput): Promis
       status: 'unreadable',
     };
   }
-  
-  const prompt = ai.definePrompt({
-    name: 'extractIngredientsPrompt',
-    input: {schema: ExtractIngredientsInputSchema},
-    output: {schema: ExtractIngredientsOutputSchema},
-    prompt: `You are an expert Optical Character Recognition (OCR) system specializing in food labels. Your task is to extract the ingredients list and nutritional information from the provided image.
 
-Analyze the image carefully and return the data in the specified JSON format.
+  const systemPrompt = `You are an advanced Optical Character Recognition (OCR) and document understanding AI specializing in food nutrition labels. Your task is to extract the ingredients list and nutritional information from the provided image with absolute accuracy. 
 
-1.  **Ingredients**: Identify and transcribe the complete list of ingredients into the \`ingredients\` array.
-2.  **Nutritional Information**:
-    - **rawText**: Transcribe the ENTIRE nutritional facts panel into a single, formatted string, preserving line breaks. This is for display purposes.
-    - **servingSizeLabel**: Extract the text that defines the serving size, e.g., "Serving size: 250mL".
-    - **nutrients**: Parse the nutritional table into a structured array. For each row in the table (e.g., Energy, Protein, Fat), create a JSON object with keys "nutrient", "perServing", and "per100mL". Include the units (like kJ, g, mg) in the string values. If a value is missing for a nutrient, omit the corresponding key.
-3.  **Status**: Based on your analysis, set the status:
-    - 'success' if you found either ingredients or nutritional information.
-    - 'no_data' if the image is clear but contains no discernible food label text.
-    - 'unreadable' if the image is too blurry, poorly lit, or otherwise impossible to read.
+Pay extremely close attention to fine print, small text, and the layout of nutritional tables.
 
-If a section is not found, return empty values for it, but adhere to the schema.
+You MUST respond ONLY with a valid JSON object. Do NOT include any explanation, markdown, or text outside the JSON.
 
-Image to analyze: {{media url=image}}`,
-  });
+The JSON must have this exact structure:
+{
+  "ingredients": ["ingredient1", "ingredient2", ...],
+  "nutrition": {
+    "rawText": "full nutritional facts text preserving line breaks",
+    "servingSizeLabel": "Serving size: 250mL",
+    "nutrients": [
+      { "nutrient": "Energy", "perServing": "775kJ", "per100mL": "310kJ" }
+    ]
+  },
+  "status": "success" | "no_data" | "unreadable"
+}
 
-  const extractIngredientsFlow: Flow<typeof ExtractIngredientsInputSchema, typeof ExtractIngredientsOutputSchema> = ai.defineFlow(
-    {
-      name: 'extractIngredientsFlow',
-      inputSchema: ExtractIngredientsInputSchema,
-      outputSchema: ExtractIngredientsOutputSchema,
-    },
-    async (input: ExtractIngredientsInput) => {
-      const {output} = await prompt(input);
-      if (!output) {
-        throw new Error('The AI model failed to provide an output.');
-      }
-      // A simple check to refine status if model returns success but no data
-      if (output.status === 'success' && output.ingredients.length === 0 && (!output.nutrition || (!output.nutrition.rawText && (!output.nutrition.nutrients || output.nutrition.nutrients.length === 0)))) {
-          output.status = 'no_data';
-      }
-
-      return output;
-    }
-  );
+Extraction Rules:
+1. **ingredients**: Identify and transcribe the complete, exhaustive list of ingredients into the array. Handle nested ingredients carefully.
+2. **nutrition.rawText**: Transcribe the ENTIRE nutritional facts panel into a single, formatted string, preserving line breaks and structural spacing.
+3. **nutrition.servingSizeLabel**: Extract the text that defines the serving size and servings per container exactly as written.
+4. **nutrition.nutrients**: Parse the nutritional table into a structured array. For each row (e.g., Energy, Protein, Fat, Carbohydrate, Sugars, Sodium), create a JSON object with keys "nutrient", "perServing", and "per100mL" (or per100g). Include units in string values. Omit keys if a value is missing.
+5. **status**: Set to 'success' if you found either ingredients or nutritional information. Set to 'no_data' if the image is clear but contains no food label text. Set to 'unreadable' if the image is too blurry, dark, or impossible to read.
+6. If any section is not found, return empty values/arrays for it. Do not hallucinate data.`;
 
   try {
-    return await extractIngredientsFlow(input);
+    const response = await nimClient.chat.completions.create({
+      model: 'meta/llama-3.2-90b-vision-instruct',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: systemPrompt },
+            {
+              type: 'image_url',
+              image_url: {
+                url: input.image,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 4096,
+      temperature: 0.1,
+      top_p: 0.9,
+      response_format: { type: 'json_object' },
+    });
+
+    const rawContent = response.choices?.[0]?.message?.content;
+
+    if (!rawContent) {
+      throw new Error('The AI model failed to provide an output.');
+    }
+
+    const parsed = parseNIMResponse(rawContent);
+
+    // Validate with Zod schema
+    const output = ExtractIngredientsOutputSchema.parse(parsed);
+
+    // Refine status if model returns success but no actual data
+    if (
+      output.status === 'success' &&
+      output.ingredients.length === 0 &&
+      (!output.nutrition || (!output.nutrition.rawText && (!output.nutrition.nutrients || output.nutrition.nutrients.length === 0)))
+    ) {
+      output.status = 'no_data';
+    }
+
+    return output;
   } catch (error: any) {
-    console.error("Error in extractIngredientsFlow:", error);
+    console.error("Error in extractIngredients (NIM):", error);
     let errorMessage = 'The AI model failed to process the image due to an unexpected error.';
     if (error.message) {
-        if (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable')) {
-            errorMessage = "The AI service is temporarily overloaded. Please wait a moment and try again.";
-        } else if (error.message.toLowerCase().includes('deadline exceeded')) {
-            errorMessage = "The analysis took too long to complete. Please try again.";
-        }
+      if (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable')) {
+        errorMessage = "The AI service is temporarily overloaded. Please wait a moment and try again.";
+      } else if (error.message.toLowerCase().includes('deadline exceeded') || error.message.toLowerCase().includes('timeout')) {
+        errorMessage = "The analysis took too long to complete. Please try again.";
+      } else if (error.message.includes('429') || error.message.toLowerCase().includes('rate limit')) {
+        errorMessage = "Too many requests. Please wait a moment and try again.";
+      }
     }
     return {
       ingredients: [],
