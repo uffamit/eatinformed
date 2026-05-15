@@ -72,13 +72,9 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
     };
   }
 
-  const systemPrompt = `You are a world-class clinical nutritionist and food safety expert. Your task is to deeply analyze the following list of food ingredients and provide a concise, highly objective, and non-overlapping health and safety assessment. 
+  const systemPrompt = `You are a clinical nutritionist. Analyze the ingredient list and return a RAW JSON assessment.
+RETURN ONLY THE JSON OBJECT. NO MARKDOWN. NO TEXT.
 
-Leverage your advanced reasoning capabilities to cross-reference these ingredients against modern nutritional science, FDA/EFSA guidelines, and established dietary safety protocols. Present your analysis with the absolute authority, precision, and trustworthiness of a professional expert. Prioritize factual accuracy and clarity.
-
-You MUST respond ONLY with a valid JSON object. Do NOT include any explanation, markdown, or text outside the JSON.
-
-The JSON must have this exact structure:
 {
   "rating": <number 1-5>,
   "pros": ["pro1", "pro2"],
@@ -87,37 +83,33 @@ The JSON must have this exact structure:
   "ingredientAnalysis": [
     {
       "ingredient": "name",
-      "description": "what it is",
-      "purpose": "why it's used",
-      "isAllergen": true/false,
-      "isControversial": true/false
+      "description": "short description",
+      "purpose": "reason for use",
+      "isAllergen": bool,
+      "isControversial": bool
     }
   ],
   "dietaryInfo": {
     "allergens": ["Gluten", "Dairy"],
     "suitability": ["Not suitable for vegans"],
-    "isVegetarian": true/false,
-    "isVegan": true/false,
-    "isGlutenFree": true/false,
-    "summary": "Brief dietary summary"
+    "isVegetarian": bool,
+    "isVegan": bool,
+    "isGlutenFree": bool,
+    "summary": "Brief summary"
   }
 }
 
-Analysis rules:
-1. **Detailed Ingredient Analysis:** For each distinct ingredient, provide a meticulous analysis including the standard name, a clear description, its functional purpose in the food, an isAllergen flag, and an isControversial flag (for artificial colors, controversial preservatives, etc.).
-2. **Health Rating (1-5):** Calculate an overall health score. Strictly evaluate the processing level (e.g., NOVA classification), whole foods presence, synthetic additives, sugar content, and unhealthy fats.
-3. **Pros:** 2-4 distinct positive aspects. Focus on nutrient-dense, natural, or beneficial components. Do not state the absence of negatives as positives.
-4. **Cons:** 2-4 distinct negative aspects entirely separate from Pros. Highlight artificial additives, excessive sugar/sodium, unhealthy fats, or heavily ultra-processed components.
-5. **Warnings:** CRITICAL alerts ONLY. Flag ingredients banned or heavily restricted in major regulatory regions (EU, CA, Japan), major scientific controversies, or significant non-obvious health risks. Return an empty array if none exist.
-6. **Dietary Information:** Conduct a strict dietary analysis. Identify common allergens (Gluten, Dairy, Soy, Peanuts, Tree Nuts, Fish, Shellfish). Provide definitive suitability statements. Determine isVegetarian, isVegan, and isGlutenFree flags. Write a highly concise summary of the dietary profile.
-
-Be completely objective, scientifically grounded, and uncompromising in your assessment. Ensure Pros and Cons provide a balanced view without any logical contradictions.`;
+Rules:
+1. rating: Based on processing, additives, sugar, and fats.
+2. pros/cons: 2-4 distinct points each.
+3. warnings: Only for critical health risks or banned substances.
+4. dietaryInfo: Check for common allergens and determine suitability.`;
 
   const userPrompt = `Ingredients list:\n"${input.ingredients}"`;
 
   try {
     const response = await nimClient.chat.completions.create({
-      model: 'deepseek-ai/deepseek-v4-pro',
+      model: 'meta/llama-3.1-8b-instruct',
       messages: [
         {
           role: 'system',
@@ -128,12 +120,10 @@ Be completely objective, scientifically grounded, and uncompromising in your ass
           content: userPrompt,
         },
       ],
-      max_tokens: 4096,
+      max_tokens: 2048,
       temperature: 0.2,
       top_p: 0.9,
       response_format: { type: 'json_object' },
-      // @ts-expect-error: extra_body is used to pass custom parameters to NVIDIA NIM
-      extra_body: { chat_template_kwargs: { thinking: false } },
     });
 
     const rawContent = response.choices?.[0]?.message?.content;

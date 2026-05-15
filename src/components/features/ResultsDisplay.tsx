@@ -3,8 +3,7 @@
 import { useRef, useCallback } from 'react';
 import html2canvas from 'html2canvas';
 import { useToast } from '@/hooks/use-toast';
-import type { ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients-types';
-import type { AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety-types';
+import { type ProductAnalysisOutput } from '@/ai/flows/product-analysis-types';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Star, ThumbsUp, ThumbsDown, AlertTriangle, ListChecks, FileText, ClipboardX, ShieldAlert, CheckCircle, XCircle, Share2, Download, Copy, Twitter } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -17,8 +16,8 @@ import Image from 'next/image';
 import { SITE_URL } from '@/lib/constants';
 
 interface ResultsDisplayProps {
-  ingredientsData: ExtractIngredientsOutput | null;
-  assessmentData: AssessHealthSafetyOutput | null;
+  ingredientsData: any;
+  assessmentData: any;
   imagePreviewUrl?: string | null; 
 }
 

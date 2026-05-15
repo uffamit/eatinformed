@@ -48,16 +48,14 @@ export async function extractIngredients(input: ExtractIngredientsInput): Promis
     };
   }
 
-  const systemPrompt = `You are a strict JSON data extraction API specializing in food nutrition labels. Your ONLY purpose is to extract the ingredients list and nutritional information from the provided image and return a raw JSON object.
+  const systemPrompt = `You are a food label OCR API. Extract ingredients and nutrition data into a RAW JSON object.
+RETURN ONLY THE JSON OBJECT. NO MARKDOWN. NO TEXT.
 
-CRITICAL INSTRUCTION: Return NOTHING BUT A RAW JSON OBJECT. No markdown formatting, no conversational text, no introductions. IF YOU OUTPUT ANY TEXT OUTSIDE THE JSON OBJECT, THE SYSTEM WILL CRASH.
-
-The JSON MUST have this exact structure:
 {
   "ingredients": ["ingredient1", "ingredient2"],
   "nutrition": {
-    "rawText": "full nutritional facts text preserving line breaks",
-    "servingSizeLabel": "Serving size: 250mL",
+    "rawText": "full text with line breaks",
+    "servingSizeLabel": "Serving size info",
     "nutrients": [
       { "nutrient": "Energy", "perServing": "775kJ", "per100mL": "310kJ" }
     ]
@@ -65,13 +63,11 @@ The JSON MUST have this exact structure:
   "status": "success" | "no_data" | "unreadable"
 }
 
-Extraction Rules:
-1. **ingredients**: Identify and transcribe the complete, exhaustive list of ingredients into the array. Handle nested ingredients carefully.
-2. **nutrition.rawText**: Transcribe the ENTIRE nutritional facts panel into a single, formatted string, preserving line breaks and structural spacing.
-3. **nutrition.servingSizeLabel**: Extract the text that defines the serving size and servings per container exactly as written.
-4. **nutrition.nutrients**: Parse the nutritional table into a structured array. For each row (e.g., Energy, Protein, Fat), create a JSON object with keys "nutrient", "perServing", and "per100mL" (or per100g). Include units in string values. Omit keys if a value is missing.
-5. **status**: Set to 'success' if you found either ingredients or nutritional information. Set to 'no_data' if the image is clear but contains no food label text. Set to 'unreadable' if the image is too blurry, dark, or impossible to read.
-6. If any section is not found, return empty values/arrays for it. Do not hallucinate data.`;
+Rules:
+1. ingredients: List every ingredient.
+2. nutrition.rawText: Transcribe the entire panel.
+3. nutrition.nutrients: Parse table into objects.
+4. status: 'success' if found, 'no_data' if empty, 'unreadable' if blurry.`;
 
   try {
     const response = await nimClient.chat.completions.create({
@@ -90,13 +86,12 @@ Extraction Rules:
           ],
         },
       ],
-      max_tokens: 4096,
+      max_tokens: 2048,
       temperature: 0.1,
       top_p: 0.9,
     });
 
     const rawContent = response.choices?.[0]?.message?.content;
-    console.log("RAW VISION AI CONTENT:", rawContent);
 
     if (!rawContent) {
       throw new Error('The AI model failed to provide an output.');

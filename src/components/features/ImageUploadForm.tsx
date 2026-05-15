@@ -2,10 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback, type ChangeEvent, type DragEvent } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { extractIngredients } from '@/ai/flows/extract-ingredients';
-import { type ExtractIngredientsOutput } from '@/ai/flows/extract-ingredients-types';
-import { assessHealthSafety } from '@/ai/flows/assess-health-safety';
-import { type AssessHealthSafetyOutput } from '@/ai/flows/assess-health-safety-types';
+import { analyzeProduct } from '@/ai/flows/product-analysis';
+import { type ProductAnalysisOutput } from '@/ai/flows/product-analysis-types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,9 +20,9 @@ export function CheckPageClient() {
 
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState<string>('Analyzing product...');
   const [error, setError] = useState<string | null>(null);
-  const [ingredientsData, setIngredientsData] = useState<ExtractIngredientsOutput | null>(null);
-  const [assessmentData, setAssessmentData] = useState<AssessHealthSafetyOutput | null>(null);
+  const [analysisData, setAnalysisData] = useState<ProductAnalysisOutput | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -224,32 +222,24 @@ export function CheckPageClient() {
 
   const handleScan = useCallback(async (photoDataUri: string) => {
     setIsLoading(true);
+    setLoadingStep('Analyzing product label...');
     setError(null);
-    setIngredientsData(null);
-    setAssessmentData(null);
+    setAnalysisData(null);
     
     try {
-      // Step 1: Extract ingredients from image
-      const extracted = await extractIngredients({ image: photoDataUri });
+      const result = await analyzeProduct(photoDataUri);
 
-      // Step 1a: Check extraction status before proceeding
-      if (extracted.status !== 'success') {
-        if (extracted.status === 'unreadable') {
+      if (result.status !== 'success') {
+        if (result.status === 'unreadable') {
           setError('The image was unreadable. Please upload or capture a clearer photo of the product label.');
-        } else if (extracted.status === 'no_data') {
+        } else if (result.status === 'no_data') {
           setError("We couldn't find any ingredient or nutrition text on the label. Please try a different image.");
         }
-        setIngredientsData(extracted);
         setIsLoading(false);
         return;
       }
       
-      setIngredientsData(extracted);
-
-      // Step 2: Assess health safety based on extracted ingredients
-      const ingredientsList = extracted.ingredients ? extracted.ingredients.join(', ') : '';
-      const assessment = await assessHealthSafety({ ingredients: ingredientsList });
-      setAssessmentData(assessment);
+      setAnalysisData(result);
 
     } catch (e: any) {
       console.error('Scan failed:', e);
@@ -267,18 +257,17 @@ export function CheckPageClient() {
   const handleReset = () => {
     stopCameraStream();
     setImagePreviewUrl(null);
-    setIngredientsData(null);
-    setAssessmentData(null);
+    setAnalysisData(null);
     setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
-  if (assessmentData) {
+  if (analysisData) {
     return (
       <div>
-        <ResultsDisplay ingredientsData={ingredientsData} assessmentData={assessmentData} imagePreviewUrl={imagePreviewUrl} />
+        <ResultsDisplay ingredientsData={analysisData} assessmentData={analysisData} imagePreviewUrl={imagePreviewUrl} />
         <div className="text-center mt-8">
           <Button onClick={handleReset} size="lg" className="rounded-full">
             <RefreshCw className="mr-2 h-5 w-5" />
@@ -304,7 +293,7 @@ export function CheckPageClient() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center space-y-4 p-8">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="text-lg text-muted-foreground">Analyzing your product...</p>
+            <p className="text-lg text-muted-foreground">{loadingStep}</p>
             <p className="text-sm text-muted-foreground">This may take a moment.</p>
           </div>
         ) : imagePreviewUrl ? (
