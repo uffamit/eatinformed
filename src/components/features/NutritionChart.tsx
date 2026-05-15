@@ -3,7 +3,8 @@
 import type { Nutrient } from '@/ai/flows/extract-ingredients-types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Cell } from 'recharts';
+import { Activity } from 'lucide-react';
 
 interface NutritionChartProps {
   data: Nutrient[];
@@ -11,8 +12,11 @@ interface NutritionChartProps {
 }
 
 const parseValue = (value: string | undefined): number => {
-  if (!value) return 0;
-  return parseFloat(value) || 0;
+  if (!value || value.toLowerCase() === 'n/a' || value === '0') return 0;
+  // Remove all non-numeric characters except for the decimal point
+  const numericString = value.replace(/[^0-9.]/g, '');
+  const parsed = parseFloat(numericString);
+  return isNaN(parsed) ? 0 : Number(parsed.toFixed(2));
 };
 
 export default function NutritionChart({ data, servingSizeLabel }: NutritionChartProps) {
@@ -20,96 +24,120 @@ export default function NutritionChart({ data, servingSizeLabel }: NutritionChar
     return null;
   }
 
-  // Filter data to only include nutrients measured in 'g' or 'mg' to make the chart comparable.
-  // This avoids plotting energy (kJ/kcal) on the same scale as weight-based nutrients.
-  const comparableData = data.filter(item => {
-    const nutrientName = (item.nutrient || '').toLowerCase();
-    if (nutrientName === 'energy') {
-      return false; // Always exclude energy
-    }
-    const perServing = (item.perServing || '').toLowerCase();
-    const per100mL = (item.per100mL || '').toLowerCase();
-    // Include if units are present and are some form of grams.
-    return perServing.includes('g') || per100mL.includes('g');
-  });
+  // Define which nutrients to include and their display order
+  const priorityNutrients = [
+    'energy', 'protein', 'carbohydrate', 'total sugars', 
+    'added sugars', 'total fat', 'saturated fat', 'trans fat', 'sodium'
+  ];
 
-  if (comparableData.length === 0) {
-    // Don't render the chart if there's no comparable data to show.
+  const nutrientColors: Record<string, string> = {
+    'energy': '#22c55e',      // Green
+    'protein': '#3b82f6',     // Blue
+    'carbohydrate': '#eab308', // Yellow
+    'total sugars': '#f59e0b', // Amber
+    'added sugars': '#f97316', // Orange
+    'total fat': '#f97316',    // Orange
+    'saturated fat': '#ef4444', // Red
+    'trans fat': '#991b1b',    // Dark Red
+    'sodium': '#6366f1'        // Indigo
+  };
+
+  const chartData = data
+    .filter(item => priorityNutrients.includes(item.nutrient.toLowerCase()))
+    .sort((a, b) => priorityNutrients.indexOf(a.nutrient.toLowerCase()) - priorityNutrients.indexOf(b.nutrient.toLowerCase()))
+    .map(item => {
+      const lowerName = item.nutrient.toLowerCase();
+      return {
+        name: item.nutrient,
+        'Per Serving': parseValue(item.perServing),
+        'Per 100mL/g': parseValue(item.per100mL),
+        servingRaw: item.perServing || '0',
+        per100Raw: item.per100mL || '0',
+        unit: (item.perServing || item.per100mL || '').replace(/[0-9.]/g, '').trim(),
+        fill: nutrientColors[lowerName] || '#94a3b8'
+      };
+    });
+
+  if (chartData.length === 0) {
     return null;
   }
 
-  const chartData = comparableData.map(item => ({
-    name: item.nutrient,
-    'Per Serving': parseValue(item.perServing),
-    'Per 100mL/g': parseValue(item.per100mL),
-    servingRaw: item.perServing,
-    per100Raw: item.per100mL,
-  }));
-  
-  const servingLabelText = servingSizeLabel ? `Per Serving (${servingSizeLabel.split(':')[1]?.trim() || ''})` : 'Per Serving';
-
   const chartConfig = {
     'Per Serving': {
-      label: servingLabelText,
-      color: 'hsl(var(--chart-1))',
+      label: servingSizeLabel ? `Serving (${servingSizeLabel.replace(/Serving size: /i, '')})` : 'Per Serving',
+      color: 'hsl(var(--primary))',
     },
     'Per 100mL/g': {
-      label: 'Per 100mL/g',
-      color: 'hsl(var(--chart-2))',
+      label: 'Per 100g/mL',
+      color: 'hsl(var(--accent))',
     },
   } satisfies ChartConfig;
 
   return (
-    <Card className="mt-6 border-2 border-dashed">
-      <CardHeader>
-        <CardTitle>Nutrition Comparison Chart</CardTitle>
+    <Card className="mt-6 border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl font-bold flex items-center gap-2">
+           <Activity className="h-5 w-5 text-primary" />
+           Nutritional Profile
+        </CardTitle>
         <CardDescription>
-         A visual comparison of key nutrients (in g/mg) per serving vs. per 100mL/g.
+         Comparison of key nutrients. Values are normalized for visualization.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-          <ResponsiveContainer width="100%" height={400}>
+        <ChartContainer config={chartConfig} className="h-[450px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
+              layout="vertical"
               margin={{
-                top: 20,
-                right: 20,
-                left: 0,
-                bottom: 60,
+                top: 5,
+                right: 30,
+                left: 40,
+                bottom: 5,
               }}
+              barGap={2}
             >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="name"
+              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(255,255,255,0.1)" />
+              <XAxis type="number" hide />
+              <YAxis 
+                dataKey="name" 
+                type="category" 
                 tickLine={false}
-                tickMargin={10}
                 axisLine={false}
-                angle={-45}
-                textAnchor="end"
-                interval={0}
-              />
-              <YAxis
-                axisLine={false}
-                tickLine={false}
-                tickMargin={10}
-                label={{ value: 'Amount', angle: -90, position: 'insideLeft' }}
+                width={100}
+                tick={{ fontSize: 12, fill: 'rgba(255,255,255,0.7)', fontWeight: 500 }}
               />
               <ChartTooltip
-                cursor={false}
+                cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                 content={<ChartTooltipContent
                   indicator="dot"
                   formatter={(value, name, props) => {
-                      if (name === 'Per Serving') return `${props.payload.servingRaw || 'N/A'}`;
-                      if (name === 'Per 100mL/g') return `${props.payload.per100Raw || 'N/A'}`;
-                      return `${value}`;
+                      if (name === 'Per Serving') return (
+                        <div className="flex items-center gap-2">
+                           <span className="font-bold text-white">{props.payload.servingRaw}</span>
+                        </div>
+                      );
+                      if (name === 'Per 100mL/g') return (
+                        <div className="flex items-center gap-2">
+                           <span className="font-medium text-white/70">{props.payload.per100Raw}</span>
+                        </div>
+                      );
+                      return value;
                   }}
-                  labelClassName="font-bold"
                 />}
               />
               <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="Per Serving" fill="var(--color-Per Serving)" radius={4} />
-              <Bar dataKey="Per 100mL/g" fill="var(--color-Per 100mL/g)" radius={4} />
+              <Bar dataKey="Per Serving" radius={[0, 4, 4, 0]} barSize={16}>
+                {chartData.map((entry, index) => (
+                   <Cell key={`cell-serving-${index}`} fill={entry.fill} fillOpacity={1} />
+                ))}
+              </Bar>
+              <Bar dataKey="Per 100mL/g" radius={[0, 4, 4, 0]} barSize={16}>
+                {chartData.map((entry, index) => (
+                   <Cell key={`cell-100-${index}`} fill={entry.fill} fillOpacity={0.4} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>

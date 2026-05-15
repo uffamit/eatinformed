@@ -279,13 +279,13 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
                 <TableHeader>
                   <TableRow className="border-b-white/10">
                     <TableHead className="font-bold text-lg text-white">Nutrient</TableHead>
-                    <TableHead className="text-right font-bold text-lg text-white">{nutrition.servingSizeLabel ? `Per ${nutrition.servingSizeLabel.split(':')[1]?.trim() || 'Serving'}` : 'Per Serving'}</TableHead>
-                    <TableHead className="text-right font-bold text-lg text-white">Per 100mL/g</TableHead>
+                    <TableHead className="text-right font-bold text-lg text-white">{nutrition.servingSizeLabel ? `Per ${nutrition.servingSizeLabel.replace(/Serving size: /i, '') || 'Serving'}` : 'Per Serving'}</TableHead>
+                    <TableHead className="text-right font-bold text-lg text-white">Per 100g/mL</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {nutrition.nutrients?.map((item, index) => (
-                    <TableRow key={index} className="border-b-0">
+                    <TableRow key={index} className="border-b-0 hover:bg-white/5 transition-colors">
                       <TableCell className="font-medium">{item.nutrient}</TableCell>
                       <TableCell className="text-right">{item.perServing ?? 'N/A'}</TableCell>
                       <TableCell className="text-right">{item.per100mL ?? 'N/A'}</TableCell>

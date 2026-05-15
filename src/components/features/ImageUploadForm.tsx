@@ -129,7 +129,7 @@ export function CheckPageClient() {
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(img, 0, 0, width, height);
-        callback(canvas.toDataURL('image/jpeg', 0.8));
+        callback(canvas.toDataURL('image/jpeg', 0.95));
       } else {
         callback(dataUri);
       }
@@ -213,7 +213,7 @@ export function CheckPageClient() {
       const context = canvas.getContext('2d');
       if (context) {
         context.drawImage(video, 0, 0, width, height);
-        const dataUri = canvas.toDataURL('image/jpeg', 0.8);
+        const dataUri = canvas.toDataURL('image/jpeg', 0.95);
         setImagePreviewUrl(dataUri);
         stopCameraStream();
       }

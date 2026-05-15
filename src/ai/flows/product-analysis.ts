@@ -6,54 +6,53 @@ import { ProductAnalysisOutput, ProductAnalysisOutputSchema } from './product-an
 
 export async function analyzeProduct(image: string): Promise<ProductAnalysisOutput> {
   if (!nimClient) {
-    throw new Error("AI system not initialized.");
+    console.error("CRITICAL: NVIDIA_API_KEY is missing or nimClient failed to initialize.");
+    return {
+      ingredients: [],
+      nutrition: { rawText: "AI System Offline: Please check server configuration (NVIDIA_API_KEY)." },
+      rating: 0,
+      pros: [],
+      cons: [],
+      warnings: ["System is currently unavailable."],
+      ingredientAnalysis: [],
+      dietaryInfo: { allergens: [], suitability: [], isVegetarian: false, isVegan: false, isGlutenFree: false, summary: "" },
+      status: 'unreadable',
+    };
   }
 
-  const systemPrompt = `You are a world-class clinical nutritionist and food safety expert. Your task is to perform a deep, scientifically-grounded analysis of the provided food label image. Leverage your knowledge of modern nutritional science, FDA/EFSA guidelines, and established dietary protocols (like the NOVA classification system) to provide an authoritative assessment.
+  const systemPrompt = `You are a world-class clinical nutritionist and food safety expert. Your task is to perform a meticulous analysis of the provided food label image. Use scientific standards (NOVA classification, FDA/EFSA guidelines) to provide an authoritative assessment.
 
-You MUST respond ONLY with a RAW JSON object. DO NOT include markdown, conversational text, or introductions.
+CRITICAL: Return NOTHING but a RAW JSON object.
 
 JSON STRUCTURE:
 {
-  "ingredients": ["transcribed item 1", "transcribed item 2"],
+  "ingredients": ["Standardized Name 1", "Standardized Name 2"],
   "nutrition": {
-    "rawText": "Complete transcription of the nutrition facts panel preserving structure",
-    "servingSizeLabel": "e.g., 'Serving size: 100g' or 'Per 250mL'",
+    "rawText": "Complete OCR transcription of the nutrition panel",
+    "servingSizeLabel": "e.g., 20g",
     "nutrients": [
-      { "nutrient": "Energy", "perServing": "775kJ", "per100mL": "310kJ" },
-      { "nutrient": "Protein", "perServing": "2g", "per100mL": "0.8g" }
+      { "nutrient": "Energy", "perServing": "100kcal", "per100mL": "500kcal" }
     ]
   },
-  "rating": <number 1.0-5.0 based on rigorous health criteria>,
-  "pros": ["Scientific benefit 1", "Scientific benefit 2"],
-  "cons": ["Evidence-based negative 1", "Evidence-based negative 2"],
-  "warnings": ["CRITICAL: banned substances, high-risk allergens, or major health controversies"] or [],
+  "rating": 1.0 to 5.0,
+  "pros": ["Scientific benefit"],
+  "cons": ["Evidence-based negative"],
+  "warnings": [],
   "ingredientAnalysis": [
-    {
-      "ingredient": "Standard Name",
-      "description": "Scientific/biochemical description",
-      "purpose": "Functional purpose (e.g., emulsifier, preservative)",
-      "isAllergen": true/false,
-      "isControversial": true/false
-    }
+    { "ingredient": "Name", "description": "Biochemical nature", "purpose": "Functional role", "isAllergen": false, "isControversial": false }
   ],
-  "dietaryInfo": {
-    "allergens": ["Gluten", "Dairy", "Soy", "Peanuts", "Tree Nuts", "Fish", "Shellfish"],
-    "suitability": ["Scientifically determined suitability statements"],
-    "isVegetarian": true/false,
-    "isVegan": true/false,
-    "isGlutenFree": true/false,
-    "summary": "Concise, authoritative dietary profile summary"
-  },
-  "status": "success" | "no_data" | "unreadable"
+  "dietaryInfo": { "allergens": [], "suitability": ["Vegan"], "isVegetarian": true, "isVegan": true, "isGlutenFree": true, "summary": "Concise summary" },
+  "status": "success"
 }
 
-SCIENTIFIC ANALYSIS RULES:
-1. **Health Rating (1-5)**: Strictly evaluate based on processing level (NOVA 1-4), glycemic load potential, presence of synthetic additives/preservatives, unhealthy fats (trans/saturated), and added sodium/sugars.
-2. **Pros/Cons**: Provide 2-4 non-overlapping, distinct points. Pros must focus on nutrient density or natural beneficial components. Cons must focus on ultra-processing, synthetic chemicals, or poor nutritional ratios.
-3. **Ingredient Analysis**: Conduct a meticulous analysis for EVERY ingredient. Identify its standard name, functional role in food science, and flag any known health controversies or allergenic potential.
-4. **Dietary Suitability**: Identify common allergens with 100% accuracy. Determine Vegetarian/Vegan/Gluten-Free status based on strict clinical definitions.
-5. **OCR Precision**: Transcribe the ingredients list and nutritional table exactly as they appear. If the image is blurry or unreadable, set status to 'unreadable'. If no label is found, set to 'no_data'.`;
+SCIENTIFIC RULES:
+1. NUTRITION DATA: Distinguish between "Per Serve", "Per 100g", and "%RDA". 
+   - 'perServing' MUST be the amount in one serving.
+   - 'per100mL' MUST be the standardized amount per 100g or 100mL. 
+   - NEVER put percentages (like "5%") in weight/energy fields. If "Per 100g" is missing, calculate it based on the serving size.
+2. HEALTH RATING: Assign a 1-5 score based on NOVA processing levels, synthetic additives, and nutritional ratios.
+3. INGREDIENTS: List every ingredient exactly as written on the label.
+4. STATUS: Set to "success" if text is readable. Set to "unreadable" ONLY if image is blank/black.`;
 
   try {
     const response = await nimClient.chat.completions.create({
@@ -67,35 +66,70 @@ SCIENTIFIC ANALYSIS RULES:
           ],
         },
       ],
-      max_tokens: 4096,
+      max_tokens: 3000,
       temperature: 0.1,
       top_p: 0.9,
     });
 
     const rawContent = response.choices?.[0]?.message?.content;
-    if (!rawContent) throw new Error('No AI response');
+    if (!rawContent) {
+      console.error("DEBUG: Empty response from NVIDIA NIM Vision model.");
+      throw new Error('No AI response from NVIDIA NIM');
+    }
+    
+    // Log the first 100 characters of the raw content for debugging
+    console.log(`DEBUG: AI Response Start: ${rawContent.substring(0, 100)}...`);
 
-    const parsed = parseNIMResponse(rawContent);
-    return ProductAnalysisOutputSchema.parse(parsed);
+    let parsed;
+    try {
+      parsed = parseNIMResponse(rawContent);
+    } catch (parseError: any) {
+      console.error("DEBUG: JSON Parse Error. Raw content follows:");
+      console.error(rawContent);
+      throw new Error(`Failed to parse JSON: ${parseError.message}`);
+    }
+
+    if (!parsed) {
+      console.error("DEBUG: AI failed to return JSON. Raw content:", rawContent);
+      throw new Error('The AI model failed to provide a valid data structure.');
+    }
+
+    // Soft-validation with defaults
+    let output;
+    try {
+      output = ProductAnalysisOutputSchema.parse(parsed);
+    } catch (zodError: any) {
+      console.error("DEBUG: Zod Validation Issues:", JSON.stringify(zodError.issues, null, 2));
+      console.error("DEBUG: Parsed object:", JSON.stringify(parsed, null, 2));
+      throw zodError;
+    }
+
+    // Check if the model hallucinated 'unreadable' despite providing content
+    if (output.status === 'unreadable' && (output.ingredients.length > 0 || output.nutrition.rawText.length > 20)) {
+      console.warn("DEBUG: AI hallucinated 'unreadable' status despite successful OCR. Overriding to 'success'.");
+      output.status = 'success';
+    }
+
+    return output;
   } catch (error: any) {
-    console.error("Analysis failed:", error);
+    console.error("Detailed Analysis Failure:", error);
+    
+    // Provide a more descriptive error status if possible
+    let status: 'unreadable' | 'no_data' = 'unreadable';
+    if (error.message?.includes('timeout') || error.message?.includes('deadline')) {
+        status = 'no_data'; // Treat timeouts as a 'try again' rather than 'bad image'
+    }
+
     return {
       ingredients: [],
-      nutrition: { rawText: "Error processing image." },
+      nutrition: { rawText: `Error: ${error.message || "Failed to process image"}` },
       rating: 0,
       pros: [],
       cons: [],
-      warnings: ["Analysis failed. Please try again."],
+      warnings: ["We encountered an issue analyzing this image. Please try again with a clearer photo."],
       ingredientAnalysis: [],
-      dietaryInfo: {
-        allergens: [],
-        suitability: [],
-        isVegetarian: false,
-        isVegan: false,
-        isGlutenFree: false,
-        summary: "Error during analysis.",
-      },
-      status: 'unreadable',
+      dietaryInfo: { allergens: [], suitability: [], isVegetarian: false, isVegan: false, isGlutenFree: false, summary: "" },
+      status: status,
     };
   }
 }
