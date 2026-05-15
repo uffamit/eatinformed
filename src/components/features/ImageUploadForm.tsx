@@ -106,6 +106,39 @@ export function CheckPageClient() {
   }, [getCameraPermission, hasCameraPermission, stopCameraStream]);
 
 
+  const resizeAndCompressImage = (dataUri: string, callback: (resizedUri: string) => void) => {
+    const img = new window.Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX_DIM = 1024;
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > MAX_DIM) {
+          height *= MAX_DIM / width;
+          width = MAX_DIM;
+        }
+      } else {
+        if (height > MAX_DIM) {
+          width *= MAX_DIM / height;
+          height = MAX_DIM;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL('image/jpeg', 0.8));
+      } else {
+        callback(dataUri);
+      }
+    };
+    img.src = dataUri;
+  };
+
   const processFile = (file: File | null | undefined) => {
     if (file) {
       const acceptedTypes = ['image/png', 'image/jpeg', 'image/webp'];
@@ -120,7 +153,9 @@ export function CheckPageClient() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const dataUri = reader.result as string;
-        setImagePreviewUrl(dataUri);
+        resizeAndCompressImage(dataUri, (compressedUri) => {
+          setImagePreviewUrl(compressedUri);
+        });
       };
       reader.readAsDataURL(file);
     }
@@ -158,12 +193,29 @@ export function CheckPageClient() {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      
+      const MAX_DIM = 1024;
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      
+      if (width > height) {
+        if (width > MAX_DIM) {
+          height *= MAX_DIM / width;
+          width = MAX_DIM;
+        }
+      } else {
+        if (height > MAX_DIM) {
+          width *= MAX_DIM / height;
+          height = MAX_DIM;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
       const context = canvas.getContext('2d');
       if (context) {
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const dataUri = canvas.toDataURL('image/png');
+        context.drawImage(video, 0, 0, width, height);
+        const dataUri = canvas.toDataURL('image/jpeg', 0.8);
         setImagePreviewUrl(dataUri);
         stopCameraStream();
       }

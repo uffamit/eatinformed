@@ -48,15 +48,13 @@ export async function extractIngredients(input: ExtractIngredientsInput): Promis
     };
   }
 
-  const systemPrompt = `You are an advanced Optical Character Recognition (OCR) and document understanding AI specializing in food nutrition labels. Your task is to extract the ingredients list and nutritional information from the provided image with absolute accuracy. 
+  const systemPrompt = `You are a strict JSON data extraction API specializing in food nutrition labels. Your ONLY purpose is to extract the ingredients list and nutritional information from the provided image and return a raw JSON object.
 
-Pay extremely close attention to fine print, small text, and the layout of nutritional tables.
+CRITICAL INSTRUCTION: Return NOTHING BUT A RAW JSON OBJECT. No markdown formatting, no conversational text, no introductions. IF YOU OUTPUT ANY TEXT OUTSIDE THE JSON OBJECT, THE SYSTEM WILL CRASH.
 
-You MUST respond ONLY with a valid JSON object. Do NOT include any explanation, markdown, or text outside the JSON.
-
-The JSON must have this exact structure:
+The JSON MUST have this exact structure:
 {
-  "ingredients": ["ingredient1", "ingredient2", ...],
+  "ingredients": ["ingredient1", "ingredient2"],
   "nutrition": {
     "rawText": "full nutritional facts text preserving line breaks",
     "servingSizeLabel": "Serving size: 250mL",
@@ -71,13 +69,13 @@ Extraction Rules:
 1. **ingredients**: Identify and transcribe the complete, exhaustive list of ingredients into the array. Handle nested ingredients carefully.
 2. **nutrition.rawText**: Transcribe the ENTIRE nutritional facts panel into a single, formatted string, preserving line breaks and structural spacing.
 3. **nutrition.servingSizeLabel**: Extract the text that defines the serving size and servings per container exactly as written.
-4. **nutrition.nutrients**: Parse the nutritional table into a structured array. For each row (e.g., Energy, Protein, Fat, Carbohydrate, Sugars, Sodium), create a JSON object with keys "nutrient", "perServing", and "per100mL" (or per100g). Include units in string values. Omit keys if a value is missing.
+4. **nutrition.nutrients**: Parse the nutritional table into a structured array. For each row (e.g., Energy, Protein, Fat), create a JSON object with keys "nutrient", "perServing", and "per100mL" (or per100g). Include units in string values. Omit keys if a value is missing.
 5. **status**: Set to 'success' if you found either ingredients or nutritional information. Set to 'no_data' if the image is clear but contains no food label text. Set to 'unreadable' if the image is too blurry, dark, or impossible to read.
 6. If any section is not found, return empty values/arrays for it. Do not hallucinate data.`;
 
   try {
     const response = await nimClient.chat.completions.create({
-      model: 'meta/llama-3.2-90b-vision-instruct',
+      model: 'meta/llama-3.2-11b-vision-instruct',
       messages: [
         {
           role: 'user',
@@ -95,10 +93,10 @@ Extraction Rules:
       max_tokens: 4096,
       temperature: 0.1,
       top_p: 0.9,
-      response_format: { type: 'json_object' },
     });
 
     const rawContent = response.choices?.[0]?.message?.content;
+    console.log("RAW VISION AI CONTENT:", rawContent);
 
     if (!rawContent) {
       throw new Error('The AI model failed to provide an output.');
