@@ -17,11 +17,14 @@ export default function HomePage() {
   const [openAuthDialog, setOpenAuthDialog] = useState(false);
 
   const handleCheckProductClick = () => {
-    if (user) {
-      router.push('/check');
-    } else {
-      setOpenAuthDialog(true);
-    }
+    // if (user) {
+    //   router.push('/check');
+    // } else {
+    //   setOpenAuthDialog(true);
+    // }
+    
+    // Temporarily bypass login for development
+    router.push('/check');
   };
   
   return (

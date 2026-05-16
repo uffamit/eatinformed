@@ -281,7 +281,7 @@ export function CheckPageClient() {
   return (
     <Card className="w-full max-w-xl mx-auto bg-white/5 backdrop-blur-lg border border-white/10 shadow-2xl shadow-black/20">
       <CardHeader>
-        <CardTitle as="h1" className="text-3xl font-headline flex items-center justify-center">
+        <CardTitle className="text-3xl font-headline flex items-center justify-center">
             <ScanLine className="mr-3 h-8 w-8 text-primary"/>
             Scan a Product
         </CardTitle>

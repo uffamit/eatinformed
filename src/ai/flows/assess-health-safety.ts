@@ -13,9 +13,8 @@ import {
 } from './assess-health-safety-types';
 
 export async function assessHealthSafety(input: AssessHealthSafetyInput): Promise<AssessHealthSafetyOutput> {
-   if (!nimClient) {
+  if (!nimClient) {
     console.error("AI system not initialized. Check NVIDIA_API_KEY.");
-    // Return a specific error structure if AI is offline
     return {
       rating: 0,
       pros: [],
@@ -72,44 +71,51 @@ export async function assessHealthSafety(input: AssessHealthSafetyInput): Promis
     };
   }
 
-  const systemPrompt = `You are a clinical nutritionist. Analyze the ingredient list and return a RAW JSON assessment.
-RETURN ONLY THE JSON OBJECT. NO MARKDOWN. NO TEXT.
+  const systemPrompt = `You are a clinical nutritionist. Analyze the ingredient list and return a health assessment.
 
+RULES:
+1. rating: A number from 1 (very unhealthy) to 5 (very healthy). Base it on processing level (NOVA classification), synthetic additives, sugar content, fat quality, and nutrient density.
+2. pros: 2-4 distinct positive health aspects of the ingredients.
+3. cons: 2-4 distinct negative health aspects or concerning ingredients.
+4. warnings: Only include warnings for critical health risks, banned substances, or extremely high sodium/sugar/trans fat levels. Use an empty array if none.
+5. ingredientAnalysis: For EACH ingredient, provide its name, a short scientific description, its purpose in the product, and whether it is a common allergen or controversial.
+6. dietaryInfo: Identify all common allergens (gluten, dairy, soy, peanuts, tree nuts, eggs, fish, shellfish, sesame). Determine if the product is suitable for vegetarians, vegans, and gluten-free diets.
+
+CRITICAL: Your entire response must be ONLY a single raw JSON object. Do NOT include any text, explanation, or markdown before or after the JSON. Start your response with { and end with }.
+
+Output this exact JSON structure with real analysis values:
 {
-  "rating": <number 1-5>,
-  "pros": ["pro1", "pro2"],
-  "cons": ["con1", "con2"],
-  "warnings": ["warning1"] or [],
+  "rating": 3,
+  "pros": ["Contains natural ingredients", "Good source of protein"],
+  "cons": ["High in sodium", "Contains artificial preservatives"],
+  "warnings": [],
   "ingredientAnalysis": [
     {
-      "ingredient": "name",
-      "description": "short description",
-      "purpose": "reason for use",
-      "isAllergen": bool,
-      "isControversial": bool
+      "ingredient": "Salt",
+      "description": "Sodium chloride, a mineral used for flavor and preservation.",
+      "purpose": "Enhances flavor and acts as a preservative.",
+      "isAllergen": false,
+      "isControversial": false
     }
   ],
   "dietaryInfo": {
     "allergens": ["Gluten", "Dairy"],
     "suitability": ["Not suitable for vegans"],
-    "isVegetarian": bool,
-    "isVegan": bool,
-    "isGlutenFree": bool,
-    "summary": "Brief summary"
+    "isVegetarian": true,
+    "isVegan": false,
+    "isGlutenFree": false,
+    "summary": "Contains dairy and gluten. Suitable for vegetarians but not vegans."
   }
 }
 
-Rules:
-1. rating: Based on processing, additives, sugar, and fats.
-2. pros/cons: 2-4 distinct points each.
-3. warnings: Only for critical health risks or banned substances.
-4. dietaryInfo: Check for common allergens and determine suitability.`;
+Remember: Output ONLY the raw JSON object. Start with { and end with }.`;
 
-  const userPrompt = `Ingredients list:\n"${input.ingredients}"`;
+  const userPrompt = `Analyze these ingredients:\n"${input.ingredients}"`;
 
   try {
-    const response = await nimClient.chat.completions.create({
-      model: 'meta/llama-3.1-8b-instruct',
+    // Build request options - some models may not support response_format
+    const requestOptions: any = {
+      model: 'meta/llama-3.3-70b-instruct',
       messages: [
         {
           role: 'system',
@@ -123,23 +129,44 @@ Rules:
       max_tokens: 2048,
       temperature: 0.2,
       top_p: 0.9,
-      response_format: { type: 'json_object' },
-    });
+    };
 
-    const rawContent = response.choices?.[0]?.message?.content;
+    // Try with response_format first, fall back without it if unsupported
+    let rawContent: string | null = null;
+    try {
+      const response = await nimClient.chat.completions.create({
+        ...requestOptions,
+        response_format: { type: 'json_object' },
+      });
+      rawContent = response.choices?.[0]?.message?.content;
+    } catch (formatError: any) {
+      // If the model doesn't support response_format, retry without it
+      if (formatError.message?.includes('response_format') || formatError.status === 400) {
+        console.warn("DEBUG: Model does not support response_format, retrying without it.");
+        const response = await nimClient.chat.completions.create(requestOptions);
+        rawContent = response.choices?.[0]?.message?.content;
+      } else {
+        throw formatError;
+      }
+    }
 
     if (!rawContent) {
       throw new Error('The AI model failed to provide an assessment.');
     }
 
+    // parseNIMResponse now throws on failure with descriptive context
     const parsed = parseNIMResponse(rawContent);
 
     // Validate with Zod schema
     const output = AssessHealthSafetyOutputSchema.parse(parsed);
 
+    // Post-validation safety: clamp rating
+    if (output.rating > 5) output.rating = 5;
+    if (output.rating < 0) output.rating = 0;
+
     return output;
   } catch (error: any) {
-    console.error("Error in assessHealthSafety (NIM):", error);
+    console.error("Error in assessHealthSafety (NIM):", error.message || error);
     let warningMessage = "The AI model failed to provide an assessment due to an unexpected error.";
     if (error.message) {
       if (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable')) {
@@ -161,8 +188,8 @@ Rules:
         allergens: [],
         suitability: [],
         isVegetarian: false,
-       isVegan: false,
-       isGlutenFree: false,
+        isVegan: false,
+        isGlutenFree: false,
         summary: "Could not perform dietary analysis because the AI service is unavailable.",
       },
     };

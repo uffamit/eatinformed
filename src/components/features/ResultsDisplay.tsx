@@ -16,8 +16,8 @@ import Image from 'next/image';
 import { SITE_URL } from '@/lib/constants';
 
 interface ResultsDisplayProps {
-  ingredientsData: any;
-  assessmentData: any;
+  ingredientsData: ProductAnalysisOutput | null;
+  assessmentData: ProductAnalysisOutput | null;
   imagePreviewUrl?: string | null; 
 }
 
@@ -213,7 +213,7 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
             />
           </div>
         )}
-        <CardTitle as="h2" className="text-4xl font-black">
+        <CardTitle className="text-4xl font-black">
             {isZeroRatingScenario ? "Analysis Incomplete" : "Analysis Complete"}
         </CardTitle>
         <div className="mt-6 flex flex-col items-center gap-2">

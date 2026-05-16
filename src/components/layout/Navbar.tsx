@@ -96,6 +96,7 @@ const AuthButton = ({ isMobile = false }) => {
 
   // Temporarily hide login buttons for development
   return null;
+
   /*
   // Auth Dialog Trigger & Content
   return (

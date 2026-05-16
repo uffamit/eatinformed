@@ -8,6 +8,7 @@ if (process.env.NVIDIA_API_KEY) {
   nimClient = new OpenAI({
     apiKey: process.env.NVIDIA_API_KEY,
     baseURL: process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1',
+    timeout: 120 * 1000, // 120 second timeout — covers both OCR and analysis steps
   });
 } else {
   // Log a clear warning to the console during server startup.
@@ -22,61 +23,85 @@ if (process.env.NVIDIA_API_KEY) {
 }
 
 /**
- * Utility to safely extract and parse JSON from LLM responses.
- * Handles cases where the model wraps JSON in markdown code blocks.
- */
-/**
- * Expert utility to repair and parse malformed JSON from LLM responses.
+ * Expert utility to extract, repair, and parse JSON from LLM responses.
+ * Handles markdown code fences, trailing commas, control characters,
+ * and other common LLM output quirks.
+ * Throws an error with context if JSON cannot be recovered.
  */
 export const parseNIMResponse = (content: string | null): any => {
-  if (!content) return null;
-  
+  if (!content || content.trim().length === 0) {
+    throw new Error('AI returned an empty response.');
+  }
+
   let cleaned = content.trim();
 
-  // 1. Strip markdown code fences
+  // Stage 1: Strip markdown code fences (```json ... ``` or ``` ... ```)
   const codeFenceMatch = cleaned.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
   if (codeFenceMatch) {
     cleaned = codeFenceMatch[1].trim();
   }
 
-  // 2. Locate the main JSON object
+  // Stage 2: Locate the outermost JSON object
   const firstBrace = cleaned.indexOf('{');
   const lastBrace = cleaned.lastIndexOf('}');
-  
+
   if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
-    return null;
+    throw new Error(
+      `AI response does not contain a JSON object. ` +
+      `Response starts with: "${cleaned.substring(0, 120)}..."`
+    );
   }
 
   let jsonCandidate = cleaned.substring(firstBrace, lastBrace + 1);
 
-  // 3. Attempt standard parse
+  // Stage 3: Attempt standard parse first (fast path)
   try {
     return JSON.parse(jsonCandidate);
-  } catch (e) {
-    // 4. Multi-stage Repair Logic
-    try {
-      // Repair A: Remove orphaned strings (text not part of a key-value pair)
-      // We look for "string" followed by a comma or brace, but NOT preceded by a colon
-      let repaired = jsonCandidate.replace(/([^{,:]+)\s*,\s*(?=[,}])/g, (match, p1) => {
-        // If the match doesn't contain a colon, it's likely an orphan string
-        return p1.includes(':') ? match : "";
-      });
+  } catch (_firstError) {
+    // Continue to repair stages
+  }
 
-      // Fix cases like: "key": "value", "orphaned string", "nextKey":
-      repaired = repaired.replace(/"[^"]+"\s*,\s*(?="[^"]+"\s*:)/g, (match) => {
-          return match.includes(':') ? match : "";
-      });
+  // Stage 4: Multi-stage repair pipeline
+  let repaired = jsonCandidate;
 
-      // Clean up consecutive commas and stray punctuation
-      repaired = repaired.replace(/,\s*,/g, ',');
-      repaired = repaired.replace(/{\s*,/g, '{');
-      repaired = repaired.replace(/,\s*}/g, '}');
+  try {
+    // 4a: Remove single-line JS comments (// ...) that are NOT inside strings.
+    // We do this carefully by only removing comments at the end of lines.
+    repaired = repaired.replace(/(?<=[,{\[\]\d"true"false"null}])\s*\/\/[^\n]*/g, '');
 
-      return JSON.parse(repaired);
-    } catch (innerError) {
-      console.error("Critical JSON repair failure:", innerError);
-      return null;
-    }
+    // 4b: Replace unescaped control characters inside strings (newlines, tabs)
+    // LLMs sometimes put literal newlines in JSON string values
+    repaired = repaired.replace(/"([^"\\]*(?:\\.[^"\\]*)*)"/g, (match) => {
+      return match
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r')
+        .replace(/\t/g, '\\t');
+    });
+
+    // 4c: Fix trailing commas in arrays: [..."item",] → [..."item"]
+    repaired = repaired.replace(/,\s*]/g, ']');
+
+    // 4d: Fix trailing commas in objects: {..."key": "val",} → {..."key": "val"}
+    repaired = repaired.replace(/,\s*}/g, '}');
+
+    // 4e: Fix double/multiple commas: ,, → ,
+    repaired = repaired.replace(/,\s*,+/g, ',');
+
+    // 4f: Fix leading commas after opening braces/brackets: {, or [,
+    repaired = repaired.replace(/([{\[])\s*,/g, '$1');
+
+    // 4g: Remove any BOM or zero-width characters
+    repaired = repaired.replace(/[\uFEFF\u200B\u200C\u200D\u2060]/g, '');
+
+    return JSON.parse(repaired);
+  } catch (innerError: any) {
+    // Provide a detailed error for debugging
+    const snippet = jsonCandidate.substring(0, 300);
+    throw new Error(
+      `Failed to parse AI response as JSON after repair. ` +
+      `Parse error: ${innerError.message}. ` +
+      `JSON starts with: "${snippet}..."`
+    );
   }
 };
 

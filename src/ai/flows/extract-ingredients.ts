@@ -48,26 +48,30 @@ export async function extractIngredients(input: ExtractIngredientsInput): Promis
     };
   }
 
-  const systemPrompt = `You are a food label OCR API. Extract ingredients and nutrition data into a RAW JSON object.
-RETURN ONLY THE JSON OBJECT. NO MARKDOWN. NO TEXT.
+  const systemPrompt = `You are a food label OCR API. Extract ingredients and nutrition data from the image.
 
+RULES:
+1. ingredients: List every single ingredient found on the label as separate strings.
+2. nutrition.rawText: Transcribe the entire nutritional information panel exactly as written.
+3. nutrition.nutrients: Parse the nutrition table into structured objects with nutrient name, per-serving value, and per-100g/mL value.
+4. status: Use "success" if any ingredient or nutrition data was found. Use "no_data" if the label is clear but contains no food data. Use "unreadable" if the image is too blurry or dark to read.
+
+CRITICAL: Your entire response must be ONLY a single raw JSON object. Do NOT include any text, explanation, or markdown before or after the JSON. Start your response with { and end with }.
+
+Output this exact JSON structure with real values extracted from the image:
 {
   "ingredients": ["ingredient1", "ingredient2"],
   "nutrition": {
-    "rawText": "full text with line breaks",
-    "servingSizeLabel": "Serving size info",
+    "rawText": "Full transcription of the nutritional panel with line breaks...",
+    "servingSizeLabel": "Serving size info from the label",
     "nutrients": [
       { "nutrient": "Energy", "perServing": "775kJ", "per100mL": "310kJ" }
     ]
   },
-  "status": "success" | "no_data" | "unreadable"
+  "status": "success"
 }
 
-Rules:
-1. ingredients: List every ingredient.
-2. nutrition.rawText: Transcribe the entire panel.
-3. nutrition.nutrients: Parse table into objects.
-4. status: 'success' if found, 'no_data' if empty, 'unreadable' if blurry.`;
+Remember: Output ONLY the raw JSON object. Start with { and end with }.`;
 
   try {
     const response = await nimClient.chat.completions.create({
@@ -97,6 +101,7 @@ Rules:
       throw new Error('The AI model failed to provide an output.');
     }
 
+    // parseNIMResponse now throws on failure with descriptive context
     const parsed = parseNIMResponse(rawContent);
 
     // Validate with Zod schema
@@ -113,7 +118,7 @@ Rules:
 
     return output;
   } catch (error: any) {
-    console.error("Error in extractIngredients (NIM):", error);
+    console.error("Error in extractIngredients (NIM):", error.message || error);
     let errorMessage = 'The AI model failed to process the image due to an unexpected error.';
     if (error.message) {
       if (error.message.includes('503') || error.message.toLowerCase().includes('service unavailable')) {
