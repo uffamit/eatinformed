@@ -1,4 +1,3 @@
-
 'use client';
 
 import { AuthForm } from '@/components/features/AuthForm';
@@ -10,7 +9,7 @@ import { useEffect } from 'react';
 import { EatInformedLogo } from '@/components/icons/NutriScanLogo';
 import Link from 'next/link';
 
-export default function LoginPage() {
+export default function SignupPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
 
@@ -44,11 +43,11 @@ export default function LoginPage() {
         <Card className="bg-background/60 backdrop-blur-2xl border-border/30 shadow-2xl shadow-primary/5 rounded-3xl overflow-hidden relative">
           <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
           <CardHeader className="text-center space-y-2 pb-6 pt-8">
-            <CardTitle className="text-3xl font-bold tracking-tight">Welcome Back</CardTitle>
-            <CardDescription className="text-base text-muted-foreground">Sign in to your account to continue</CardDescription>
+            <CardTitle className="text-3xl font-bold tracking-tight">Create an Account</CardTitle>
+            <CardDescription className="text-base text-muted-foreground">Join EatInformed to start tracking your food</CardDescription>
           </CardHeader>
           <CardContent className="pb-8">
-              <AuthForm initialTab="login" onAuthSuccess={() => router.push('/check')} />
+              <AuthForm initialTab="signup" onAuthSuccess={() => router.push('/check')} />
           </CardContent>
         </Card>
       </div>

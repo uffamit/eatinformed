@@ -27,12 +27,12 @@ const ParticleBackground = () => {
           value: "transparent",
         },
       },
-      fpsLimit: 60,
+      fpsLimit: 120, // Increase FPS limit for smoother animation
       interactivity: {
         events: {
           onHover: {
-            enable: false,
-            mode: "repulse",
+            enable: true, // Enable mouse interaction
+            mode: "repulse", // Change to repulse instead of grab
           },
         },
         modes: {
@@ -44,36 +44,32 @@ const ParticleBackground = () => {
       },
       particles: {
         color: {
-          value: "#ffffff",
+          value: "#22c55e", // Use primary green color
         },
         links: {
-          color: "#ffffff",
-          distance: 150,
-          enable: false,
-          opacity: 0.1,
-          width: 1,
+          enable: false, // Disable links as requested
         },
         move: {
-          direction: "none",
+          direction: "bottom", // Make them fall
           enable: true,
           outModes: {
-            default: "out",
+            default: "out", // Let them fall out of the screen
           },
           random: true,
-          speed: 0.2,
+          speed: 1, // slightly faster falling
           straight: false,
         },
         number: {
           density: {
             enable: true,
           },
-          value: 250,
+          value: 150, // Increase number since links are gone
         },
         opacity: {
-          value: { min: 0.1, max: 0.3 },
+          value: { min: 0.1, max: 0.6 },
           animation: {
             enable: true,
-            speed: 0.5,
+            speed: 1,
             sync: false,
           },
         },
@@ -81,7 +77,12 @@ const ParticleBackground = () => {
           type: "circle",
         },
         size: {
-          value: { min: 1, max: 2 },
+          value: { min: 1, max: 4 },
+          animation: {
+            enable: true,
+            speed: 2,
+            sync: false,
+          }
         },
       },
       detectRetina: true,

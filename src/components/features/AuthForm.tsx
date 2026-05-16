@@ -32,15 +32,16 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 interface AuthFormProps {
     onAuthSuccess: () => void;
+    initialTab?: 'login' | 'signup';
 }
 
-export function AuthForm({ onAuthSuccess }: AuthFormProps) {
+export function AuthForm({ onAuthSuccess, initialTab = 'login' }: AuthFormProps) {
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [activeTab, setActiveTab] = useState('login');
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   const handleAuthSuccess = async (idToken: string) => {
     // Call the API route to set the session cookie

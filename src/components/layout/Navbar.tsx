@@ -9,6 +9,7 @@ import { Menu, User as UserIcon, LogOut } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -21,14 +22,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { auth } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
-import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { AuthForm } from '../features/AuthForm';
 
 const navItems = [
-  { href: '/#features', label: 'Features' },
-  { href: '/#how-it-works', label: 'How it Works' },
-  { href: '/#pricing', label: 'Pricing' },
+  { href: '/product', label: 'Product' },
+  { href: '/how-it-works', label: 'How it Works' },
+  { href: '/pricing', label: 'Pricing' },
+  { href: '/docs', label: 'Docs' },
+  { href: '/support', label: 'Support' },
 ];
 
 const AuthButton = ({ isMobile = false }) => {
@@ -94,10 +96,6 @@ const AuthButton = ({ isMobile = false }) => {
     );
   }
 
-  // Temporarily hide login buttons for development
-  return null;
-
-  /*
   // Auth Dialog Trigger & Content
   return (
     <>
@@ -120,34 +118,75 @@ const AuthButton = ({ isMobile = false }) => {
       </Dialog>
     </>
   );
-  */
 };
 
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      setIsScrolled(currentScrollY > 50);
+
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-lg">
-      <div className="container flex h-20 max-w-screen-2xl items-center justify-between">
-        <Link href="/" className="flex items-center space-x-2" aria-label="EatInformed Home">
-          <EatInformedLogo width={36} height={36} />
-           <span className="font-bold text-xl hidden sm:inline-block bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">EatInformed</span>
+    <header
+      className={cn(
+        "fixed top-4 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ease-in-out w-[95%] max-w-screen-xl",
+        isVisible ? "translate-y-0 opacity-100" : "-translate-y-[150%] opacity-0"
+      )}
+    >
+      <div
+        className={cn(
+          "flex items-center justify-between px-6 py-3 rounded-2xl border transition-all duration-300",
+          isScrolled
+            ? "bg-background/90 backdrop-blur-xl border-border/40 shadow-2xl shadow-primary/10"
+            : "bg-background/40 backdrop-blur-md border-border/20 shadow-lg"
+        )}
+      >
+        <Link href="/" className="flex items-center space-x-2 transform transition-transform duration-200 hover:scale-105" aria-label="EatInformed Home">
+          <EatInformedLogo width={32} height={32} />
+           <span className="font-bold text-lg hidden sm:inline-block bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">EatInformed</span>
         </Link>
 
-        <nav className="hidden md:flex items-center space-x-8 text-sm font-medium">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "relative transition-colors hover:text-primary after:absolute after:bottom-[-2px] after:left-0 after:h-[2px] after:w-0 after:bg-primary after:transition-all after:duration-300 hover:after:w-full",
-                pathname === item.href ? "text-primary" : "text-foreground/60"
-              )}
-            >
-              {item.label}
-            </Link>
-          ))}
+        <nav className="hidden md:flex items-center gap-2 lg:gap-6 text-sm font-medium">
+          {navItems.map((item, index) => {
+             const isActive = pathname === item.href;
+             return (
+               <Link
+                 key={item.href}
+                 href={item.href}
+                 className={cn(
+                   "relative text-foreground/80 hover:text-foreground transition-all duration-300 group px-3 py-1 rounded-lg hover:bg-foreground/5 transform hover:scale-110",
+                   index % 2 === 0 ? "hover:rotate-1 hover:skew-x-1" : "hover:-rotate-1 hover:-skew-x-1",
+                   isActive && "text-primary font-semibold bg-primary/10"
+                 )}
+               >
+                 {item.label}
+                 <span className={cn(
+                   "absolute -bottom-1 left-1/2 transform -translate-x-1/2 h-0.5 bg-primary transition-all duration-200",
+                   isActive ? "w-4" : "w-0 group-hover:w-4"
+                 )}></span>
+               </Link>
+             );
+          })}
         </nav>
 
         <div className="flex items-center space-x-2">
@@ -156,11 +195,11 @@ export default function Navbar() {
           <div className="md:hidden">
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Open menu">
+                <Button variant="ghost" size="icon" aria-label="Open menu" className="rounded-xl">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background/95 backdrop-blur-lg p-0">
+              <SheetContent side="right" className="w-[280px] sm:w-[320px] bg-background/95 backdrop-blur-lg p-0 border-l border-white/10 shadow-2xl">
                 <div className="flex flex-col h-full">
                   <div className="p-6">
                     <Link href="/" className="flex items-center space-x-2 mb-8" aria-label="EatInformed Home">
@@ -175,11 +214,12 @@ export default function Navbar() {
                             <Link
                               href={item.href}
                               className={cn(
-                                "block rounded-md p-3 transition-colors hover:bg-secondary text-base",
-                                pathname === item.href ? "bg-secondary text-primary" : "text-foreground/80"
+                                "block rounded-xl p-3 transition-colors hover:bg-white/5 text-base relative overflow-hidden group",
+                                pathname === item.href ? "bg-primary/10 text-primary font-medium" : "text-foreground/80"
                               )}
                             >
-                              {item.label}
+                              <span className="relative z-10">{item.label}</span>
+                              <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-300"></div>
                             </Link>
                         </SheetClose>
                       ))}

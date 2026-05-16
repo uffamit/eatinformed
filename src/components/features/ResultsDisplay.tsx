@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import Image from 'next/image';
 import { SITE_URL } from '@/lib/constants';
+import { motion } from 'framer-motion';
 
 interface ResultsDisplayProps {
   ingredientsData: ProductAnalysisOutput | null;
@@ -21,16 +22,33 @@ interface ResultsDisplayProps {
   imagePreviewUrl?: string | null; 
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
+
 const ResultSection = ({ title, icon, children, hidden = false }: { title: string, icon: React.ReactNode, children: React.ReactNode, hidden?: boolean }) => {
   if (hidden) return null;
   return (
-    <div className="py-4">
+    <motion.div variants={itemVariants} className="py-4 bg-white/5 p-6 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors">
       <h3 className="text-xl font-bold flex items-center mb-4 text-foreground/90">
-        {icon}
-        <span className="ml-3">{title}</span>
+        <div className="p-2 bg-primary/10 rounded-full mr-3">
+          {icon}
+        </div>
+        <span>{title}</span>
       </h3>
-      <div className="pl-10 text-base text-muted-foreground">{children}</div>
-    </div>
+      <div className="text-base text-muted-foreground">{children}</div>
+    </motion.div>
   );
 };
 
@@ -194,149 +212,158 @@ export default function ResultsDisplay({ ingredientsData, assessmentData, imageP
             className={`h-8 w-8 ${index < Math.round(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
           />
         ))}
-        <span className="ml-3 text-3xl font-bold">{rating > 0 ? `${rating.toFixed(1)}/5` : 'N/A'}</span>
+        <span className="ml-3 text-3xl font-bold text-foreground">{rating > 0 ? `${rating.toFixed(1)}/5` : 'N/A'}</span>
       </div>
     );
   };
 
   return (
-    <Card ref={resultsCardRef} className="w-full max-w-4xl mx-auto bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl shadow-black/30 mt-8">
-      <CardHeader className="text-center p-8">
-        {imagePreviewUrl && (
-          <div className="mb-6 flex justify-center">
-            <Image 
-              src={imagePreviewUrl} 
-              alt="Scanned product label"
-              width={240}
-              height={240}
-              className="max-h-60 w-auto rounded-lg border-2 border-white/10 object-contain"
-            />
-          </div>
-        )}
-        <CardTitle className="text-4xl font-black">
-            {isZeroRatingScenario ? "Analysis Incomplete" : "Analysis Complete"}
-        </CardTitle>
-        <div className="mt-6 flex flex-col items-center gap-2">
-         {renderStars(assessmentData.rating)}
-         <p className="text-muted-foreground text-lg">Health Rating</p>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4 px-4 md:px-8">
-        <Separator className="bg-white/10" />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-            <ResultSection title="Dietary Suitability" icon={<ClipboardX className="h-6 w-6 text-primary" />} hidden={!dietInfo?.suitability || dietInfo.suitability.length === 0}>
-                <BulletList items={dietInfo?.suitability || []} variant="suitability" />
-            </ResultSection>
-
-            <ResultSection title="Warnings" icon={<AlertTriangle className="h-6 w-6 text-yellow-400" />} hidden={!assessmentData.warnings || assessmentData.warnings.length === 0 || (isZeroRatingScenario && assessmentData.warnings[0]?.includes('Unable to evaluate'))}>
-                <BulletList items={assessmentData.warnings} variant="warnings" />
-            </ResultSection>
-
-            <ResultSection title="Pros" icon={<ThumbsUp className="h-6 w-6 text-green-500" />} hidden={!assessmentData.pros || assessmentData.pros.length === 0 || isZeroRatingScenario}>
-               <BulletList items={assessmentData.pros} variant="pros" />
-            </ResultSection>
-
-            <ResultSection title="Cons" icon={<ThumbsDown className="h-6 w-6 text-red-500" />} hidden={!assessmentData.cons || assessmentData.cons.length === 0 || isZeroRatingScenario}>
-              <BulletList items={assessmentData.cons} variant="cons" />
-            </ResultSection>
-        </div>
-        
-        <Separator className="bg-white/10" />
-
-        <ResultSection title="Allergen Information" icon={<ShieldAlert className="h-6 w-6 text-primary" />} hidden={!dietInfo?.allergens || dietInfo.allergens.length === 0}>
-           <p className="font-medium text-lg text-yellow-300">Contains or may contain: {dietInfo?.allergens?.join(', ')}.</p>
-        </ResultSection>
-        
-        <Separator className="bg-white/10" />
-
-        <ResultSection title="Ingredient Analysis" icon={<ListChecks className="h-6 w-6 text-primary" />} hidden={!assessmentData.ingredientAnalysis || assessmentData.ingredientAnalysis.length === 0}>
-          <Accordion type="single" collapsible className="w-full">
-            {assessmentData.ingredientAnalysis.map((item, index) => (
-              <AccordionItem value={`item-${index}`} key={index}>
-                <AccordionTrigger className="text-base font-medium hover:no-underline">
-                  <div className="flex items-center">
-                    {item.isAllergen && <ShieldAlert className="h-5 w-5 text-yellow-400 mr-2" />}
-                    {item.isControversial && <AlertTriangle className="h-5 w-5 text-orange-500 mr-2" />}
-                    <span>{item.ingredient}</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground text-sm space-y-2 pl-4 border-l-2 border-primary/20 ml-2">
-                  <p><span className="font-semibold text-foreground/80">What it is:</span> {item.description}</p>
-                  <p><span className="font-semibold text-foreground/80">Why it&apos;s here:</span> {item.purpose}</p>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        </ResultSection>
-        
-        <Separator className="bg-white/10" />
-        
-        <ResultSection title="Nutritional Information" icon={<FileText className="h-6 w-6 text-primary" />} hidden={!nutrition || (!hasStructuredNutrition && !nutrition.rawText)}>
-          {hasStructuredNutrition ? (
-            <div className="overflow-hidden rounded-md border border-white/10 bg-black/20">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b-white/10">
-                    <TableHead className="font-bold text-lg text-white">Nutrient</TableHead>
-                    <TableHead className="text-right font-bold text-lg text-white">{nutrition.servingSizeLabel ? `Per ${nutrition.servingSizeLabel.replace(/Serving size: /i, '') || 'Serving'}` : 'Per Serving'}</TableHead>
-                    <TableHead className="text-right font-bold text-lg text-white">Per 100g/mL</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {nutrition.nutrients?.map((item, index) => (
-                    <TableRow key={index} className="border-b-0 hover:bg-white/5 transition-colors">
-                      <TableCell className="font-medium">{item.nutrient}</TableCell>
-                      <TableCell className="text-right">{item.perServing ?? 'N/A'}</TableCell>
-                      <TableCell className="text-right">{item.per100mL ?? 'N/A'}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <p className="text-base text-muted-foreground whitespace-pre-wrap leading-relaxed">{nutrition?.rawText}</p>
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      <Card ref={resultsCardRef} className="w-full max-w-4xl mx-auto bg-card/80 backdrop-blur-xl border border-white/10 shadow-2xl mt-8">
+        <CardHeader className="text-center p-8">
+          {imagePreviewUrl && (
+            <motion.div variants={itemVariants} className="mb-6 flex justify-center">
+              <Image 
+                src={imagePreviewUrl} 
+                alt="Scanned product label"
+                width={240}
+                height={240}
+                className="max-h-60 w-auto rounded-xl border-2 border-primary/20 shadow-lg object-contain bg-black/40"
+              />
+            </motion.div>
           )}
-          {hasStructuredNutrition && <NutritionChart data={nutrition.nutrients!} servingSizeLabel={nutrition.servingSizeLabel} />}
-        </ResultSection>
-      
-      </CardContent>
-      <CardFooter className="flex flex-col items-center space-y-4 p-8">
-        <div className="flex space-x-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-full">
-                  <Share2 className="mr-2 h-4 w-4" /> Share Results
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={handleDownloadImage}>
-                  <Download className="mr-2 h-4 w-4" />
-                  <span>Download as Image</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleCopySummary}>
-                  <Copy className="mr-2 h-4 w-4" />
-                  <span>Copy Summary</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleShare('twitter')}>
-                  <Twitter className="mr-2 h-4 w-4" />
-                  <span>Share on X (Twitter)</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleShare('whatsapp')}>
-                  <WhatsAppIcon className="mr-2 h-4 w-4" />
-                  <span>Share on WhatsApp</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-        <p className="text-xs text-muted-foreground/60 px-4 text-center mt-4">
-          Disclaimer: Information provided by EatInformed is for general guidance only and not a substitute for professional medical or nutritional advice. Always consult with a qualified healthcare provider for any health concerns or before making any decisions related to your health or diet. Ingredient data and regulations can change; verify critical information with product packaging and official sources.
-        </p>
-        <div className="w-full h-24 bg-white/5 rounded-md flex items-center justify-center text-muted-foreground/50 text-sm mt-6 border border-white/10">
-            [ Placeholder for Non-Intrusive Ad ]
-        </div>
-      </CardFooter>
-    </Card>
+          <motion.div variants={itemVariants}>
+            <CardTitle className="text-4xl font-black drop-shadow-md">
+                {isZeroRatingScenario ? "Analysis Incomplete" : "Analysis Complete"}
+            </CardTitle>
+            <div className="mt-6 flex flex-col items-center gap-2 bg-black/20 p-4 rounded-3xl border border-white/5 w-fit mx-auto">
+             {renderStars(assessmentData.rating)}
+             <p className="text-primary font-medium tracking-wide uppercase text-sm mt-1">Health Rating</p>
+            </div>
+          </motion.div>
+        </CardHeader>
+        <CardContent className="space-y-6 px-4 md:px-8">
+          
+          <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ResultSection title="Dietary Suitability" icon={<ClipboardX className="h-6 w-6 text-primary" />} hidden={!dietInfo?.suitability || dietInfo.suitability.length === 0}>
+                  <BulletList items={dietInfo?.suitability || []} variant="suitability" />
+              </ResultSection>
+
+              <ResultSection title="Warnings" icon={<AlertTriangle className="h-6 w-6 text-yellow-400" />} hidden={!assessmentData.warnings || assessmentData.warnings.length === 0 || (isZeroRatingScenario && assessmentData.warnings[0]?.includes('Unable to evaluate'))}>
+                  <BulletList items={assessmentData.warnings} variant="warnings" />
+              </ResultSection>
+
+              <ResultSection title="Pros" icon={<ThumbsUp className="h-6 w-6 text-green-500" />} hidden={!assessmentData.pros || assessmentData.pros.length === 0 || isZeroRatingScenario}>
+                 <BulletList items={assessmentData.pros} variant="pros" />
+              </ResultSection>
+
+              <ResultSection title="Cons" icon={<ThumbsDown className="h-6 w-6 text-red-500" />} hidden={!assessmentData.cons || assessmentData.cons.length === 0 || isZeroRatingScenario}>
+                <BulletList items={assessmentData.cons} variant="cons" />
+              </ResultSection>
+          </motion.div>
+          
+          <ResultSection title="Allergen Information" icon={<ShieldAlert className="h-6 w-6 text-primary" />} hidden={!dietInfo?.allergens || dietInfo.allergens.length === 0}>
+             <p className="font-medium text-lg text-yellow-400 bg-yellow-400/10 p-4 rounded-xl border border-yellow-400/20">
+               Contains or may contain: <span className="font-bold">{dietInfo?.allergens?.join(', ')}</span>.
+             </p>
+          </ResultSection>
+          
+          <ResultSection title="Ingredient Analysis" icon={<ListChecks className="h-6 w-6 text-primary" />} hidden={!assessmentData.ingredientAnalysis || assessmentData.ingredientAnalysis.length === 0}>
+            <Accordion type="single" collapsible className="w-full bg-black/20 rounded-xl border border-white/5 p-2">
+              {assessmentData.ingredientAnalysis.map((item, index) => (
+                <AccordionItem value={`item-${index}`} key={index} className="border-b-white/5 last:border-0">
+                  <AccordionTrigger className="text-base font-medium hover:no-underline px-4 rounded-lg hover:bg-white/5">
+                    <div className="flex items-center">
+                      {item.isAllergen && <ShieldAlert className="h-5 w-5 text-yellow-400 mr-2 shrink-0" />}
+                      {item.isControversial && <AlertTriangle className="h-5 w-5 text-orange-500 mr-2 shrink-0" />}
+                      <span className="text-left">{item.ingredient}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground text-sm space-y-3 p-4 bg-black/40 rounded-lg mt-1 border border-white/5">
+                    <p><span className="font-semibold text-primary">What it is:</span> {item.description}</p>
+                    <p><span className="font-semibold text-primary">Why it&apos;s here:</span> {item.purpose}</p>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </ResultSection>
+          
+          <ResultSection title="Nutritional Information" icon={<FileText className="h-6 w-6 text-primary" />} hidden={!nutrition || (!hasStructuredNutrition && !nutrition.rawText)}>
+            {hasStructuredNutrition ? (
+              <div className="overflow-hidden rounded-xl border border-white/10 bg-black/40 shadow-inner">
+                <Table>
+                  <TableHeader className="bg-white/5">
+                    <TableRow className="border-b-white/10">
+                      <TableHead className="font-bold text-lg text-white">Nutrient</TableHead>
+                      <TableHead className="text-right font-bold text-lg text-white">{nutrition.servingSizeLabel ? `Per ${nutrition.servingSizeLabel.replace(/Serving size: /i, '') || 'Serving'}` : 'Per Serving'}</TableHead>
+                      <TableHead className="text-right font-bold text-lg text-white">Per 100g/mL</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {nutrition.nutrients?.map((item, index) => (
+                      <TableRow key={index} className="border-b-white/5 hover:bg-white/5 transition-colors">
+                        <TableCell className="font-medium">{item.nutrient}</TableCell>
+                        <TableCell className="text-right">{item.perServing ?? 'N/A'}</TableCell>
+                        <TableCell className="text-right">{item.per100mL ?? 'N/A'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="bg-black/40 p-4 rounded-xl border border-white/5">
+                <p className="text-base text-muted-foreground whitespace-pre-wrap leading-relaxed">{nutrition?.rawText}</p>
+              </div>
+            )}
+            {hasStructuredNutrition && (
+              <div className="mt-8 bg-black/20 p-4 rounded-xl border border-white/5">
+                <NutritionChart data={nutrition.nutrients!} servingSizeLabel={nutrition.servingSizeLabel} />
+              </div>
+            )}
+          </ResultSection>
+        
+        </CardContent>
+        <CardFooter className="flex flex-col items-center space-y-6 p-8 bg-black/20 rounded-b-xl border-t border-white/5">
+          <motion.div variants={itemVariants} className="flex space-x-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="rounded-full border-primary/50 hover:bg-primary/10">
+                    <Share2 className="mr-2 h-4 w-4" /> Share Results
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-card border-white/10">
+                  <DropdownMenuItem onClick={handleDownloadImage} className="hover:bg-white/10">
+                    <Download className="mr-2 h-4 w-4" />
+                    <span>Download as Image</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleCopySummary} className="hover:bg-white/10">
+                    <Copy className="mr-2 h-4 w-4" />
+                    <span>Copy Summary</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem onClick={() => handleShare('twitter')} className="hover:bg-white/10">
+                    <Twitter className="mr-2 h-4 w-4" />
+                    <span>Share on X (Twitter)</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleShare('whatsapp')} className="hover:bg-white/10">
+                    <WhatsAppIcon className="mr-2 h-4 w-4" />
+                    <span>Share on WhatsApp</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+          </motion.div>
+          <motion.p variants={itemVariants} className="text-xs text-muted-foreground/60 px-4 text-center">
+            Disclaimer: Information provided by EatInformed is for general guidance only and not a substitute for professional medical or nutritional advice. Always consult with a qualified healthcare provider for any health concerns or before making any decisions related to your health or diet. Ingredient data and regulations can change; verify critical information with product packaging and official sources.
+          </motion.p>
+          <motion.div variants={itemVariants} className="w-full h-24 bg-white/5 rounded-xl flex items-center justify-center text-muted-foreground/50 text-sm border border-white/10 border-dashed">
+              [ Placeholder for Non-Intrusive Ad ]
+          </motion.div>
+        </CardFooter>
+      </Card>
+    </motion.div>
   );
 }

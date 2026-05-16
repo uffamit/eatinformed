@@ -4,101 +4,99 @@
 
 @layer base {
   :root {
-    /* New Color Palette: Science meets Nutrition */
-    --background: 222 47% 11%; /* #0F172A */
-    --foreground: 210 40% 96%; /* #E2E8F0 */
+    /* Pure Black & Dark Shades Theme */
+    --background: 0 0% 0%; /* Pure black */
+    --foreground: 0 0% 98%; /* Almost white for text */
     
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 96%;
+    --card: 0 0% 4%; /* Very dark gray */
+    --card-foreground: 0 0% 98%;
     
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 96%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 98%;
     
-    --primary: 142.1 70.6% 45.3%; /* #22C55E */
-    --primary-foreground: 210 40% 98%;
+    --primary: 142.1 70.6% 45.3%; /* Existing green */
+    --primary-foreground: 0 0% 0%; /* Black text on green */
     
-    --secondary: 215 28% 21%; /* #334155 */
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 0 0% 9%; /* Darker gray */
+    --secondary-foreground: 0 0% 98%;
     
-    --muted: 222 47% 16%; /* #1E293B */
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 65%;
     
-    --accent: 204 94% 60%; /* #38BDF8 */
-    --accent-foreground: 222 47% 11%;
+    --accent: 142.1 70.6% 45.3%; /* Use green for accent */
+    --accent-foreground: 0 0% 0%;
     
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
     
-    --border: 222 47% 16%; /* #1E293B */
-    --input: 222 47% 16%;
+    --border: 0 0% 12%; /* Dark gray borders */
+    --input: 0 0% 12%;
     --ring: 142.1 70.6% 45.3%;
     
-    --radius: 0.5rem;
-
-    /* Chart Colors */
-    --chart-1: 142.1 70.6% 45.3%; /* Green */
-    --chart-2: 204 94% 60%; /* Blue */
-    --chart-3: 215 28% 40%;
-    --chart-4: 40 80% 60%;
-    --chart-5: 20 70% 55%;
-
-    /* Sidebar - Unchanged for now, can be themed separately if needed */
-    --sidebar-background: 120 10% 12%;
-    --sidebar-foreground: 120 15% 85%;
-    --sidebar-primary: 96 38% 52%;
-    --sidebar-primary-foreground: 120 25% 10%;
-    --sidebar-accent: 35 29% 40%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 120 10% 20%;
-    --sidebar-ring: 96 38% 60%;
-  }
-
-  .dark {
-    /* Same as :root for a consistent dark theme */
-    --background: 222 47% 11%;
-    --foreground: 210 40% 96%;
-    
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 96%;
-    
-    --popover: 222 47% 11%;
-    --popover-foreground: 210 40% 96%;
-    
-    --primary: 142.1 70.6% 45.3%;
-    --primary-foreground: 210 40% 98%;
-    
-    --secondary: 215 28% 21%;
-    --secondary-foreground: 210 40% 98%;
-    
-    --muted: 222 47% 16%;
-    --muted-foreground: 215 20% 65%;
-    
-    --accent: 204 94% 60%;
-    --accent-foreground: 222 47% 11%;
-    
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --border: 222 47% 16%;
-    --input: 222 47% 16%;
-    --ring: 142.1 70.6% 45.3%;
+    --radius: 1rem; /* More rounded corners for modern feel */
 
     /* Chart Colors */
     --chart-1: 142.1 70.6% 45.3%;
-    --chart-2: 204 94% 60%;
-    --chart-3: 215 28% 40%;
-    --chart-4: 40 80% 60%;
-    --chart-5: 20 70% 55%;
+    --chart-2: 0 0% 30%;
+    --chart-3: 0 0% 50%;
+    --chart-4: 0 0% 70%;
+    --chart-5: 0 0% 90%;
 
     /* Sidebar */
-    --sidebar-background: 120 10% 12%;
-    --sidebar-foreground: 120 15% 85%;
-    --sidebar-primary: 96 38% 52%;
-    --sidebar-primary-foreground: 120 25% 10%;
-    --sidebar-accent: 35 29% 40%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 120 10% 20%;
-    --sidebar-ring: 96 38% 60%;
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 142.1 70.6% 45.3%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 142.1 70.6% 45.3%;
+  }
+
+  .dark {
+    /* Same as :root for pure black theme */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 98%;
+    
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 142.1 70.6% 45.3%;
+    --primary-foreground: 0 0% 0%;
+    
+    --secondary: 0 0% 9%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 65%;
+    
+    --accent: 142.1 70.6% 45.3%;
+    --accent-foreground: 0 0% 0%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 0 0% 12%;
+    --input: 0 0% 12%;
+    --ring: 142.1 70.6% 45.3%;
+
+    --chart-1: 142.1 70.6% 45.3%;
+    --chart-2: 0 0% 30%;
+    --chart-3: 0 0% 50%;
+    --chart-4: 0 0% 70%;
+    --chart-5: 0 0% 90%;
+
+    --sidebar-background: 0 0% 4%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 142.1 70.6% 45.3%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 142.1 70.6% 45.3%;
   }
 }
 
@@ -107,7 +105,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased;
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary/30 selection:text-primary-foreground;
     position: relative;
     overflow-x: hidden;
   }

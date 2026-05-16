@@ -14,6 +14,7 @@ import { Loader2, UploadCloud, Camera, RefreshCw, AlertCircle, ScanLine } from '
 import ResultsDisplay from '@/components/features/ResultsDisplay';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function CheckPageClient() {
   const { toast } = useToast();
@@ -266,134 +267,178 @@ export function CheckPageClient() {
 
   if (analysisData) {
     return (
-      <div>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <ResultsDisplay ingredientsData={analysisData} assessmentData={analysisData} imagePreviewUrl={imagePreviewUrl} />
-        <div className="text-center mt-8">
-          <Button onClick={handleReset} size="lg" className="rounded-full">
+        <div className="text-center mt-12 mb-8">
+          <Button onClick={handleReset} size="lg" className="rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all hover:-translate-y-1">
             <RefreshCw className="mr-2 h-5 w-5" />
             Scan Another Product
           </Button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <Card className="w-full max-w-xl mx-auto bg-white/5 backdrop-blur-lg border border-white/10 shadow-2xl shadow-black/20">
-      <CardHeader>
-        <CardTitle className="text-3xl font-headline flex items-center justify-center">
-            <ScanLine className="mr-3 h-8 w-8 text-primary"/>
-            Scan a Product
-        </CardTitle>
-        <CardDescription>
-          {imagePreviewUrl ? "Confirm the image is clear, then start the analysis." : "Upload a clear image of a food label or use your camera to get an instant health analysis."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center space-y-4 p-8">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="text-lg text-muted-foreground">{loadingStep}</p>
-            <p className="text-sm text-muted-foreground">This may take a moment.</p>
-          </div>
-        ) : imagePreviewUrl ? (
-          <div className="flex flex-col items-center space-y-4 p-4">
-            <p className="font-semibold text-lg">Is this image clear?</p>
-            <Image 
-              src={imagePreviewUrl} 
-              alt="Selected food label preview" 
-              width={240}
-              height={240}
-              className="max-h-60 w-auto rounded-md border-2 border-primary object-contain"
-            />
-            <p className="text-sm text-muted-foreground text-center">
-              A clear photo of the ingredients list provides the best results.
-            </p>
-            <div className="flex w-full justify-center space-x-4 pt-4">
-              <Button variant="outline" onClick={handleReset} className="rounded-full">
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Try Again
-              </Button>
-              <Button onClick={() => handleScan(imagePreviewUrl!)} className="rounded-full">
-                <ScanLine className="mr-2 h-4 w-4" />
-                Analyze Image
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <Tabs defaultValue="upload" className="w-full" onValueChange={handleTabChange}>
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="upload">
-                <UploadCloud className="mr-2 h-5 w-5"/> Upload Image
-              </TabsTrigger>
-              <TabsTrigger value="camera">
-                <Camera className="mr-2 h-5 w-5" /> Use Camera
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="upload" className="mt-6">
-                <div
-                  onDragEnter={handleDragEnter}
-                  onDragLeave={handleDragLeave}
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  className={cn(
-                    "flex flex-col items-center justify-center space-y-2 p-6 border-2 border-dashed rounded-lg transition-colors",
-                    isDragging ? "border-primary bg-primary/10" : "border-white/20"
-                  )}
-                >
-                    <UploadCloud className="h-12 w-12 text-muted-foreground" />
-                    <Label htmlFor="file-upload" className="text-lg font-semibold text-primary cursor-pointer hover:underline">
-                        Click to upload an image
-                    </Label>
-                    <p className="text-sm text-muted-foreground">or drag and drop</p>
-                    <p className="text-xs text-muted-foreground">PNG, JPG, or WEBP</p>
-                    <Input
-                        id="file-upload"
-                        type="file"
-                        accept="image/png, image/jpeg, image/webp"
-                        className="hidden"
-                        onChange={handleFileChange}
-                        ref={fileInputRef}
-                    />
-                </div>
-            </TabsContent>
-            <TabsContent value="camera" className="mt-6">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card className="w-full max-w-xl mx-auto bg-card/60 backdrop-blur-xl border border-white/10 shadow-2xl mt-10">
+        <CardHeader>
+          <CardTitle className="text-3xl font-headline flex items-center justify-center text-foreground drop-shadow-sm">
+              <ScanLine className="mr-3 h-8 w-8 text-primary"/>
+              Scan a Product
+          </CardTitle>
+          <CardDescription className="text-center text-muted-foreground/80">
+            {imagePreviewUrl ? "Confirm the image is clear, then start the analysis." : "Upload a clear image of a food label or use your camera to get an instant health analysis."}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div 
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center justify-center space-y-6 py-12"
+            >
               <div className="relative">
-                <video ref={videoRef} className="w-full aspect-video rounded-md bg-muted" autoPlay muted playsInline />
-                <canvas ref={canvasRef} className="hidden" />
-                {hasCameraPermission === false && (
-                    <Alert variant="destructive" className="mt-4">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Camera Access Required</AlertTitle>
-                        <AlertDescription>
-                          Please allow camera access in your browser to use this feature.
-                        </AlertDescription>
-                    </Alert>
-                )}
-                 {hasCameraPermission === true && (
-                     <div className="mt-4 flex justify-center">
-                        <Button onClick={handleCapture} size="lg" className="rounded-full">
-                            <Camera className="mr-2 h-5 w-5" /> Capture Image
-                        </Button>
-                     </div>
-                 )}
-                 {hasCameraPermission === null && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
-                 )}
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
+                <Loader2 className="h-16 w-16 animate-spin text-primary relative z-10" />
               </div>
-            </TabsContent>
-          </Tabs>
-        )}
-        {error && (
-            <Alert variant="destructive" className="mt-6">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Analysis Error</AlertTitle>
-                <AlertDescription>{error}</AlertDescription>
-            </Alert>
-        )}
-      </CardContent>
-    </Card>
+              <div className="text-center space-y-2">
+                <p className="text-xl font-medium text-foreground">{loadingStep}</p>
+                <p className="text-sm text-muted-foreground">This may take a moment.</p>
+              </div>
+            </motion.div>
+          ) : imagePreviewUrl ? (
+            <motion.div 
+              key="preview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex flex-col items-center space-y-6 py-6"
+            >
+              <p className="font-semibold text-lg text-foreground">Is this image clear?</p>
+              <motion.div whileHover={{ scale: 1.05 }} className="relative rounded-xl overflow-hidden border-2 border-primary/50 shadow-lg shadow-primary/20">
+                <Image 
+                  src={imagePreviewUrl} 
+                  alt="Selected food label preview" 
+                  width={240}
+                  height={240}
+                  className="max-h-60 w-auto object-contain bg-black/40"
+                />
+              </motion.div>
+              <p className="text-sm text-muted-foreground text-center px-4">
+                A clear photo of the ingredients list provides the best results.
+              </p>
+              <div className="flex w-full justify-center space-x-4 pt-4">
+                <Button variant="outline" onClick={handleReset} className="rounded-full border-white/10 hover:bg-white/5">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Try Again
+                </Button>
+                <Button onClick={() => handleScan(imagePreviewUrl!)} className="rounded-full shadow-lg shadow-primary/20 hover:shadow-primary/40">
+                  <ScanLine className="mr-2 h-4 w-4" />
+                  Analyze Image
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="upload" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <Tabs defaultValue="upload" className="w-full" onValueChange={handleTabChange}>
+                <TabsList className="grid w-full grid-cols-2 bg-black/40 border border-white/5 rounded-full p-1">
+                  <TabsTrigger value="upload" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
+                    <UploadCloud className="mr-2 h-5 w-5"/> Upload Image
+                  </TabsTrigger>
+                  <TabsTrigger value="camera" className="rounded-full data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">
+                    <Camera className="mr-2 h-5 w-5" /> Use Camera
+                  </TabsTrigger>
+                </TabsList>
+                <div className="mt-8">
+                  <TabsContent value="upload" className="m-0">
+                      <div
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        className={cn(
+                          "flex flex-col items-center justify-center space-y-4 p-10 border-2 border-dashed rounded-2xl transition-all duration-300",
+                          isDragging ? "border-primary bg-primary/10 scale-[1.02]" : "border-white/20 hover:border-primary/50 hover:bg-white/5"
+                        )}
+                      >
+                          <div className="p-4 rounded-full bg-primary/10 text-primary mb-2">
+                            <UploadCloud className="h-10 w-10" />
+                          </div>
+                          <div className="text-center">
+                            <Label htmlFor="file-upload" className="text-lg font-semibold text-primary cursor-pointer hover:underline">
+                                Click to upload an image
+                            </Label>
+                            <p className="text-sm text-muted-foreground mt-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground/60 px-2 py-1 bg-white/5 rounded-md">PNG, JPG, or WEBP</p>
+                          <Input
+                              id="file-upload"
+                              type="file"
+                              accept="image/png, image/jpeg, image/webp"
+                              className="hidden"
+                              onChange={handleFileChange}
+                              ref={fileInputRef}
+                          />
+                      </div>
+                  </TabsContent>
+                  <TabsContent value="camera" className="m-0">
+                    <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-black/40 shadow-inner">
+                      <video ref={videoRef} className="w-full aspect-video object-cover" autoPlay muted playsInline />
+                      <canvas ref={canvasRef} className="hidden" />
+                      {hasCameraPermission === false && (
+                          <div className="p-6">
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Camera Access Required</AlertTitle>
+                                <AlertDescription>
+                                  Please allow camera access in your browser to use this feature.
+                                </AlertDescription>
+                            </Alert>
+                          </div>
+                      )}
+                       {hasCameraPermission === true && (
+                           <div className="absolute bottom-4 left-0 right-0 flex justify-center">
+                              <Button onClick={handleCapture} size="lg" className="rounded-full shadow-lg shadow-black/50 backdrop-blur-md bg-primary/90 hover:bg-primary border border-white/20 hover:scale-105 transition-transform">
+                                  <Camera className="mr-2 h-5 w-5" /> Capture Image
+                              </Button>
+                           </div>
+                       )}
+                       {hasCameraPermission === null && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm">
+                              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                              <p className="text-sm text-white/80">Requesting camera access...</p>
+                          </div>
+                       )}
+                    </div>
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </motion.div>
+          )}
+          </AnimatePresence>
+          {error && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6">
+                <Alert variant="destructive" className="bg-red-500/10 border-red-500/20">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Analysis Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
