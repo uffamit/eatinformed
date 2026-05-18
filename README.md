@@ -8,32 +8,32 @@
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 <h3 align="center">
-  🤖 AI-powered web application to analyze food labels with instant insights into nutritional facts, ingredient breakdown, and potential health risks.
+  AI-powered web application to analyze food labels with instant insights into nutritional facts, ingredient breakdown, and potential health risks.
 </h3>
 
 <h3 align="center">
-  📸 Upload. 🔍 Analyze. 💪 Stay Informed.
+  Upload. Analyze. Stay Informed.
 </h3>
 
 ---
 
-## 🌟 Overview
+## Overview
 
-**EatInformed** empowers users to make healthier food choices by leveraging advanced AI to decode complex food labels. Simply upload an image of a food product label, and receive comprehensive analysis including nutritional information, ingredient breakdown, allergen warnings, and health risk assessments—all powered by Google Gemini AI with Firebase Genkit integration.
+**EatInformed** empowers users to make healthier food choices by leveraging advanced AI to decode complex food labels. Simply upload an image of a food product label, and receive comprehensive analysis including nutritional information, ingredient breakdown, allergen warnings, and health risk assessments-all powered by Google Gemini AI with Firebase Genkit integration.
 
 Built with modern web technologies and designed for performance, EatInformed delivers real-time analysis with a beautiful, responsive interface optimized for all devices.
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🤖 AI-Powered Intelligence
+### AI-Powered Intelligence
 - **Google Gemini AI Integration:** Advanced multimodal AI for accurate image and text analysis
 - **Firebase Genkit Framework:** Robust AI workflow orchestration and management
 - **Real-Time Processing:** Instant analysis with streaming responses
 - **Multi-Language Support:** Analyze labels in various languages
 
-### 📊 Comprehensive Analysis
+### Comprehensive Analysis
 - **Nutritional Facts Extraction:** Complete breakdown of calories, macros, vitamins, and minerals
 - **Ingredient Analysis:** Detailed examination of all ingredients with health implications
 - **Allergen Detection:** Automatic identification of common allergens (nuts, dairy, gluten, etc.)
@@ -41,20 +41,20 @@ Built with modern web technologies and designed for performance, EatInformed del
 - **Additive Identification:** Recognition and explanation of E-numbers and preservatives
 - **Dietary Compliance:** Check against vegan, vegetarian, keto, and other dietary restrictions
 
-### 🎨 Modern User Experience
+### Modern User Experience
 - **Responsive Design:** Seamless experience across desktop, tablet, and mobile devices
 - **Beautiful UI Components:** Built with Radix UI primitives and Tailwind CSS
 - **Interactive Visualizations:** Charts and graphs using Recharts
 - **Smooth Animations:** Enhanced with TailwindCSS Animate and TSParticles
 - **Dark Mode Support:** Eye-friendly interface for all lighting conditions
 
-### 🔐 Security & Authentication
+### Security & Authentication
 - **Firebase Authentication:** Secure user sign-up and login
 - **Email/Password & Social Auth:** Multiple authentication methods
 - **Protected Routes:** Secure access to user-specific features
 - **Admin Panel:** Firebase Admin SDK integration for backend operations
 
-### 💾 Data Management
+### Data Management
 - **SQLite Database:** Efficient local data storage
 - **Analysis History:** Save and review past scans
 - **User Profiles:** Personalized dietary preferences and restrictions
@@ -62,7 +62,7 @@ Built with modern web technologies and designed for performance, EatInformed del
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
 ### Frontend Framework
 | Technology | Version | Purpose |
@@ -119,7 +119,7 @@ Built with modern web technologies and designed for performance, EatInformed del
 
 ---
 
-## 📦 Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 
@@ -223,7 +223,7 @@ Before you begin, ensure you have the following installed:
 
 ---
 
-## 🛠️ Available Scripts
+## Available Scripts
 
 ```bash
 # Development
@@ -245,7 +245,7 @@ yarn add <package>      # Add new dependency
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 eatinformed/
